@@ -16,38 +16,40 @@ export const AboutMe = () => {
   };
 
   return (
-    <section id="about" className="py-20 relative overflow-hidden">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true }}
-        className="container mx-auto px-4"
-      >
-        <h2 className="text-4xl font-bold text-center mb-12">
-          About <span className="text-primary">Me</span>
-        </h2>
-        
-        <div className="grid lg:grid-cols-2 gap-8 items-center">
+    <section id="about" className="relative overflow-hidden py-20 lg:min-h-screen lg:py-32">
+      <div className="container mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="mb-12 text-center"
+        >
+          <h2 className="text-4xl font-bold">
+            About <span className="text-primary">Me</span>
+          </h2>
+        </motion.div>
+
+        <div className="grid items-center gap-12 lg:grid-cols-2">
           {/* Profile Picture Section */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="relative mx-auto lg:mx-0"
+            className="relative mx-auto w-full max-w-md"
           >
             {/* Animated Blobs */}
-            <div className="absolute -z-10 animate-blob mix-blend-multiply filter blur-xl opacity-70 bg-purple-300 top-0 -left-4 w-72 h-72 rounded-full" />
-            <div className="absolute -z-10 animate-blob animation-delay-2000 mix-blend-multiply filter blur-xl opacity-70 bg-yellow-300 -bottom-8 -right-4 w-72 h-72 rounded-full" />
-            <div className="absolute -z-10 animate-blob animation-delay-4000 mix-blend-multiply filter blur-xl opacity-70 bg-pink-300 -bottom-4 left-20 w-72 h-72 rounded-full" />
-            
+            <div className="absolute -left-4 top-0 -z-10 h-72 w-72 animate-blob rounded-full bg-purple-300 opacity-70 mix-blend-multiply blur-xl filter" />
+            <div className="absolute -right-4 -bottom-8 -z-10 h-72 w-72 animate-blob animation-delay-2000 rounded-full bg-yellow-300 opacity-70 mix-blend-multiply blur-xl filter" />
+            <div className="absolute -bottom-4 left-20 -z-10 h-72 w-72 animate-blob animation-delay-4000 rounded-full bg-pink-300 opacity-70 mix-blend-multiply blur-xl filter" />
+
             {/* Profile Picture Container */}
-            <div className="relative w-80 h-80 rounded-full overflow-hidden border-4 border-primary/20 shadow-xl">
+            <div className="group relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-full border-4 border-primary/20 shadow-xl transition-transform duration-300 hover:scale-105">
               <img
                 src="/photo-1581091226825-a6a2a5aee158"
                 alt="Professional headshot"
-                className="w-full h-full object-cover"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
@@ -62,9 +64,9 @@ export const AboutMe = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               viewport={{ once: true }}
             >
-              <Card className="p-6 backdrop-blur-sm bg-accent/10 border-primary/20">
-                <h3 className="text-2xl font-semibold mb-4">Who I Am</h3>
-                <p className="text-muted-foreground leading-relaxed">
+              <Card className="border-primary/20 bg-accent/10 p-6 backdrop-blur-sm">
+                <h3 className="mb-4 text-2xl font-semibold">Who I Am</h3>
+                <p className="leading-relaxed text-muted-foreground">
                   I'm a passionate Data Engineer & Full Stack Developer with a love for creating
                   elegant solutions to complex problems. My journey in tech has been driven by
                   curiosity and a desire to build impactful applications.
@@ -78,9 +80,9 @@ export const AboutMe = () => {
               transition={{ duration: 0.8, delay: 0.4 }}
               viewport={{ once: true }}
             >
-              <Card className="p-6 backdrop-blur-sm bg-accent/10 border-primary/20">
-                <h3 className="text-2xl font-semibold mb-4">My Approach</h3>
-                <p className="text-muted-foreground leading-relaxed">
+              <Card className="border-primary/20 bg-accent/10 p-6 backdrop-blur-sm">
+                <h3 className="mb-4 text-2xl font-semibold">My Approach</h3>
+                <p className="leading-relaxed text-muted-foreground">
                   I believe in writing clean, maintainable code and creating intuitive user
                   experiences. My expertise in Android Development with Jetpack Compose allows
                   me to build modern, responsive applications.
@@ -100,18 +102,23 @@ export const AboutMe = () => {
                 onClick={handleDownloadCV}
                 className="group relative overflow-hidden px-8 py-6"
                 size="lg"
+                aria-label="Download CV"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
+                  <FileText className="h-5 w-5" aria-hidden="true" />
                   Download CV
-                  <Download className="w-5 h-5 transition-transform group-hover:translate-y-1" />
+                  <Download 
+                    className="h-5 w-5 transition-transform duration-300 group-hover:translate-y-1" 
+                    aria-hidden="true"
+                  />
                 </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/40 transform transition-transform duration-300 group-hover:scale-110" />
+                <div className="absolute inset-0 transform bg-gradient-to-r from-primary/20 to-primary/40 transition-transform duration-300 group-hover:scale-110" />
               </Button>
             </motion.div>
           </div>
         </div>
 
+        {/* Inspirational Quote */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -119,13 +126,13 @@ export const AboutMe = () => {
           viewport={{ once: true }}
           className="mt-12 text-center"
         >
-          <Card className="inline-block p-6 backdrop-blur-sm bg-accent/10 border-primary/20">
-            <p className="text-lg text-primary font-medium">
+          <Card className="inline-block border-primary/20 bg-accent/10 p-6 backdrop-blur-sm">
+            <p className="text-lg font-medium text-primary">
               "The only way to do great work is to love what you do."
             </p>
           </Card>
         </motion.div>
-      </motion.div>
+      </div>
     </section>
   );
 };

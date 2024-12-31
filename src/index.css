@@ -34,8 +34,13 @@
   * {
     @apply border-border;
   }
+  
+  html {
+    @apply overflow-x-hidden scroll-smooth;
+  }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-x-hidden;
   }
 }
 
@@ -53,4 +58,13 @@
 
 .timeline-dot {
   @apply absolute -left-[5px] top-2 h-3 w-3 rounded-full bg-primary;
+}
+
+/* Animation delay utilities */
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
 }
