@@ -37,7 +37,7 @@ export const ParticlesBackground = () => {
               default: "bounce",
             },
             random: true,
-            speed: 1,
+            speed: 2,
             straight: false,
           },
           number: {
@@ -56,8 +56,28 @@ export const ParticlesBackground = () => {
           size: {
             value: { min: 1, max: 3 },
           },
+          repulse: {
+            enable: true,
+            distance: 100,
+            duration: 0.4,
+          },
         },
         detectRetina: true,
+        interactivity: {
+          detect_on: "window",
+          events: {
+            onhover: {
+              enable: true,
+              mode: "repulse",
+            },
+          },
+          modes: {
+            repulse: {
+              distance: 100,
+              duration: 0.4,
+            },
+          },
+        },
       }}
       className="absolute inset-0 -z-10"
     />
