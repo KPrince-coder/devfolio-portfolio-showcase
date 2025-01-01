@@ -5,6 +5,7 @@ import { Timeline } from "@/components/Timeline";
 import { Contact } from "@/components/Contact";
 import { AboutMe } from "@/components/AboutMe";
 import { CursorLight } from "@/components/CursorLight";
+import { Blog } from "@/components/Blog";
 
 const Index = () => {
   return (
@@ -15,6 +16,7 @@ const Index = () => {
       <Projects />
       <Skills />
       <Timeline />
+      <Blog />
       <Contact />
     </div>
   );
