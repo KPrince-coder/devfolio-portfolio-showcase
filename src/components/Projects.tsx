@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Github, ExternalLink } from "lucide-react";
 import { ProjectDetailsModal } from "./ProjectDetailsModal";
 
-type ProjectType = "all" | "web" | "android";
+type ProjectType = "all" | "web" | "android" | "data";
 
 const projects = [
   {
@@ -41,6 +41,22 @@ const projects = [
       "Custom workout plans"
     ]
   },
+  {
+    title: "Data Pipeline Framework",
+    description: "A scalable data processing pipeline built with Apache Spark",
+    longDescription: "An enterprise-grade data pipeline framework that handles large-scale data processing, transformation, and analytics workflows.",
+    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71",
+    tech: ["Apache Spark", "Python", "Airflow", "AWS"],
+    github: "https://github.com",
+    demo: "https://demo.com",
+    type: "data",
+    features: [
+      "Real-time data processing",
+      "Automated ETL workflows",
+      "Data quality monitoring",
+      "Scalable architecture"
+    ]
+  },
 ];
 
 export const Projects = () => {
@@ -60,10 +76,11 @@ export const Projects = () => {
         className="w-full mb-12"
         onValueChange={(value) => setSelectedType(value as ProjectType)}
       >
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-3">
+        <TabsList className="grid w-full max-w-md mx-auto grid-cols-4">
           <TabsTrigger value="all">All Projects</TabsTrigger>
           <TabsTrigger value="web">Web</TabsTrigger>
           <TabsTrigger value="android">Android</TabsTrigger>
+          <TabsTrigger value="data">Data Engineering</TabsTrigger>
         </TabsList>
       </Tabs>
 
