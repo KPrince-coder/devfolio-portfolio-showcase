@@ -1,19 +1,33 @@
 import { motion } from "framer-motion";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, Target } from "lucide-react";
 import { useToast } from "./ui/use-toast";
 
 export const AboutMe = () => {
   const { toast } = useToast();
 
   const handleDownloadCV = () => {
-    // This is where you would implement the actual CV download
     toast({
       title: "Coming soon!",
       description: "CV download will be available shortly.",
     });
   };
+
+  const goals = [
+    {
+      title: "Technical Excellence",
+      description: "Continuously improving my skills in full-stack development and staying current with emerging technologies."
+    },
+    {
+      title: "Innovation",
+      description: "Creating impactful solutions that solve real-world problems and enhance user experiences."
+    },
+    {
+      title: "Collaboration",
+      description: "Working effectively with teams to build scalable and maintainable applications."
+    }
+  ];
 
   return (
     <section id="about" className="relative overflow-hidden py-20 lg:min-h-screen lg:py-32">
@@ -87,6 +101,36 @@ export const AboutMe = () => {
                   experiences. My expertise in Android Development with Jetpack Compose allows
                   me to build modern, responsive applications.
                 </p>
+              </Card>
+            </motion.div>
+
+            {/* Goals Section */}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <Card className="border-primary/20 bg-accent/10 p-6 backdrop-blur-sm">
+                <h3 className="mb-4 text-2xl font-semibold flex items-center gap-2">
+                  <Target className="h-6 w-6" />
+                  My Goals
+                </h3>
+                <div className="space-y-4">
+                  {goals.map((goal, index) => (
+                    <motion.div
+                      key={goal.title}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      className="border-l-2 border-primary/20 pl-4"
+                    >
+                      <h4 className="font-medium text-primary">{goal.title}</h4>
+                      <p className="text-sm text-muted-foreground">{goal.description}</p>
+                    </motion.div>
+                  ))}
+                </div>
               </Card>
             </motion.div>
 
