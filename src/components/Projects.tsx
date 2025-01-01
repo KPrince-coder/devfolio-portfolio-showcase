@@ -69,7 +69,9 @@ export const Projects = () => {
 
   return (
     <section id="projects" className="py-20">
-      <h2 className="mb-8 text-center text-3xl font-bold">Featured Projects</h2>
+      <h2 className="mb-8 text-center text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/50">
+        Featured Projects
+      </h2>
       
       <Tabs
         defaultValue="all"
@@ -114,18 +116,30 @@ export const Projects = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.3 }}
+                whileHover={{ 
+                  scale: 1.02,
+                  rotateY: 5,
+                  translateZ: 20,
+                }}
+                style={{ perspective: 1000 }}
               >
                 <Card
-                  className="project-card cursor-pointer"
+                  className="project-card overflow-hidden bg-gradient-to-br from-accent/5 via-accent/10 to-accent/5 backdrop-blur-sm border-accent/10 hover:border-accent/20"
                   onClick={() => setSelectedProject(project)}
                 >
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="mb-6 h-48 w-full rounded-lg object-cover"
-                    loading="lazy"
-                  />
-                  <h3 className="mb-2 text-xl font-bold">{project.title}</h3>
+                  <div className="relative group">
+                    <img
+                      src={project.image}
+                      alt={project.title}
+                      className="mb-6 h-48 w-full rounded-lg object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  
+                  <h3 className="mb-2 text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">
+                    {project.title}
+                  </h3>
                   <p className="mb-4 text-muted-foreground">{project.description}</p>
                   <div className="mb-6 flex flex-wrap gap-2">
                     {project.tech.map((tech) => (

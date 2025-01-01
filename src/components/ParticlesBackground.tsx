@@ -1,6 +1,6 @@
 import { useCallback } from "react";
+import type { Container, Engine } from "tsparticles-engine";
 import Particles from "react-tsparticles";
-import type { Engine } from "tsparticles-engine";
 import { loadSlim } from "tsparticles-slim";
 
 export const ParticlesBackground = () => {
@@ -12,13 +12,30 @@ export const ParticlesBackground = () => {
     <Particles
       id="tsparticles"
       init={particlesInit}
+      className="absolute inset-0"
       options={{
-        background: {
-          color: {
-            value: "transparent",
+        fpsLimit: 120,
+        interactivity: {
+          events: {
+            onClick: {
+              enable: true,
+              mode: "push",
+            },
+            onHover: {
+              enable: true,
+              mode: "repulse",
+            },
+          },
+          modes: {
+            push: {
+              quantity: 4,
+            },
+            repulse: {
+              distance: 200,
+              duration: 0.4,
+            },
           },
         },
-        fpsLimit: 120,
         particles: {
           color: {
             value: "#ffffff",
@@ -36,7 +53,7 @@ export const ParticlesBackground = () => {
             outModes: {
               default: "bounce",
             },
-            random: true,
+            random: false,
             speed: 2,
             straight: false,
           },
@@ -48,38 +65,17 @@ export const ParticlesBackground = () => {
             value: 80,
           },
           opacity: {
-            value: 0.3,
+            value: 0.2,
           },
           shape: {
             type: "circle",
           },
           size: {
-            value: { min: 1, max: 3 },
-          },
-          repulse: {
-            enable: true,
-            distance: 100,
-            duration: 0.4,
+            value: { min: 1, max: 5 },
           },
         },
         detectRetina: true,
-        interactivity: {
-          detect_on: "window",
-          events: {
-            onhover: {
-              enable: true,
-              mode: "repulse",
-            },
-          },
-          modes: {
-            repulse: {
-              distance: 100,
-              duration: 0.4,
-            },
-          },
-        },
       }}
-      className="absolute inset-0 -z-10"
     />
   );
 };
