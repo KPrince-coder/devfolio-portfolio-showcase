@@ -6,19 +6,23 @@ import { Contact } from "@/components/Contact";
 import { AboutMe } from "@/components/AboutMe";
 import { CursorLight } from "@/components/CursorLight";
 import { Blog } from "@/components/Blog";
+import { Header } from "@/components/Header";
 
 const Index = () => {
   return (
-    <div className="container mx-auto px-4">
-      <CursorLight />
-      <Hero />
-      <AboutMe />
-      <Projects />
-      <Skills />
-      <Timeline />
-      <Blog />
-      <Contact />
-    </div>
+    <>
+      <Header />
+      <div className="container mx-auto px-4 pt-16">
+        <CursorLight />
+        <Hero />
+        <AboutMe />
+        <Projects />
+        <Skills />
+        <Timeline />
+        <Blog />
+        <Contact />
+      </div>
+    </>
   );
 };
 
