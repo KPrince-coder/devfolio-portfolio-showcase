@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Upload, FileText, Image } from "lucide-react";
 
 interface ProfileData {
   id?: string;
@@ -24,10 +25,8 @@ export const ProfileManager = () => {
   });
   const { toast } = useToast();
 
-  // Fetch initial profile data
   useEffect(() => {
     const fetchProfileData = async () => {
-      // First try to get existing profile
       const { data, error } = await supabase
         .from("profile_data")
         .select("*")
@@ -43,14 +42,13 @@ export const ProfileManager = () => {
         return;
       }
 
-      // If no profile exists, create one
       if (!data) {
         const { data: newProfile, error: createError } = await supabase
           .from("profile_data")
-          .insert([{ 
+          .insert([{
             about_text: "",
             resume_url: "",
-            profile_image_url: "" 
+            profile_image_url: ""
           }])
           .select()
           .single();
@@ -73,7 +71,6 @@ export const ProfileManager = () => {
 
     fetchProfileData();
 
-    // Set up real-time subscription
     const channel = supabase
       .channel("profile_changes")
       .on(
@@ -106,9 +103,10 @@ export const ProfileManager = () => {
 
     setLoading(true);
     try {
-      // Upload file to storage
       const fileExt = file.name.split(".").pop();
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const fileName = fileType === "resume" 
+        ? `cv_${new Date().toISOString()}.${fileExt}`
+        : `profile_${crypto.randomUUID()}.${fileExt}`;
       const filePath = `${fileType}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -117,12 +115,10 @@ export const ProfileManager = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: publicUrl } = supabase.storage
         .from("profile")
         .getPublicUrl(filePath);
 
-      // Update profile data
       const updateField =
         fileType === "resume" ? "resume_url" : "profile_image_url";
       const { error: updateError } = await supabase
@@ -196,14 +192,24 @@ export const ProfileManager = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="cv">CV Upload</Label>
-          <Input
-            id="cv"
-            type="file"
-            accept=".pdf,.doc,.docx"
-            onChange={(e) => handleFileUpload(e, "resume")}
-            disabled={loading}
-          />
+          <Label htmlFor="cv" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            CV Upload
+          </Label>
+          <div className="flex items-center gap-4">
+            <Input
+              id="cv"
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={(e) => handleFileUpload(e, "resume")}
+              disabled={loading}
+              className="flex-1"
+            />
+            <Button type="button" disabled={loading} onClick={() => document.getElementById('cv')?.click()}>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload CV
+            </Button>
+          </div>
           {profileData.resume_url && (
             <p className="text-sm text-muted-foreground">
               Current CV:{" "}
@@ -220,14 +226,24 @@ export const ProfileManager = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="profile_image">Profile Image</Label>
-          <Input
-            id="profile_image"
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleFileUpload(e, "profile_image")}
-            disabled={loading}
-          />
+          <Label htmlFor="profile_image" className="flex items-center gap-2">
+            <Image className="h-4 w-4" />
+            Profile Image
+          </Label>
+          <div className="flex items-center gap-4">
+            <Input
+              id="profile_image"
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleFileUpload(e, "profile_image")}
+              disabled={loading}
+              className="flex-1"
+            />
+            <Button type="button" disabled={loading} onClick={() => document.getElementById('profile_image')?.click()}>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Image
+            </Button>
+          </div>
           {profileData.profile_image_url && (
             <div className="mt-2">
               <img

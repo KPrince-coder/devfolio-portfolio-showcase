@@ -3,15 +3,63 @@ import { Button } from "@/components/ui/button";
 import { ArrowDown, FileText } from "lucide-react";
 import { ParticlesBackground } from "./ParticlesBackground";
 import { useToast } from "@/components/ui/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Hero = () => {
   const { toast } = useToast();
 
-  const handleDownloadCV = () => {
-    toast({
-      title: "Coming soon!",
-      description: "CV download will be available shortly.",
-    });
+  const { data: profileData } = useQuery({
+    queryKey: ['profile-data'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profile_data')
+        .select('*')
+        .single();
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const handleDownloadCV = async () => {
+    if (!profileData?.resume_url) {
+      toast({
+        title: "No CV available",
+        description: "CV has not been uploaded yet.",
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Downloading CV",
+        description: "Your download will begin shortly...",
+      });
+
+      const response = await fetch(profileData.resume_url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "YourName_CV.pdf"; // This will be the downloaded file name
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download complete",
+        description: "CV has been downloaded successfully.",
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        variant: "destructive",
+        title: "Download failed",
+        description: "Failed to download CV. Please try again.",
+      });
+    }
   };
 
   return (
@@ -39,7 +87,7 @@ export const Hero = () => {
           }}
         >
           Hi, I'm <span className="text-primary relative inline-block">
-            Your Name
+            {profileData?.about_text || "Your Name"}
             <motion.span
               className="absolute -inset-1 rounded-lg bg-primary/20"
               animate={{
@@ -53,6 +101,15 @@ export const Hero = () => {
             />
           </span>
         </motion.h1>
+        {profileData?.profile_image_url && (
+          <div className="mx-auto w-32 h-32 rounded-full overflow-hidden border-4 border-primary">
+            <img
+              src={profileData.profile_image_url}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
         <p className="text-xl text-muted-foreground sm:text-2xl max-w-2xl mx-auto">
           Data Engineer & Full Stack Developer specializing in Android Development with Jetpack Compose
         </p>
