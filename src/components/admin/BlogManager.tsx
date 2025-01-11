@@ -427,12 +427,12 @@ export const BlogManager = () => {
       )}
 
       <div className="space-y-4">
-        {posts?.map((post) => (
+        {posts?.map((post: BlogPost) => (
           <Card key={post.id} className="p-4">
             <div className="mb-2 flex items-center justify-between">
               <h3 className="font-medium">{post.title}</h3>
               <span className="text-sm text-muted-foreground">
-                {new Date(post.created_at).toLocaleDateString()}
+                {new Date(post.publishedAt).toLocaleDateString()}
               </span>
             </div>
             <p className="text-sm text-muted-foreground">{post.excerpt}</p>
