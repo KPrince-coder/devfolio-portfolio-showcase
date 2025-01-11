@@ -83,7 +83,7 @@ export const Hero = () => {
 
 
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
+    <section className="flex h-screen items-center justify-center overflow-hidden">
       <ParticlesBackground />
       
       {/* Animated Background Gradient */}
