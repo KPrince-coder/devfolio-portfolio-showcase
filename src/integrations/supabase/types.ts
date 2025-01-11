@@ -35,32 +35,44 @@ export type Database = {
       }
       blogs: {
         Row: {
+          author: string | null
           content: string
+          coverimage: string | null
           created_at: string | null
           excerpt: string | null
           id: string
           image_url: string | null
           published: boolean | null
+          publishedat: string | null
+          tags: string[] | null
           title: string
           updated_at: string | null
         }
         Insert: {
+          author?: string | null
           content: string
+          coverimage?: string | null
           created_at?: string | null
           excerpt?: string | null
           id?: string
           image_url?: string | null
           published?: boolean | null
+          publishedat?: string | null
+          tags?: string[] | null
           title: string
           updated_at?: string | null
         }
         Update: {
+          author?: string | null
           content?: string
+          coverimage?: string | null
           created_at?: string | null
           excerpt?: string | null
           id?: string
           image_url?: string | null
           published?: boolean | null
+          publishedat?: string | null
+          tags?: string[] | null
           title?: string
           updated_at?: string | null
         }

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Upload, FileText, Image, Save, X } from "lucide-react";
+import { Plus, Upload, FileText, Image, Save, X, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,10 @@ interface BlogPost {
   published: boolean;
   created_at: string;
   updated_at: string;
+  author: string;
+  tags: string[];
+  publishedAt: string;
+  coverImage: string | null;
 }
 
 export const BlogManager = () => {
@@ -30,7 +34,11 @@ export const BlogManager = () => {
     excerpt: "",
     image_url: "",
     published: false,
+    author: "",
+    tags: [] as string[],
+    coverImage: "",
   });
+  const [tagInput, setTagInput] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -154,6 +162,7 @@ export const BlogManager = () => {
 
         setNewPost(prev => ({
           ...prev,
+          coverImage: publicUrl.publicUrl,
           image_url: publicUrl.publicUrl
         }));
 
@@ -174,6 +183,23 @@ export const BlogManager = () => {
     }
   };
 
+  const handleAddTag = () => {
+    if (tagInput.trim()) {
+      setNewPost(prev => ({
+        ...prev,
+        tags: [...prev.tags, tagInput.trim()]
+      }));
+      setTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setNewPost(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -192,6 +218,10 @@ export const BlogManager = () => {
           excerpt: newPost.excerpt,
           image_url: newPost.image_url,
           published: newPost.published,
+          author: newPost.author,
+          tags: newPost.tags,
+          coverImage: newPost.coverImage,
+          publishedAt: new Date().toISOString(),
         }]);
 
       if (error) {
@@ -208,6 +238,9 @@ export const BlogManager = () => {
         excerpt: "",
         image_url: "",
         published: false,
+        author: "",
+        tags: [],
+        coverImage: "",
       });
 
       toast({
@@ -260,6 +293,17 @@ export const BlogManager = () => {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="author">Author</Label>
+            <Input
+              id="author"
+              value={newPost.author}
+              onChange={(e) => setNewPost({ ...newPost, author: e.target.value })}
+              placeholder="Enter author name"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="excerpt">Excerpt</Label>
             <Textarea
               id="excerpt"
@@ -280,6 +324,43 @@ export const BlogManager = () => {
               className="min-h-[200px]"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">Tags</Label>
+            <div className="flex gap-2">
+              <Input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                placeholder="Add a tag"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+              />
+              <Button type="button" onClick={handleAddTag}>
+                <Tag className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {newPost.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs text-accent-foreground"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(tag)}
+                    className="ml-1 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -306,9 +387,9 @@ export const BlogManager = () => {
               onChange={handleFileUpload}
               disabled={loading}
             />
-            {newPost.image_url && (
+            {newPost.coverImage && (
               <img
-                src={newPost.image_url}
+                src={newPost.coverImage}
                 alt="Cover"
                 className="mt-2 max-h-40 object-cover rounded"
               />
@@ -343,13 +424,24 @@ export const BlogManager = () => {
               </span>
             </div>
             <p className="text-sm text-muted-foreground">{post.excerpt}</p>
-            {post.image_url && (
+            {post.coverImage && (
               <img
-                src={post.image_url}
+                src={post.coverImage}
                 alt={post.title}
                 className="mt-2 max-h-40 object-cover rounded"
               />
             )}
+            <div className="mt-2 flex flex-wrap gap-2">
+              {post.tags?.map((tag) => (
+                <span
+                  key={tag}
+                  className="flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs text-accent-foreground"
+                >
+                  <Tag className="h-3 w-3" />
+                  {tag}
+                </span>
+              ))}
+            </div>
           </Card>
         ))}
       </div>
