@@ -11,18 +11,19 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { BlogPost } from "@/types/blog";
 
-interface BlogPost {
+// Interface for the Supabase blog data structure
+interface SupabaseBlogPost {
   id: string;
   title: string;
   content: string;
-  excerpt: string;
+  excerpt: string | null;
   image_url: string | null;
-  published: boolean;
+  published: boolean | null;
   created_at: string;
   updated_at: string;
-  author: string;
-  tags: string[];
-  publishedat: string;
+  author: string | null;
+  tags: string[] | null;
+  publishedat: string | null;
   coverimage: string | null;
 }
 
@@ -67,7 +68,6 @@ export const BlogManager = () => {
 
     console.log("Checking admin status for user:", session.user.id);
     
-    // Check if user is an admin using maybeSingle() instead of single()
     const { data: adminData, error: adminError } = await supabase
       .from('admin_users')
       .select('id')
@@ -120,7 +120,7 @@ export const BlogManager = () => {
       console.log("Blog posts fetched successfully:", data);
       
       // Map the Supabase response to match our BlogPost type
-      return (data as BlogPost[]).map(post => ({
+      return (data as SupabaseBlogPost[]).map(post => ({
         id: post.id,
         title: post.title,
         content: post.content,
