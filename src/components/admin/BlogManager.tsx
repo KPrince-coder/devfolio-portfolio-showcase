@@ -9,6 +9,7 @@ import { Plus, Upload, FileText, Image, Save, X, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { BlogPost } from "@/types/blog";
 
 interface BlogPost {
   id: string;
@@ -21,8 +22,8 @@ interface BlogPost {
   updated_at: string;
   author: string;
   tags: string[];
-  publishedAt: string;
-  coverImage: string | null;
+  publishedat: string;
+  coverimage: string | null;
 }
 
 export const BlogManager = () => {
@@ -117,7 +118,18 @@ export const BlogManager = () => {
       }
       
       console.log("Blog posts fetched successfully:", data);
-      return data as BlogPost[];
+      
+      // Map the Supabase response to match our BlogPost type
+      return (data as BlogPost[]).map(post => ({
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        excerpt: post.excerpt || "",
+        coverImage: post.coverimage || post.image_url || "",
+        author: post.author || "",
+        publishedAt: post.publishedat || post.created_at,
+        tags: post.tags || []
+      }));
     }
   });
 
@@ -220,8 +232,8 @@ export const BlogManager = () => {
           published: newPost.published,
           author: newPost.author,
           tags: newPost.tags,
-          coverImage: newPost.coverImage,
-          publishedAt: new Date().toISOString(),
+          coverimage: newPost.coverImage,
+          publishedat: new Date().toISOString(),
         }]);
 
       if (error) {
