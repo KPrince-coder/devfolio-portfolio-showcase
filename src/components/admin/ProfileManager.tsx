@@ -7,9 +7,17 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface ProfileData {
+  id?: string;
+  about_text: string | null;
+  resume_url: string | null;
+  profile_image_url: string | null;
+  updated_at?: string | null;
+}
+
 export const ProfileManager = () => {
   const [loading, setLoading] = useState(false);
-  const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState<ProfileData>({
     about_text: "",
     resume_url: "",
     profile_image_url: "",
@@ -54,7 +62,7 @@ export const ProfileManager = () => {
         (payload) => {
           console.log("Profile data changed:", payload);
           if (payload.new) {
-            setProfileData(payload.new);
+            setProfileData(payload.new as ProfileData);
           }
         }
       )
