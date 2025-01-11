@@ -27,10 +27,11 @@ export const ProfileManager = () => {
   // Fetch initial profile data
   useEffect(() => {
     const fetchProfileData = async () => {
+      // First try to get existing profile
       const { data, error } = await supabase
         .from("profile_data")
         .select("*")
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching profile data:", error);
@@ -42,7 +43,30 @@ export const ProfileManager = () => {
         return;
       }
 
-      if (data) {
+      // If no profile exists, create one
+      if (!data) {
+        const { data: newProfile, error: createError } = await supabase
+          .from("profile_data")
+          .insert([{ 
+            about_text: "",
+            resume_url: "",
+            profile_image_url: "" 
+          }])
+          .select()
+          .single();
+
+        if (createError) {
+          console.error("Error creating profile:", createError);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to create profile",
+          });
+          return;
+        }
+
+        setProfileData(newProfile);
+      } else {
         setProfileData(data);
       }
     };
