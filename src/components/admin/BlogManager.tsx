@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Plus, Upload, FileText, Image, Save, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 interface BlogPost {
   id: string;
@@ -32,16 +33,40 @@ export const BlogManager = () => {
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  // Check authentication status
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({
+        variant: "destructive",
+        title: "Authentication required",
+        description: "Please log in to manage blog posts",
+      });
+      navigate("/login");
+      return false;
+    }
+    return true;
+  };
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ['blog-posts'],
     queryFn: async () => {
+      console.log("Fetching blog posts...");
+      const isAuthenticated = await checkAuth();
+      if (!isAuthenticated) return [];
+
       const { data, error } = await supabase
         .from('blogs')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching blog posts:", error);
+        throw error;
+      }
+      console.log("Blog posts fetched successfully:", data);
       return data as BlogPost[];
     }
   });
@@ -49,6 +74,9 @@ export const BlogManager = () => {
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) return;
 
     if (file.type === 'text/plain' || file.type === 'application/pdf' || 
         file.type.includes('word') || file.type.includes('officedocument')) {
@@ -106,7 +134,12 @@ export const BlogManager = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) return;
+
     setLoading(true);
+    console.log("Submitting blog post...");
 
     try {
       const { error } = await supabase
@@ -119,8 +152,12 @@ export const BlogManager = () => {
           published: newPost.published,
         }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating blog post:", error);
+        throw error;
+      }
 
+      console.log("Blog post created successfully");
       queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
       setIsCreating(false);
       setNewPost({
