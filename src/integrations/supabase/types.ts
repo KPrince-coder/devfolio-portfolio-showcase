@@ -243,6 +243,47 @@ export type Database = {
         }
         Relationships: []
       }
+
+      experiences: {
+        Row: {
+          id: string
+          year: string
+          title: string
+          company: string
+          description: string
+          technologies: string[] | null
+          achievements: string[] | null
+          icon_key: string | null
+          color: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          year: string
+          title: string
+          company: string
+          description: string
+          technologies?: string[] | null
+          achievements?: string[] | null
+          icon_key?: string | null
+          color?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          year?: string
+          title?: string
+          company?: string
+          description?: string
+          technologies?: string[] | null
+          achievements?: string[] | null
+          icon_key?: string | null
+          color?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      
     }
     Views: {
       [_ in never]: never
