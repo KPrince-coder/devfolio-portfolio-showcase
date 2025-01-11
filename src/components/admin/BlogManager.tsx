@@ -5,13 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Upload, FileText, Image, Save, X, Tag } from "lucide-react";
+import { Plus, Upload, FileText, Image, Save, X, Tag, Edit, Trash } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { BlogPost } from "@/types/blog";
 
-// Interface for the Supabase blog data structure
 interface SupabaseBlogPost {
   id: string;
   title: string;
@@ -29,6 +28,7 @@ interface SupabaseBlogPost {
 
 export const BlogManager = () => {
   const [isCreating, setIsCreating] = useState(false);
+  const [isEditing, setIsEditing] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [newPost, setNewPost] = useState({
     title: "",
@@ -45,7 +45,6 @@ export const BlogManager = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  // Check authentication status
   const checkAuth = async () => {
     console.log("Checking authentication status...");
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -101,7 +100,7 @@ export const BlogManager = () => {
   };
 
   const { data: posts, isLoading } = useQuery({
-    queryKey: ['blog-posts'],
+    queryKey: ['blog-posts-admin'],
     queryFn: async () => {
       console.log("Fetching blog posts...");
       const isAuthenticated = await checkAuth();
@@ -119,7 +118,6 @@ export const BlogManager = () => {
       
       console.log("Blog posts fetched successfully:", data);
       
-      // Map the Supabase response to match our BlogPost type
       return (data as SupabaseBlogPost[]).map(post => ({
         id: post.id,
         title: post.title,
@@ -229,7 +227,7 @@ export const BlogManager = () => {
           content: newPost.content,
           excerpt: newPost.excerpt,
           image_url: newPost.image_url,
-          published: newPost.published,
+          published: true,
           author: newPost.author,
           tags: newPost.tags,
           coverimage: newPost.coverImage,
@@ -271,6 +269,123 @@ export const BlogManager = () => {
     }
   };
 
+  const handleEdit = async (post: BlogPost) => {
+    setIsEditing(post.id);
+    setNewPost({
+      title: post.title,
+      content: post.content,
+      excerpt: post.excerpt,
+      image_url: post.coverImage,
+      published: true,
+      author: post.author,
+      tags: post.tags,
+      coverImage: post.coverImage,
+    });
+    setIsCreating(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) return;
+
+    setLoading(true);
+    console.log("Updating blog post...");
+
+    try {
+      const { error } = await supabase
+        .from('blogs')
+        .update({
+          title: newPost.title,
+          content: newPost.content,
+          excerpt: newPost.excerpt,
+          image_url: newPost.image_url,
+          published: true,
+          author: newPost.author,
+          tags: newPost.tags,
+          coverimage: newPost.coverImage,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', isEditing);
+
+      if (error) {
+        console.error("Error updating blog post:", error);
+        throw error;
+      }
+
+      console.log("Blog post updated successfully");
+      queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
+      setIsCreating(false);
+      setIsEditing(null);
+      setNewPost({
+        title: "",
+        content: "",
+        excerpt: "",
+        image_url: "",
+        published: false,
+        author: "",
+        tags: [],
+        coverImage: "",
+      });
+
+      toast({
+        title: "Success",
+        description: "Blog post updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating blog post:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update blog post",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (postId: string) => {
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) return;
+
+    if (!window.confirm("Are you sure you want to delete this blog post?")) {
+      return;
+    }
+
+    setLoading(true);
+    console.log("Deleting blog post...");
+
+    try {
+      const { error } = await supabase
+        .from('blogs')
+        .delete()
+        .eq('id', postId);
+
+      if (error) {
+        console.error("Error deleting blog post:", error);
+        throw error;
+      }
+
+      console.log("Blog post deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
+
+      toast({
+        title: "Success",
+        description: "Blog post deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting blog post:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete blog post",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <Card className="p-6">
@@ -292,7 +407,7 @@ export const BlogManager = () => {
       </div>
 
       {isCreating && (
-        <form onSubmit={handleSubmit} className="mb-8 space-y-4">
+        <form onSubmit={isEditing ? handleUpdate : handleSubmit} className="mb-8 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
@@ -411,12 +526,25 @@ export const BlogManager = () => {
           <div className="flex items-center gap-4">
             <Button type="submit" disabled={loading}>
               <Save className="mr-2 h-4 w-4" />
-              {loading ? "Creating..." : "Create Post"}
+              {loading ? (isEditing ? "Updating..." : "Creating...") : (isEditing ? "Update Post" : "Create Post")}
             </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={() => setIsCreating(false)}
+              onClick={() => {
+                setIsCreating(false);
+                setIsEditing(null);
+                setNewPost({
+                  title: "",
+                  content: "",
+                  excerpt: "",
+                  image_url: "",
+                  published: false,
+                  author: "",
+                  tags: [],
+                  coverImage: "",
+                });
+              }}
               disabled={loading}
             >
               <X className="mr-2 h-4 w-4" />
@@ -431,9 +559,22 @@ export const BlogManager = () => {
           <Card key={post.id} className="p-4">
             <div className="mb-2 flex items-center justify-between">
               <h3 className="font-medium">{post.title}</h3>
-              <span className="text-sm text-muted-foreground">
-                {new Date(post.publishedAt).toLocaleDateString()}
-              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(post)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDelete(post.id)}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <p className="text-sm text-muted-foreground">{post.excerpt}</p>
             {post.coverImage && (

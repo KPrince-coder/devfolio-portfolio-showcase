@@ -5,61 +5,51 @@ import { Clock, Tag, User } from "lucide-react";
 import { useState } from "react";
 import { BlogPost } from "@/types/blog";
 import { BlogModal } from "./BlogModal";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Blog = () => {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
 
-  // Sample blog posts - in production, this would come from Supabase
-  const blogPosts: BlogPost[] = [
-    {
-      id: "1",
-      title: "Getting Started with React and TypeScript",
-      excerpt: "Learn how to set up a new React project with TypeScript and best practices for type safety.",
-      content: `<div class="prose prose-invert">
-        <p>TypeScript has become an essential tool in modern React development. In this guide, we'll explore how to set up a new React project with TypeScript and discuss best practices for maintaining type safety throughout your application.</p>
-        <h2>Why TypeScript?</h2>
-        <p>TypeScript adds static typing to JavaScript, which helps catch errors early in development and improves code maintainability.</p>
-        <h2>Setting Up Your Project</h2>
-        <p>To create a new React project with TypeScript, you can use Create React App with the TypeScript template...</p>
-      </div>`,
-      coverImage: "https://images.unsplash.com/photo-1587620962725-abab7fe55159",
-      author: "John Doe",
-      publishedAt: "2024-03-10",
-      tags: ["React", "TypeScript", "Web Development"]
-    },
-    {
-      id: "2",
-      title: "Building Scalable Android Apps with Jetpack Compose",
-      excerpt: "Discover how to create modern Android applications using Jetpack Compose.",
-      content: `<div class="prose prose-invert">
-        <p>Jetpack Compose is revolutionizing Android UI development. This article explores how to build scalable and maintainable Android applications using this modern toolkit.</p>
-        <h2>Introduction to Compose</h2>
-        <p>Jetpack Compose is Android's modern toolkit for building native UI. It simplifies and accelerates UI development on Android.</p>
-        <h2>Key Concepts</h2>
-        <p>Learn about composable functions, state management, and side effects in Jetpack Compose...</p>
-      </div>`,
-      coverImage: "https://images.unsplash.com/photo-1607252650355-f7fd0460ccdb",
-      author: "Jane Smith",
-      publishedAt: "2024-03-08",
-      tags: ["Android", "Jetpack Compose", "Mobile Development"]
-    },
-    {
-      id: "3",
-      title: "Data Engineering Best Practices",
-      excerpt: "Essential practices for building robust data pipelines and ETL processes.",
-      content: `<div class="prose prose-invert">
-        <p>Data engineering is crucial for modern applications. This guide covers best practices for building reliable data pipelines and ETL processes.</p>
-        <h2>Pipeline Architecture</h2>
-        <p>Learn about different architectural patterns for data pipelines and when to use each one.</p>
-        <h2>Data Quality</h2>
-        <p>Discover techniques for ensuring data quality and implementing proper validation...</p>
-      </div>`,
-      coverImage: "https://images.unsplash.com/photo-1551288049-bebda4e38f71",
-      author: "Alex Johnson",
-      publishedAt: "2024-03-05",
-      tags: ["Data Engineering", "ETL", "Big Data"]
+  const { data: blogPosts, isLoading } = useQuery({
+    queryKey: ['blog-posts'],
+    queryFn: async () => {
+      console.log("Fetching blog posts...");
+      const { data, error } = await supabase
+        .from('blogs')
+        .select('*')
+        .eq('published', true)
+        .order('publishedat', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching blog posts:", error);
+        throw error;
+      }
+
+      console.log("Blog posts fetched:", data);
+      
+      return data.map((post: any) => ({
+        id: post.id,
+        title: post.title,
+        excerpt: post.excerpt || "",
+        content: post.content,
+        coverImage: post.coverimage || post.image_url || "",
+        author: post.author || "Anonymous",
+        publishedAt: post.publishedat || post.created_at,
+        tags: post.tags || []
+      }));
     }
-  ];
+  });
+
+  if (isLoading) {
+    return (
+      <section id="blog" className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center">Loading blog posts...</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="blog" className="py-20">
@@ -80,7 +70,7 @@ export const Blog = () => {
         </motion.div>
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {blogPosts.map((post) => (
+          {blogPosts?.map((post) => (
             <motion.div
               key={post.id}
               initial={{ opacity: 0, scale: 0.9 }}
@@ -94,7 +84,7 @@ export const Blog = () => {
               >
                 <div className="aspect-video overflow-hidden">
                   <img
-                    src={post.coverImage}
+                    src={post.coverImage || "https://images.unsplash.com/photo-1587620962725-abab7fe55159"}
                     alt={post.title}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                   />
