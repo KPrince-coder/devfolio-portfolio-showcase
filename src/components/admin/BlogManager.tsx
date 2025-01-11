@@ -38,10 +38,10 @@ export const BlogManager = () => {
   // Check authentication status
   const checkAuth = async () => {
     console.log("Checking authentication status...");
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    if (error) {
-      console.error("Auth check error:", error);
+    if (sessionError) {
+      console.error("Session check error:", sessionError);
       return false;
     }
     
@@ -55,16 +55,29 @@ export const BlogManager = () => {
       navigate("/login");
       return false;
     }
+
+    console.log("Checking admin status for user:", session.user.id);
     
-    // Check if user is an admin
+    // Check if user is an admin using maybeSingle() instead of single()
     const { data: adminData, error: adminError } = await supabase
       .from('admin_users')
       .select('id')
       .eq('id', session.user.id)
-      .single();
+      .maybeSingle();
     
-    if (adminError || !adminData) {
+    if (adminError) {
       console.error("Admin check error:", adminError);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to verify admin status",
+      });
+      navigate("/login");
+      return false;
+    }
+
+    if (!adminData) {
+      console.log("User is not an admin:", session.user.id);
       toast({
         variant: "destructive",
         title: "Access denied",
@@ -74,7 +87,7 @@ export const BlogManager = () => {
       return false;
     }
     
-    console.log("Authentication check passed");
+    console.log("Authentication check passed - user is admin");
     return true;
   };
 
