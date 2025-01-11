@@ -37,8 +37,16 @@ export const BlogManager = () => {
 
   // Check authentication status
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    console.log("Checking authentication status...");
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error("Auth check error:", error);
+      return false;
+    }
+    
     if (!session) {
+      console.log("No active session found");
       toast({
         variant: "destructive",
         title: "Authentication required",
@@ -47,6 +55,26 @@ export const BlogManager = () => {
       navigate("/login");
       return false;
     }
+    
+    // Check if user is an admin
+    const { data: adminData, error: adminError } = await supabase
+      .from('admin_users')
+      .select('id')
+      .eq('id', session.user.id)
+      .single();
+    
+    if (adminError || !adminData) {
+      console.error("Admin check error:", adminError);
+      toast({
+        variant: "destructive",
+        title: "Access denied",
+        description: "You must be an admin to manage blog posts",
+      });
+      navigate("/login");
+      return false;
+    }
+    
+    console.log("Authentication check passed");
     return true;
   };
 
@@ -66,6 +94,7 @@ export const BlogManager = () => {
         console.error("Error fetching blog posts:", error);
         throw error;
       }
+      
       console.log("Blog posts fetched successfully:", data);
       return data as BlogPost[];
     }
