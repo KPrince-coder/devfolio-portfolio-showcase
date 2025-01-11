@@ -12,12 +12,18 @@ export const Hero = () => {
   const { data: profileData } = useQuery({
     queryKey: ['profile-data'],
     queryFn: async () => {
+      console.log('Fetching profile data...');
       const { data, error } = await supabase
         .from('profile_data')
         .select('*')
-        .single();
+        .limit(1)
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile data:', error);
+        throw error;
+      }
+      console.log('Profile data fetched:', data);
       return data;
     }
   });
