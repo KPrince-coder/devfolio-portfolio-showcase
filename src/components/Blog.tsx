@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { slugify } from '@/utils/blogUtils';
 
 export const Blog = () => {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export const Blog = () => {
       
       return data.map((post: any) => ({
         id: post.id,
+        slug: post.slug || slugify(post.title),
         title: post.title,
         excerpt: post.excerpt || "",
         content: post.content,
@@ -45,11 +47,13 @@ export const Blog = () => {
   });
 
   const handlePostClick = (post: BlogPost) => {
-    navigate(`/blog/${post.id}`);
+    const postSlug = post.slug || slugify(post.title);
+    navigate(`/blog/${encodeURIComponent(postSlug)}`);
   };
 
-  const handleShare = (postId: string) => {
-    const url = `${window.location.origin}/blog/${postId}`;
+  const handleShare = (post: BlogPost) => {
+    const postSlug = post.slug || slugify(post.title);
+    const url = `${window.location.origin}/blog/${encodeURIComponent(postSlug)}`;
     navigator.clipboard.writeText(url);
     toast.success("Link copied to clipboard!");
   };
@@ -106,13 +110,14 @@ export const Blog = () => {
           {(showMore ? blogPosts : blogPosts?.slice(0, 3))?.map((post) => (
             <motion.div
               key={post.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, scale: 0.9 }}              
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
               viewport={{ once: true }}
+              className="h-full"
             >
               <Card
-                className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl"
+                className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl h-full flex flex-col"
                 onClick={() => handlePostClick(post)}
               >
                 <div className="aspect-video overflow-hidden">
@@ -122,7 +127,7 @@ export const Blog = () => {
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                   />
                 </div>
-                <div className="p-6">
+                <div className="p-6 flex-grow flex flex-col">
                   <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
@@ -133,35 +138,37 @@ export const Blog = () => {
                       {post.author}
                     </span>
                   </div>
-                  <h3 className="mb-2 text-xl font-semibold transition-colors group-hover:text-primary">
+                  <h3 className="mb-2 text-xl font-semibold transition-colors group-hover:text-primary line-clamp-2">
                     {post.title}
                   </h3>
-                  <p className="mb-4 text-muted-foreground">
+                  <p className="mb-4 text-muted-foreground line-clamp-3 flex-grow">
                     {post.excerpt}
                   </p>
-                  <div className="flex flex-wrap gap-2">
-                    {post.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs text-accent-foreground"
-                      >
-                        <Tag className="h-3 w-3" />
-                        {tag}
-                      </span>
-                    ))}
+                  <div className="mt-auto">
+                    <div className="flex flex-wrap gap-2">
+                      {post.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs text-accent-foreground"
+                        >
+                          <Tag className="h-3 w-3" />
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShare(post.id);
+                      }}
+                    >
+                      <Share className="h-4 w-4" />
+                      Share
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-4"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleShare(post.id);
-                    }}
-                  >
-                    <Share className="h-4 w-4" />
-                    Share
-                  </Button>
                 </div>
               </Card>
             </motion.div>
