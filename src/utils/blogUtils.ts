@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { slugify, generateUniqueSlug, isValidSlug } from './slugify';
+
 
 export const checkAuth = async () => {
   console.log("Checking authentication status...");
@@ -63,4 +65,10 @@ export const handleFileUpload = async (file: File) => {
     });
     return null;
   }
+};
+
+export {
+  slugify,
+  generateUniqueSlug,
+  isValidSlug
 };
