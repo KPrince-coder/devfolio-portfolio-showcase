@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
@@ -14,28 +15,62 @@ const queryClient = new QueryClient();
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Session check:", session ? "Authenticated" : "Not authenticated");
-      setSession(!!session);
-    });
+    const checkSession = async () => {
+      try {
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Session check error:", error);
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Please try logging in again.",
+          });
+          setSession(false);
+        } else {
+          console.log("Session check:", currentSession ? "Authenticated" : "Not authenticated");
+          setSession(!!currentSession);
+        }
+      } catch (err) {
+        console.error("Unexpected error during session check:", err);
+        setSession(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log("Auth state changed:", session ? "Authenticated" : "Not authenticated");
+      
+      if (_event === 'TOKEN_REFRESHED') {
+        console.log('Token successfully refreshed');
+      }
+      
+      if (_event === 'SIGNED_OUT') {
+        // Clear any cached data
+        queryClient.clear();
+      }
+
       setSession(!!session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Show loading state while checking authentication
-  if (session === null) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   // Redirect to login if not authenticated

@@ -44,6 +44,7 @@ export type Database = {
           image_url: string | null
           published: boolean | null
           publishedat: string | null
+          slug: string | null
           tags: string[] | null
           title: string
           updated_at: string | null
@@ -58,6 +59,7 @@ export type Database = {
           image_url?: string | null
           published?: boolean | null
           publishedat?: string | null
+          slug?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string | null
@@ -72,6 +74,7 @@ export type Database = {
           image_url?: string | null
           published?: boolean | null
           publishedat?: string | null
+          slug?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null
@@ -102,6 +105,48 @@ export type Database = {
           message?: string
           name?: string
           read?: boolean | null
+        }
+        Relationships: []
+      }
+      experiences: {
+        Row: {
+          achievements: string[] | null
+          color: string | null
+          company: string
+          created_at: string | null
+          description: string
+          icon_key: string | null
+          id: string
+          technologies: string[] | null
+          title: string
+          updated_at: string | null
+          year: string
+        }
+        Insert: {
+          achievements?: string[] | null
+          color?: string | null
+          company: string
+          created_at?: string | null
+          description: string
+          icon_key?: string | null
+          id?: string
+          technologies?: string[] | null
+          title: string
+          updated_at?: string | null
+          year: string
+        }
+        Update: {
+          achievements?: string[] | null
+          color?: string | null
+          company?: string
+          created_at?: string | null
+          description?: string
+          icon_key?: string | null
+          id?: string
+          technologies?: string[] | null
+          title?: string
+          updated_at?: string | null
+          year?: string
         }
         Relationships: []
       }
