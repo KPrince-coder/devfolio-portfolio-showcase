@@ -7,4 +7,6 @@ export interface BlogPost {
   author: string;
   publishedAt: string;
   tags: string[];
+  modifiedAt?: string;
+
 }
