@@ -4,14 +4,14 @@ import { Button } from "./ui/button";
 import { Clock, Tag, User, Share } from "lucide-react";
 import { useState } from "react";
 import { BlogPost } from "@/types/blog";
-import { BlogModal } from "./BlogModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export const Blog = () => {
   const navigate = useNavigate();
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  // const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [showMore, setShowMore] = useState(false);
 
   const { data: blogPosts, isLoading } = useQuery({
@@ -45,7 +45,13 @@ export const Blog = () => {
   });
 
   const handlePostClick = (post: BlogPost) => {
-    window.open(`/blog/${post.id}`, '_blank'); // Open in new tab
+    navigate(`/blog/${post.id}`);
+  };
+
+  const handleShare = (postId: string) => {
+    const url = `${window.location.origin}/blog/${postId}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Link copied to clipboard!");
   };
 
   if (isLoading) {
@@ -148,10 +154,9 @@ export const Blog = () => {
                     variant="outline"
                     size="sm"
                     className="mt-4"
-                    onClick={() => {
-                      const url = `${window.location.href}#${post.id}`;
-                      navigator.clipboard.writeText(url);
-                      alert("Link copied to clipboard!");
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShare(post.id);
                     }}
                   >
                     <Share className="h-4 w-4" />

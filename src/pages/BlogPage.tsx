@@ -16,6 +16,17 @@ const BlogPost: FC<BlogPostProps> = () => {
   return <BlogPostPage postId={postId} />;
 };
 
-export default BlogPost;
+export { BlogPost };
+
+interface BlogPageProps {
+  postId?: string;
+}
+
+const BlogPage = ({ postId }: BlogPageProps) => {
+  if (!postId) return null;
+  return <BlogPostPage postId={postId} />;
+};
+
+export default BlogPage;
 
 

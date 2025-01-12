@@ -7,8 +7,11 @@ import { useState } from "react";
 import { BlogPost } from "@/types/blog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export const BlogArchive = () => {
+  const navigate = useNavigate();
   const { data: blogPosts, isLoading } = useQuery({
     queryKey: ['blog-posts-archive'],
     queryFn: async () => {
@@ -38,6 +41,12 @@ export const BlogArchive = () => {
       }));
     }
   });
+
+  const handleShare = (postId: string) => {
+    const url = `${window.location.origin}/blog/${postId}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Link copied to clipboard!");
+  };
 
   if (isLoading) {
     return (
@@ -78,6 +87,7 @@ export const BlogArchive = () => {
             >
               <Card
                 className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl"
+                onClick={() => navigate(`/blog/${post.id}`)}
               >
                 <div className="aspect-video overflow-hidden">
                   <img
@@ -118,23 +128,22 @@ export const BlogArchive = () => {
                     variant="outline"
                     size="sm"
                     className="mt-4"
-                    onClick={() => {
-                      const url = `${window.location.href}#${post.id}`;
-                      navigator.clipboard.writeText(url);
-                      alert("Link copied to clipboard");
-                      }}
-                      >
-                        <Share className="h-4 w-4" />
-                        Share
-                      </Button>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      );
-    };
-    
-    export default BlogArchive;
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShare(post.id);
+                    }}
+                  >
+                    <Share className="h-4 w-4" />
+                    Share
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default BlogArchive;
