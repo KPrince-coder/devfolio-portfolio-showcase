@@ -20,6 +20,94 @@ import {
 import { Badge } from "@/components/ui/badge";
 import {slugify} from "@/utils/slugify";
 
+interface BlogCardProps {
+  post: BlogPost;
+  viewMode: "grid" | "list";
+  onShare: () => void;
+  onClick: () => void;
+}
+
+const BlogCard: React.FC<BlogCardProps> = ({ post, viewMode, onShare, onClick }) => {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className={viewMode === "grid" ? "h-full" : "w-full"}
+    >
+      <Card
+        className={`group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl ${
+          viewMode === "list" ? "flex h-64" : "flex flex-col h-full"
+        }`}
+        onClick={onClick}
+      >
+        <div className={`
+          overflow-hidden flex-shrink-0
+          ${viewMode === "list" ? "w-72" : "aspect-video"}
+        `}>
+          <img
+            src={post.coverImage || "https://images.unsplash.com/photo-1587620962725-abab7fe55159"}
+            alt={post.title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+          />
+        </div>
+        
+        <div className={`
+          flex flex-col flex-grow
+          ${viewMode === "list" ? "w-full p-6" : "p-6"}
+        `}>
+          <div className="mb-2 flex items-center gap-4 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Clock className="h-4 w-4" />
+              {new Date(post.publishedAt).toLocaleDateString()}
+            </span>
+            <span className="flex items-center gap-1">
+              <User className="h-4 w-4" />
+              {post.author}
+            </span>
+          </div>
+          <h3 className="mb-2 text-xl font-semibold transition-colors group-hover:text-primary line-clamp-2">
+            {post.title}
+          </h3>
+          <p className="mb-4 text-muted-foreground line-clamp-2">
+            {post.excerpt}
+          </p>
+          <div className="mt-auto flex items-center justify-between">
+            <div className="flex flex-wrap gap-2">
+              {post.tags.slice(0, viewMode === "list" ? 3 : undefined).map((tag) => (
+                <span
+                  key={tag}
+                  className="flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs text-accent-foreground"
+                >
+                  <Tag className="h-3 w-3" />
+                  {tag}
+                </span>
+              ))}
+              {viewMode === "list" && post.tags.length > 3 && (
+                <span className="text-xs text-muted-foreground">
+                  +{post.tags.length - 3} more
+                </span>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onShare();
+              }}
+            >
+              <Share className="h-4 w-4" />
+              Share
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
+};
+
 export const BlogArchive = () => {
   const navigate = useNavigate();
   const { data: blogPosts, isLoading } = useQuery({
@@ -130,16 +218,20 @@ export const BlogArchive = () => {
               placeholder="Search posts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
+              className="w-full focus-visible:ring-1 focus-visible:ring-offset-0"
             />
             
             <Select value={selectedTag} onValueChange={setSelectedTag}>
-              <SelectTrigger>
+              <SelectTrigger className="focus-visible:ring-1 focus-visible:ring-offset-0">
                 <SelectValue placeholder="Select a tag" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border shadow-lg">
                 {allTags.map(tag => (
-                  <SelectItem key={tag} value={tag}>
+                  <SelectItem 
+                    key={tag} 
+                    value={tag}
+                    className="focus:bg-accent focus:text-accent-foreground"
+                  >
                     {tag.charAt(0).toUpperCase() + tag.slice(1)}
                   </SelectItem>
                 ))}
@@ -147,13 +239,28 @@ export const BlogArchive = () => {
             </Select>
 
             <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-              <SelectTrigger>
+              <SelectTrigger className="focus-visible:ring-1 focus-visible:ring-offset-0">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="latest">Latest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="title">By Title</SelectItem>
+              <SelectContent className="bg-background border shadow-lg">
+                <SelectItem 
+                  value="latest"
+                  className="focus:bg-accent focus:text-accent-foreground"
+                >
+                  Latest First
+                </SelectItem>
+                <SelectItem 
+                  value="oldest"
+                  className="focus:bg-accent focus:text-accent-foreground"
+                >
+                  Oldest First
+                </SelectItem>
+                <SelectItem 
+                  value="title"
+                  className="focus:bg-accent focus:text-accent-foreground"
+                >
+                  By Title
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -162,6 +269,7 @@ export const BlogArchive = () => {
                 variant={viewMode === "grid" ? "default" : "outline"}
                 onClick={() => setViewMode("grid")}
                 size="icon"
+                className="focus-visible:ring-1 focus-visible:ring-offset-0"
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
@@ -169,24 +277,40 @@ export const BlogArchive = () => {
                 variant={viewMode === "list" ? "default" : "outline"}
                 onClick={() => setViewMode("list")}
                 size="icon"
+                className="focus-visible:ring-1 focus-visible:ring-offset-0"
               >
                 <List className="h-4 w-4" />
               </Button>
             </div>
           </motion.div>
 
-          <motion.div className="flex flex-wrap gap-2">
-            {allTags.map(tag => (
-              <Badge
-                key={tag}
-                variant={selectedTag === tag ? "default" : "outline"}
-                className="cursor-pointer"
-                onClick={() => setSelectedTag(tag)}
-              >
-                {tag}
-              </Badge>
-            ))}
+          {/* Tags ScrollArea */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="relative"
+          >
+            {/* Add fade effects on edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10" />
+            
+            {/* Scrollable container with added padding */}
+            <div className="overflow-x-auto flex-nowrap hide-scrollbar px-4">
+              <div className="flex gap-2 pb-2">
+                {allTags.map(tag => (
+                  <Badge
+                    key={tag}
+                    variant={selectedTag === tag ? "default" : "outline"}
+                    className="cursor-pointer whitespace-nowrap hover:bg-accent/50"
+                    onClick={() => setSelectedTag(tag)}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           </motion.div>
+
         </div>
 
         {/* Posts Grid/List */}
@@ -208,7 +332,7 @@ export const BlogArchive = () => {
                 post={post}
                 viewMode={viewMode}
                 onShare={() => handleShare(post)}
-                onClick={() => navigate(`/blog/${post.id}`)}
+                onClick={() => navigate(`/blog/${post.slug || slugify(post.title)}`)}
               />
             ))}
           </motion.div>
@@ -216,89 +340,24 @@ export const BlogArchive = () => {
       </div>
     </section>
   );
-
-  // Update BlogCard props interface
-  interface BlogCardProps {
-    post: BlogPost;
-    viewMode: "grid" | "list";
-    onShare: () => void;
-    onClick: () => void;
-  }
-
-  const BlogCard: React.FC<BlogCardProps> = ({ post, viewMode, onShare, onClick }) => {
-    return (
-      <motion.div
-        layout
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        className={viewMode === "grid" ? "" : "max-w-3xl mx-auto"}
-      >
-        <Card
-          className={`group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl ${
-            viewMode === "list" ? "flex" : ""
-          }`}
-          onClick={() => navigate(`/blog/${encodeURIComponent(post.slug || slugify(post.title))}`)}
-        >
-          <div className={`
-            aspect-video overflow-hidden
-            ${viewMode === "list" ? "w-1/3" : ""}
-          `}>
-            <img
-              src={post.coverImage || "https://images.unsplash.com/photo-1587620962725-abab7fe55159"}
-              alt={post.title}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-            />
-          </div>
-          
-          <div className={`
-            flex flex-col justify-between
-            ${viewMode === "list" ? "w-2/3 p-6" : "p-6"}
-          `}>
-            <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                {new Date(post.publishedAt).toLocaleDateString()}
-              </span>
-              <span className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                {post.author}
-              </span>
-            </div>
-            <h3 className="mb-2 text-xl font-semibold transition-colors group-hover:text-primary">
-              {post.title}
-            </h3>
-            <p className="mb-4 text-muted-foreground">
-              {post.excerpt}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs text-accent-foreground"
-                >
-                  <Tag className="h-3 w-3" />
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4"
-              onClick={(e) => {
-                e.stopPropagation();
-                onShare();
-              }}
-            >
-              <Share className="h-4 w-4" />
-              Share
-            </Button>
-          </div>
-        </Card>
-      </motion.div>
-    );
-  };
 };
+
+// Add this CSS either in your global CSS file or as a style tag
+const styles = `
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;            /* Chrome, Safari and Opera */
+  }
+`;
+
+// Add the styles to the document
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+}
 
 export default BlogArchive;
