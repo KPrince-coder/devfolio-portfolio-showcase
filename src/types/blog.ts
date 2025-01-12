@@ -1,5 +1,6 @@
 export interface BlogPost {
   id: string;
+  slug: string;
   title: string;
   excerpt: string;
   content: string;
@@ -7,10 +8,12 @@ export interface BlogPost {
   author: string;
   publishedAt: string;
   tags: string[];
+  modifiedAt?: string;
 }
 
 export interface BlogPostResponse {
   id: string;
+  slug: string;
   title: string;
   excerpt?: string;
   content: string;
