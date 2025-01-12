@@ -121,10 +121,11 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
     });
   };
 
-  // Add reading time calculation
+  // Update reading time calculation to be more accurate
   const calculateReadingTime = (content: string) => {
     const wordsPerMinute = 200;
-    const words = content.split(/\s+/).length;
+    const textContent = content.replace(/<[^>]*>/g, ''); // Remove HTML tags
+    const words = textContent.trim().split(/\s+/).length;
     const minutes = Math.ceil(words / wordsPerMinute);
     return `${minutes} min read`;
   };
@@ -240,88 +241,84 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
           </div>
         </nav>
 
-        {/* Hero Section */}
-        <header className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
-          {post.coverImage && (
-            <motion.div 
-              initial={{ scale: 1.1, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.7 }}
-              className="absolute inset-0 z-0"
-            >
-              <div className="relative h-full">
-                <img
-                  src={post.coverImage}
-                  alt={post.title}
-                  className="h-full w-full object-cover"
-                  style={{ objectPosition: 'center' }}
-                />
-                <div 
-                  className="absolute inset-0"
-                  style={{
-                    background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%)',
-                    mixBlendMode: 'multiply'
-                  }}
-                />
-              </div>
-            </motion.div>
-          )}
-          
-          <div className="relative z-10 container mx-auto px-4">
-            <motion.div
+        {/* Enhanced Header Section with Title and Meta */}
+        <header className="container mx-auto px-4 pt-12 pb-8 relative z-10">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="max-w-4xl mx-auto text-center space-y-6"
+          >
+            <motion.h1
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="max-w-4xl mx-auto text-center"
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-tight"
             >
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-foreground">
-                {post.title}
-              </h1>
-              
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="flex flex-wrap items-center justify-center gap-6 text-muted-foreground"
-              >
-                <span className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  {new Date(post.publishedAt).toLocaleDateString()}
-                </span>
-                <span className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  {post.author}
-                </span>
-              </motion.div>
+              {post.title}
+            </motion.h1>
+
+            <motion.div
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm text-muted-foreground"
+            >
+              <span className="flex items-center gap-2 hover:text-primary transition-colors">
+                <User className="h-4 w-4" />
+                {post.author}
+              </span>
+              <span className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                {formatDate(post.publishedAt)}
+              </span>
             </motion.div>
-          </div>
+          </motion.div>
         </header>
 
-        {/* Add reading time and date info */}
-        <div className="container mx-auto px-4 -mt-16 relative z-10">
-          <div className="bg-card rounded-lg p-6 flex flex-wrap gap-4 justify-center items-center shadow-lg">
-            <span className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              {formatDate(post.publishedAt)}
-            </span>
-            <span className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              {post.author}
-            </span>
-            <span className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              {calculateReadingTime(post.content)}
-            </span>
-          </div>
-        </div>
+        {/* Hero Image Section */}
+        {post.coverImage && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="container mx-auto px-4 mb-8"
+          >
+            <div className="relative max-w-5xl mx-auto aspect-[21/9] overflow-hidden rounded-lg shadow-2xl">
+              <img
+                src={post.coverImage}
+                alt={post.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </motion.div>
+        )}
 
-        {/* Main Content */}
+        {/* Simplified Reading Time Bar */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm border-y"
+        >
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-center py-2">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                Estimation:{" "}
+                {calculateReadingTime(post.content)}
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Main Content and Sidebar */}
         <main className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+            {/* Content */}
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.7 }}
               className="lg:col-span-3"
             >
               <div
