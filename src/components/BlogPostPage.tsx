@@ -2,14 +2,17 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, Tag, User, Share, ArrowLeft, ArrowRight } from "lucide-react";
-import { BlogPost } from "@/types/blog";
+import { Clock, Tag, User, Share, ArrowLeft, ArrowRight, Home } from "lucide-react";
+import { BlogPost, BlogPostResponse } from "@/types/blog";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { slugify } from '@/utils/slugify';
+
+
 
 interface BlogPostPageProps {
   postId: string;
@@ -19,18 +22,41 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
   const navigate = useNavigate();
   const [isCopied, setIsCopied] = useState(false);
 
-  // Fetch current post
-  const { data: post, isLoading: isPostLoading } = useQuery({
+  const { data: post, isLoading: isPostLoading, error } = useQuery<BlogPost>({
     queryKey: ['blog-post', postId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First try to find by slug
+      let { data, error } = await supabase
         .from('blogs')
         .select('*')
-        .eq('id', postId)
-        .single();
+        .eq('published', true)
+        .eq('slug', postId)
+        .maybeSingle();
+
+      // If not found by slug, try by ID
+      if (!data) {
+        ({ data, error } = await supabase
+          .from('blogs')
+          .select('*')
+          .eq('published', true)
+          .eq('id', postId)
+          .maybeSingle());
+      }
 
       if (error) throw error;
-      return data;
+      if (!data) throw new Error('Post not found');
+
+      return {
+        id: data.id,
+        slug: data.slug || slugify(data.title),
+        title: data.title,
+        excerpt: data.excerpt || "",
+        content: data.content,
+        coverImage: data.coverimage || data.image_url || "",
+        author: data.author || "Anonymous",
+        publishedAt: data.publishedat || data.created_at,
+        tags: data.tags || []
+      };
     }
   });
 
@@ -55,8 +81,57 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
     enabled: !!post
   });
 
+  // Fetch related posts based on tags
+  const { data: relatedPosts } = useQuery<BlogPost[]>({
+    queryKey: ['related-posts', post?.tags],
+    queryFn: async () => {
+      if (!post?.tags?.length) return [];
+
+      const { data } = await supabase
+        .from('blogs')
+        .select('*')
+        .eq('published', true)
+        .neq('id', post.id)
+        .contains('tags', post.tags)
+        .order('publishedat', { ascending: false })
+        .limit(3)
+        .returns<BlogPostResponse[]>();
+
+      return (data || []).map(post => ({
+        id: post.id,
+        slug: post.slug || slugify(post.title),
+        title: post.title,
+        excerpt: post.excerpt || "",
+        content: post.content,
+        coverImage: post.coverimage || post.image_url || "",
+        author: post.author || "Anonymous",
+        publishedAt: post.publishedat || post.created_at,
+        tags: post.tags || []
+      }));
+    },
+    enabled: !!post?.tags?.length
+  });
+
+  // Function to format date
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // Add reading time calculation
+  const calculateReadingTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const words = content.split(/\s+/).length;
+    const minutes = Math.ceil(words / wordsPerMinute);
+    return `${minutes} min read`;
+  };
+
+  // Update sharing function to use slug
   const handleShare = async (platform: 'copy' | 'twitter' | 'facebook' | 'linkedin') => {
-    const url = `${window.location.origin}/blog/${postId}`;
+    const url = `${window.location.origin}/blog/${post?.slug || postId}`;
     const title = post?.title || '';
 
     switch (platform) {
@@ -126,13 +201,22 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
         {/* Navigation Bar */}
         <nav className="sticky top-0 z-50 backdrop-blur-lg border-b border-border/40">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link 
-              to="/archive"
-              className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Archive
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link 
+                to="/"
+                className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
+              >
+                <Home className="h-4 w-4" />
+                Home
+              </Link>
+              <Link 
+                to="/archive"
+                className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Archive
+              </Link>
+            </div>
             <div className="flex items-center gap-4">
               {adjacentPosts?.prev && (
                 <Button
@@ -157,20 +241,29 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
         </nav>
 
         {/* Hero Section */}
-        <header className="relative py-20 overflow-hidden">
-          {post.coverimage && (
+        <header className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
+          {post.coverImage && (
             <motion.div 
               initial={{ scale: 1.1, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.7 }}
               className="absolute inset-0 z-0"
             >
-              <img
-                src={post.coverimage}
-                alt={post.title}
-                className="h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background" />
+              <div className="relative h-full">
+                <img
+                  src={post.coverImage}
+                  alt={post.title}
+                  className="h-full w-full object-cover"
+                  style={{ objectPosition: 'center' }}
+                />
+                <div 
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%)',
+                    mixBlendMode: 'multiply'
+                  }}
+                />
+              </div>
             </motion.div>
           )}
           
@@ -193,7 +286,7 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
               >
                 <span className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  {new Date(post.publishedat).toLocaleDateString()}
+                  {new Date(post.publishedAt).toLocaleDateString()}
                 </span>
                 <span className="flex items-center gap-2">
                   <User className="h-4 w-4" />
@@ -203,6 +296,24 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
             </motion.div>
           </div>
         </header>
+
+        {/* Add reading time and date info */}
+        <div className="container mx-auto px-4 -mt-16 relative z-10">
+          <div className="bg-card rounded-lg p-6 flex flex-wrap gap-4 justify-center items-center shadow-lg">
+            <span className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              {formatDate(post.publishedAt)}
+            </span>
+            <span className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              {post.author}
+            </span>
+            <span className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              {calculateReadingTime(post.content)}
+            </span>
+          </div>
+        </div>
 
         {/* Main Content */}
         <main className="container mx-auto px-4 py-12">
@@ -285,9 +396,89 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
         <section className="bg-accent/10 py-20">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">More Posts</h2>
-            {/* Add related posts grid here */}
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {relatedPosts?.map((relatedPost) => (
+                <motion.div
+                  key={relatedPost.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Card
+                    className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl h-full flex flex-col"
+                    onClick={() => navigate(`/blog/${relatedPost.slug || slugify(relatedPost.title)}`)}
+                  >
+                    <div className="aspect-video overflow-hidden">
+                      <img
+                        src={relatedPost.coverImage || "https://images.unsplash.com/photo-1587620962725-abab7fe55159"}
+                        alt={relatedPost.title}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                    </div>
+                    <div className="p-6 flex-grow flex flex-col">
+                      <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {formatDate(relatedPost.publishedAt)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <User className="h-4 w-4" />
+                          {relatedPost.author}
+                        </span>
+                      </div>
+                      <h3 className="mb-2 text-xl font-semibold transition-colors group-hover:text-primary line-clamp-2">
+                        {relatedPost.title}
+                      </h3>
+                      <p className="mb-4 text-muted-foreground line-clamp-3">
+                        {relatedPost.excerpt}
+                      </p>
+                      <div className="mt-auto flex flex-wrap gap-2">
+                        {relatedPost.tags?.map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm"
+                          >
+                            <Tag className="mr-1 h-3 w-3" />
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+            <div className="mt-8 text-center">
+              <Link 
+                to="/archive"
+                className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
+              >
+                View all posts
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </section>
+
+        {/* Add table of contents for long posts */}
+        {post.content && (
+          <div className="fixed top-24 right-4 w-64 hidden xl:block">
+            <Card className="p-4">
+              <h4 className="font-semibold mb-2">Table of Contents</h4>
+              <nav className="space-y-1">
+                {Array.from(post.content.matchAll(/<h[2-3][^>]*>(.*?)<\/h[2-3]>/g)).map((match, index) => (
+                  <a
+                    key={index}
+                    href={`#${slugify(match[1])}`}
+                    className="block text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {match[1]}
+                  </a>
+                ))}
+              </nav>
+            </Card>
+          </div>
+        )}
       </motion.article>
     </AnimatePresence>
   );
