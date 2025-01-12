@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,7 @@ export const BlogManager = () => {
         coverImage: post.coverimage || post.image_url || "",
         author: post.author || "",
         publishedAt: post.publishedat || post.created_at,
+        modifiedAt: post.updated_at,
         tags: post.tags || []
       }));
     }

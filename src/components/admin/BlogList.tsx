@@ -1,6 +1,7 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash, Tag } from "lucide-react";
+import { Edit, Trash, Tag, Calendar } from "lucide-react";
 import { BlogPost } from "@/types/blog";
 
 interface BlogListProps {
@@ -51,6 +52,17 @@ export const BlogList = ({ posts, onEdit, onDelete }: BlogListProps) => {
                 {tag}
               </span>
             ))}
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            <p className="text-sm text-muted-foreground">
+              Published: {new Date(post.publishedAt).toLocaleString()}
+            </p>
+            {post.modifiedAt && (
+              <p className="text-sm text-muted-foreground">
+                Modified: {new Date(post.modifiedAt).toLocaleString()}
+              </p>
+            )}
           </div>
         </Card>
       ))}

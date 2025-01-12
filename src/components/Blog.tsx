@@ -1,15 +1,18 @@
 import { motion } from "framer-motion";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Clock, Tag, User } from "lucide-react";
+import { Clock, Tag, User, Share } from "lucide-react";
 import { useState } from "react";
 import { BlogPost } from "@/types/blog";
 import { BlogModal } from "./BlogModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Link, useNavigate } from "react-router-dom";
 
 export const Blog = () => {
+  const navigate = useNavigate();
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const [showMore, setShowMore] = useState(false);
 
   const { data: blogPosts, isLoading } = useQuery({
     queryKey: ['blog-posts'],
@@ -41,11 +44,35 @@ export const Blog = () => {
     }
   });
 
+  const handlePostClick = (post: BlogPost) => {
+    window.open(`/blog/${post.id}`, '_blank'); // Open in new tab
+  };
+
   if (isLoading) {
     return (
       <section id="blog" className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center">Loading blog posts...</div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!blogPosts || blogPosts.length === 0) {
+    return (
+      <section id="blog" className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col items-center justify-center h-screen">
+            <img
+              src="https://images.unsplash.com/photo-1587620962725-abab7fe55159"
+              alt="No blogs available"
+              className="h-40 w-40 object-cover rounded-full"
+            />
+            <h2 className="mt-4 text-2xl font-bold">No blogs available</h2>
+            <p className="mt-2 text-muted-foreground">
+              We're sorry, but it looks like there are no blogs available at the moment.
+            </p>
+          </div>
         </div>
       </section>
     );
@@ -70,7 +97,7 @@ export const Blog = () => {
         </motion.div>
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {blogPosts?.map((post) => (
+          {(showMore ? blogPosts : blogPosts?.slice(0, 3))?.map((post) => (
             <motion.div
               key={post.id}
               initial={{ opacity: 0, scale: 0.9 }}
@@ -80,7 +107,7 @@ export const Blog = () => {
             >
               <Card
                 className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl"
-                onClick={() => setSelectedPost(post)}
+                onClick={() => handlePostClick(post)}
               >
                 <div className="aspect-video overflow-hidden">
                   <img
@@ -94,9 +121,9 @@ export const Blog = () => {
                     <span className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
                       {new Date(post.publishedAt).toLocaleDateString()}
-                    </span>
+                      </span>
                     <span className="flex items-center gap-1">
-                      <User className="h-4 w-4" />
+                      <User   className="h-4 w-4" />
                       {post.author}
                     </span>
                   </div>
@@ -117,18 +144,42 @@ export const Blog = () => {
                       </span>
                     ))}
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4"
+                    onClick={() => {
+                      const url = `${window.location.href}#${post.id}`;
+                      navigator.clipboard.writeText(url);
+                      alert("Link copied to clipboard!");
+                    }}
+                  >
+                    <Share className="h-4 w-4" />
+                    Share
+                  </Button>
                 </div>
               </Card>
             </motion.div>
           ))}
         </div>
+        <div className="mt-8 flex flex-col items-center gap-4">
+          {blogPosts?.length > 3 && (
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setShowMore(!showMore)}
+            >
+              {showMore ? "Show less" : "Show more"}
+            </Button>
+          )}
+          <Link 
+            to="/archive" 
+            className="text-primary hover:text-primary-dark transition-colors"
+          >
+            View all blog posts
+          </Link>
+        </div>
       </div>
-
-      <BlogModal
-        post={selectedPost}
-        isOpen={!!selectedPost}
-        onClose={() => setSelectedPost(null)}
-      />
     </section>
   );
 };

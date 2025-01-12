@@ -463,7 +463,7 @@ import css from "highlight.js/lib/languages/css";
 import js from "highlight.js/lib/languages/javascript";
 import ts from "highlight.js/lib/languages/typescript";
 import html from "highlight.js/lib/languages/xml";
-import Toolbar from "../Toolbar"; // Custom toolbar component for formatting options
+import Toolbar from "./Toolbar"; // Custom toolbar component for formatting options
 
 // Register syntax highlighting languages
 lowlight.registerLanguage("html", html);

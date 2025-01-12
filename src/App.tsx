@@ -9,6 +9,14 @@ import { toast } from "@/components/ui/use-toast";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
+import Archive from "./pages/Archive";
+import { useParams } from "react-router-dom";
+import BlogPage from "./pages/BlogPage";
+
+const BlogPageWrapper = () => {
+  const { postId } = useParams();
+  return <BlogPage postId={postId} />;
+};
 
 const queryClient = new QueryClient();
 
@@ -90,6 +98,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/archive" element={<Archive />} />
+            <Route path="/blog/:postId" element={<BlogPageWrapper />} />
             <Route path="/login" element={<Login />} />
             <Route
               path="/admin"
