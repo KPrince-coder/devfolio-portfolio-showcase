@@ -1,8 +1,8 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash, Tag, Calendar } from "lucide-react";
+import { Edit, Trash, Tag, Calendar, Link } from "lucide-react";
 import { BlogPost } from "@/types/blog";
+import { toast } from "sonner";
 
 interface BlogListProps {
   posts: BlogPost[];
@@ -11,6 +11,12 @@ interface BlogListProps {
 }
 
 export const BlogList = ({ posts, onEdit, onDelete }: BlogListProps) => {
+  const handleCopyLink = (post: BlogPost) => {
+    const url = `${window.location.origin}/blog/${encodeURIComponent(post.slug)}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Blog link copied to clipboard!");
+  };
+
   return (
     <div className="space-y-4">
       {posts?.map((post: BlogPost) => (
@@ -18,6 +24,14 @@ export const BlogList = ({ posts, onEdit, onDelete }: BlogListProps) => {
           <div className="mb-2 flex items-center justify-between">
             <h3 className="font-medium">{post.title}</h3>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleCopyLink(post)}
+                title="Copy blog link"
+              >
+                <Link className="h-4 w-4" />
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -63,6 +77,11 @@ export const BlogList = ({ posts, onEdit, onDelete }: BlogListProps) => {
                 Modified: {new Date(post.modifiedAt).toLocaleString()}
               </p>
             )}
+          </div>
+          <div className="mt-2 text-sm text-muted-foreground space-y-1">
+            <p>ID: {post.id}</p>
+            <p>Slug: {post.slug}</p>
+            <p>URL: /blog/{encodeURIComponent(post.slug)}</p>
           </div>
         </Card>
       ))}
