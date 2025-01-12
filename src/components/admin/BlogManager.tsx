@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { BlogPost } from "@/types/blog";
 import { BlogForm } from "./BlogForm";
 import { BlogList } from "./BlogList";
-import { checkAuth } from "@/utils/blogUtils";
+import { checkAuth, generateUniqueSlug, slugify } from "@/utils/blogUtils";
 
 interface SupabaseBlogPost {
   id: string;
@@ -66,7 +65,8 @@ export const BlogManager = () => {
         author: post.author || "",
         publishedAt: post.publishedat || post.created_at,
         modifiedAt: post.updated_at,
-        tags: post.tags || []
+        tags: post.tags || [],
+        slug: slugify(post.title)
       }));
     }
   });
@@ -82,6 +82,15 @@ export const BlogManager = () => {
     console.log("Submitting blog post...");
 
     try {
+      // Get existing slugs for uniqueness check
+      const { data: existingSlugs } = await supabase
+        .from('blogs')
+        .select('slug')
+        .not('id', 'eq', postData.id || '');
+
+      const baseSlug = slugify(postData.title || '');
+      const slug = generateUniqueSlug(baseSlug, (existingSlugs || []).map(p => p.slug || ''));
+
       const { error } = await supabase
         .from('blogs')
         .insert([{
@@ -94,6 +103,7 @@ export const BlogManager = () => {
           tags: postData.tags,
           coverimage: postData.coverImage,
           publishedat: new Date().toISOString(),
+          slug: slug,
         }]);
 
       if (error) throw error;
@@ -128,6 +138,15 @@ export const BlogManager = () => {
     console.log("Updating blog post...");
 
     try {
+      // Get existing slugs for uniqueness check
+      const { data: existingSlugs } = await supabase
+        .from('blogs')
+        .select('slug')
+        .not('id', 'eq', postData.id || '');
+
+      const baseSlug = slugify(postData.title || '');
+      const slug = generateUniqueSlug(baseSlug, (existingSlugs || []).map(p => p.slug || ''));
+
       const { error } = await supabase
         .from('blogs')
         .update({
@@ -140,6 +159,7 @@ export const BlogManager = () => {
           tags: postData.tags,
           coverimage: postData.coverImage,
           updated_at: new Date().toISOString(),
+          slug: slug,
         })
         .eq('id', isEditing);
 
