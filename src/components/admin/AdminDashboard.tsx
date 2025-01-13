@@ -1,78 +1,3 @@
-// import { useState } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import { Button } from "@/components/ui/button";
-// import { LogOut } from "lucide-react";
-// import { supabase } from "@/integrations/supabase/client";
-// import { useToast } from "@/components/ui/use-toast";
-// import { MessageList } from "./MessageList";
-// import { ProjectManager } from "./ProjectManager";
-// import { BlogManager } from "./BlogManager";
-// import { ProfileManager } from "./ProfileManager";
-
-// export const AdminDashboard = () => {
-//   const [activeTab, setActiveTab] = useState("messages");
-//   const navigate = useNavigate();
-//   const { toast } = useToast();
-
-//   const handleLogout = async () => {
-//     const { error } = await supabase.auth.signOut();
-//     if (error) {
-//       toast({
-//         variant: "destructive",
-//         title: "Error",
-//         description: "Failed to sign out",
-//       });
-//       return;
-//     }
-//     toast({
-//       title: "Signed out",
-//       description: "You have been successfully signed out",
-//     });
-//     navigate("/login");
-//   };
-
-//   return (
-//     <div className="container mx-auto py-8">
-//       <div className="flex justify-between items-center mb-8">
-//         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-//         <Button variant="outline" onClick={handleLogout}>
-//           <LogOut className="mr-2 h-4 w-4" />
-//           Sign out
-//         </Button>
-//       </div>
-      
-//       <Tabs value={activeTab} onValueChange={setActiveTab}>
-//         <TabsList className="grid w-full grid-cols-4">
-//           <TabsTrigger value="messages">Messages</TabsTrigger>
-//           <TabsTrigger value="projects">Projects</TabsTrigger>
-//           <TabsTrigger value="blog">Blog</TabsTrigger>
-//           <TabsTrigger value="profile">Profile</TabsTrigger>
-//         </TabsList>
-        
-//         <TabsContent value="messages">
-//           <MessageList />
-//         </TabsContent>
-        
-//         <TabsContent value="projects">
-//           <ProjectManager />
-//         </TabsContent>
-        
-//         <TabsContent value="blog">
-//           <BlogManager />
-//         </TabsContent>
-        
-//         <TabsContent value="profile">
-//           <ProfileManager />
-//         </TabsContent>
-//       </Tabs>
-//     </div>
-//   );
-// };
-
-
-
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -88,7 +13,11 @@ import {
   LayoutDashboard,
   Bell,
   Zap,
-  TrendingUp
+  TrendingUp,
+  BarChart2, 
+  Users, 
+  Eye, 
+  ThumbsUp
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -100,6 +29,7 @@ import { ProjectManager } from "./ProjectManager";
 import { BlogManager } from "./BlogManager";
 import { ProfileManager } from "./ProfileManager";
 import { TimelineManager } from "./TimelineManager";
+import { AnalyticsDashboard } from './Analytics/AnalyticsDashboard';
 
 const DashboardStats = () => {
   const [stats, setStats] = useState({
@@ -236,12 +166,79 @@ export const AdminDashboard = () => {
 
   const tabs = [
     { value: "dashboard", icon: LayoutDashboard, label: "Dashboard", color: "text-indigo-600" },
+    { value: "analytics", icon: BarChart2, label: "Analytics", color: "text-purple-600" }, // Add analytics tab
     { value: "messages", icon: MessageCircle, label: "Messages", color: "text-blue-600" },
     { value: "projects", icon: Laptop, label: "Projects", color: "text-green-600" },
     { value: "blog", icon: Newspaper, label: "Blog", color: "text-pink-600" },
     { value: "profile", icon: User, label: "Profile", color: "text-purple-600" },
     { value: "timeline", icon: Clock, label: "Timeline", color: "text-orange-600" }
   ];
+
+  // Add analytics summary stats
+  const AnalyticsSummary = () => {
+    const stats = [
+      {
+        label: "Total Visitors",
+        value: "12.5K",
+        trend: "+12%",
+        icon: Users,
+        color: "bg-indigo-600",
+      },
+      {
+        label: "Page Views",
+        value: "48.2K",
+        trend: "+18%",
+        icon: Eye,
+        color: "bg-pink-600",
+      },
+      {
+        label: "Engagement Rate",
+        value: "6.8%",
+        trend: "+2.3%",
+        icon: ThumbsUp,
+        color: "bg-green-600",
+      },
+      {
+        label: "Avg. Session",
+        value: "3m 45s",
+        trend: "+0.8%",
+        icon: Clock,
+        color: "bg-orange-600",
+      },
+    ];
+
+    const AnalyticsCard = ({ title, value, trend, icon, color }: { 
+      title: string;
+      value: string;
+      trend: number;
+      icon: React.ReactNode;
+      color: string;
+    }) => (
+      <div className={`${color} p-4 rounded-lg text-white`}>
+        <div className="flex justify-between items-center">
+          {icon}
+          <span className={trend > 0 ? "text-green-300" : "text-red-300"}>{trend}%</span>
+        </div>
+        <h3 className="mt-2 text-xl font-bold">{value}</h3>
+        <p className="text-sm opacity-80">{title}</p>
+      </div>
+    );
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        {stats.map((stat) => (
+          <AnalyticsCard
+            key={stat.label}
+            title={stat.label}
+            value={stat.value}
+            trend={parseFloat(stat.trend)}
+            icon={<stat.icon className="h-6 w-6 text-white" />}
+            color={stat.color}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
     <TooltipProvider>
@@ -383,6 +380,7 @@ export const AdminDashboard = () => {
                       <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
                         Quick Overview
                       </h2>
+                      <AnalyticsSummary />
                       <DashboardStats />
                       
                       {/* Additional Dashboard Widgets */}
@@ -427,6 +425,7 @@ export const AdminDashboard = () => {
                       </div>
                     </motion.div>
                   )}
+                  {activeTab === "analytics" && <AnalyticsDashboard />}
                   {activeTab === "messages" && <MessageList />}
                   {activeTab === "projects" && <ProjectManager />}
                   {activeTab === "blog" && <BlogManager />}
