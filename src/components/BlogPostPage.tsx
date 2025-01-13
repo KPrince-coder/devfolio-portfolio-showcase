@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, Tag, User, Share, ArrowLeft, ArrowRight, Home } from "lucide-react";
+import { Clock, Tag, User, ArrowLeft, ArrowRight, Home } from "lucide-react";
 import { BlogPost, BlogPostResponse } from "@/types/blog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { slugify } from '@/utils/slugify';
 import { ShareDialog } from "@/components/ui/share-dialog";
-
+import { cn } from "@/lib/utils";
 
 
 interface BlogPostPageProps {
@@ -128,6 +128,39 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
     return `${minutes} min read`;
   };
 
+  // Process content to add IDs to headings and extract TOC items
+  const processContent = (content: string) => {
+    const headings: { id: string; title: string; level: number }[] = [];
+    
+    // Add IDs to headings and collect TOC items
+    const processedContent = content.replace(
+      /<h([2-3])[^>]*>(.*?)<\/h[2-3]>/g,
+      (match, level, title) => {
+        const plainText = title.replace(/<[^>]*>/g, '');
+        const id = slugify(plainText);
+        headings.push({ id, title: plainText, level: parseInt(level, 10) });
+        return `<h${level} id="${id}">${title}</h${level}>`;
+      }
+    );
+
+    return { processedContent, headings };
+  };
+
+  // Smooth scroll to heading
+  const scrollToHeading = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 100; // Adjust based on your header height
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    }
+  };
+
   if (isPostLoading) {
     return (
       <div className="container mx-auto px-4 py-20">
@@ -164,6 +197,8 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
     );
   }
 
+  const { processedContent, headings } = processContent(post.content);
+
   return (
     <AnimatePresence mode="wait">
       <motion.article
@@ -199,6 +234,7 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
                   size="sm"
                   onClick={() => navigate(`/blog/${adjacentPosts.prev.id}`)}
                 >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
                   Previous Post
                 </Button>
               )}
@@ -209,6 +245,7 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
                   onClick={() => navigate(`/blog/${adjacentPosts.next.id}`)}
                 >
                   Next Post
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
             </div>
@@ -293,11 +330,11 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.7 }}
-              className="lg:col-span-3"
+              className="lg:col-span-3 relative" // Added relative positioning
             >
               <div
                 className="prose prose-lg prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                dangerouslySetInnerHTML={{ __html: processedContent }}
               />
             </motion.div>
 
@@ -306,7 +343,7 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="space-y-6 lg:sticky lg:top-24"
+              className="space-y-6 lg:sticky lg:top-24 lg:self-start" // Added self-start
             >
               <Card className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Share this post</h3>
@@ -404,19 +441,27 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
           </div>
         </section>
 
-        {/* Add table of contents for long posts */}
-        {post.content && (
+        {/* Updated Table of Contents */}
+        {headings.length > 0 && (
           <div className="fixed top-24 right-4 w-64 hidden xl:block">
-            <Card className="p-4">
-              <h4 className="font-semibold mb-2">Table of Contents</h4>
-              <nav className="space-y-1">
-                {Array.from(post.content.matchAll(/<h[2-3][^>]*>(.*?)<\/h[2-3]>/g)).map((match, index) => (
+            <Card className="p-4 bg-background/95 backdrop-blur-sm border-border/40">
+              <h4 className="font-semibold mb-4">Table of Contents</h4>
+              <nav className="space-y-2 max-h-[calc(100vh-12rem)] overflow-y-auto">
+                {headings.map((heading, index) => (
                   <a
                     key={index}
-                    href={`#${slugify(match[1])}`}
-                    className="block text-sm text-muted-foreground hover:text-primary transition-colors"
+                    href={`#${heading.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      scrollToHeading(heading.id);
+                    }}
+                    className={cn(
+                      "block text-sm text-muted-foreground hover:text-primary transition-colors py-1",
+                      heading.level === 3 && "pl-4",
+                      "hover:bg-accent/50 rounded px-2"
+                    )}
                   >
-                    {match[1]}
+                    {heading.title}
                   </a>
                 ))}
               </nav>
