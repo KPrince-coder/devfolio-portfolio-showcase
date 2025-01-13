@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {slugify} from "@/utils/slugify";
+import { Home } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface BlogCardProps {
   post: BlogPost;
@@ -196,149 +198,178 @@ export const BlogArchive = () => {
   }
 
   return (
-    <section id="blog-archive" className="py-20">
-      <div className="container mx-auto px-4">
-        {/* Header and Controls */}
-        <div className="mb-12 space-y-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <h2 className="text-4xl font-bold mb-4">Blog Archive</h2>
-            <p className="text-muted-foreground">Explore our collection of articles</p>
-          </motion.div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="min-h-screen bg-gradient-to-b from-background to-background/80"
+    >
+      {/* Updated Navigation Bar spacing */}
+      <nav className="sticky top-0 z-50 backdrop-blur-lg border-b border-border/40">
+        <div className="container mx-auto px-4 h-14 flex items-center">
+          <div className="flex items-center gap-4">
+            <Link 
+              to="/"
+              className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
+            >
+              <Home className="h-4 w-4" />
+              Home
+            </Link>
+            <span className="text-sm text-muted-foreground">
+              /
+            </span>
+            <span className="text-sm">
+              Blog Archive
+            </span>
+          </div>
+        </div>
+      </nav>
 
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
-          >
-            <Input
-              placeholder="Search posts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full focus-visible:ring-1 focus-visible:ring-offset-0"
-            />
-            
-            <Select value={selectedTag} onValueChange={setSelectedTag}>
-              <SelectTrigger className="focus-visible:ring-1 focus-visible:ring-offset-0">
-                <SelectValue placeholder="Select a tag" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border shadow-lg">
-                {allTags.map(tag => (
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          {/* Header and Controls */}
+          <div className="mb-12 space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center"
+            >
+              <h2 className="text-4xl font-bold mb-4">Blog Archive</h2>
+              <p className="text-muted-foreground">Explore our collection of articles</p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+            >
+              <Input
+                placeholder="Search posts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full focus-visible:ring-1 focus-visible:ring-offset-0"
+              />
+              
+              <Select value={selectedTag} onValueChange={setSelectedTag}>
+                <SelectTrigger className="focus-visible:ring-1 focus-visible:ring-offset-0">
+                  <SelectValue placeholder="Select a tag" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg">
+                  {allTags.map(tag => (
+                    <SelectItem 
+                      key={tag} 
+                      value={tag}
+                      className="focus:bg-accent focus:text-accent-foreground"
+                    >
+                      {tag.charAt(0).toUpperCase() + tag.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+                <SelectTrigger className="focus-visible:ring-1 focus-visible:ring-offset-0">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg">
                   <SelectItem 
-                    key={tag} 
-                    value={tag}
+                    value="latest"
                     className="focus:bg-accent focus:text-accent-foreground"
                   >
-                    {tag.charAt(0).toUpperCase() + tag.slice(1)}
+                    Latest First
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-              <SelectTrigger className="focus-visible:ring-1 focus-visible:ring-offset-0">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border shadow-lg">
-                <SelectItem 
-                  value="latest"
-                  className="focus:bg-accent focus:text-accent-foreground"
-                >
-                  Latest First
-                </SelectItem>
-                <SelectItem 
-                  value="oldest"
-                  className="focus:bg-accent focus:text-accent-foreground"
-                >
-                  Oldest First
-                </SelectItem>
-                <SelectItem 
-                  value="title"
-                  className="focus:bg-accent focus:text-accent-foreground"
-                >
-                  By Title
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="flex gap-2">
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                onClick={() => setViewMode("grid")}
-                size="icon"
-                className="focus-visible:ring-1 focus-visible:ring-offset-0"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                onClick={() => setViewMode("list")}
-                size="icon"
-                className="focus-visible:ring-1 focus-visible:ring-offset-0"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </motion.div>
-
-          {/* Tags ScrollArea */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="relative"
-          >
-            {/* Add fade effects on edges */}
-            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10" />
-            
-            {/* Scrollable container with added padding */}
-            <div className="overflow-x-auto flex-nowrap hide-scrollbar px-4">
-              <div className="flex gap-2 pb-2">
-                {allTags.map(tag => (
-                  <Badge
-                    key={tag}
-                    variant={selectedTag === tag ? "default" : "outline"}
-                    className="cursor-pointer whitespace-nowrap hover:bg-accent/50"
-                    onClick={() => setSelectedTag(tag)}
+                  <SelectItem 
+                    value="oldest"
+                    className="focus:bg-accent focus:text-accent-foreground"
                   >
-                    {tag}
-                  </Badge>
-                ))}
+                    Oldest First
+                  </SelectItem>
+                  <SelectItem 
+                    value="title"
+                    className="focus:bg-accent focus:text-accent-foreground"
+                  >
+                    By Title
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="flex gap-2">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "outline"}
+                  onClick={() => setViewMode("grid")}
+                  size="icon"
+                  className="focus-visible:ring-1 focus-visible:ring-offset-0"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "outline"}
+                  onClick={() => setViewMode("list")}
+                  size="icon"
+                  className="focus-visible:ring-1 focus-visible:ring-offset-0"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
 
+            {/* Tags ScrollArea */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="relative"
+            >
+              {/* Add fade effects on edges */}
+              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10" />
+              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10" />
+              
+              {/* Scrollable container with added padding */}
+              <div className="overflow-x-auto flex-nowrap hide-scrollbar px-4">
+                <div className="flex gap-2 pb-2">
+                  {allTags.map(tag => (
+                    <Badge
+                      key={tag}
+                      variant={selectedTag === tag ? "default" : "outline"}
+                      className="cursor-pointer whitespace-nowrap hover:bg-accent/50"
+                      onClick={() => setSelectedTag(tag)}
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+          </div>
+
+          {/* Posts Grid/List */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              // Include all filter states in the key
+              key={`${viewMode}-${searchQuery}-${selectedTag}-${sortBy}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className={
+                viewMode === "grid"
+                  ? "grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+                  : "space-y-8"
+              }
+            >
+              {filteredPosts.map((post) => (
+                <BlogCard
+                  key={post.id}
+                  post={post}
+                  viewMode={viewMode}
+                  onShare={() => handleShare(post)}
+                  onClick={() => navigate(`/blog/${post.slug || slugify(post.title)}`)}
+                />
+              ))}
+            </motion.div>
+          </AnimatePresence>
         </div>
-
-        {/* Posts Grid/List */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={viewMode}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className={
-              viewMode === "grid"
-                ? "grid gap-8 md:grid-cols-2 lg:grid-cols-3"
-                : "space-y-8"
-            }
-          >
-            {filteredPosts.map((post) => (
-              <BlogCard
-                key={post.id}
-                post={post}
-                viewMode={viewMode}
-                onShare={() => handleShare(post)}
-                onClick={() => navigate(`/blog/${post.slug || slugify(post.title)}`)}
-              />
-            ))}
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    </section>
+      </section>
+    </motion.div>
   );
 };
 
