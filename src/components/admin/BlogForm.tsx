@@ -2,31 +2,75 @@ import { useState, useCallback, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Plus, Upload, FileText, Image, Save, X, Tag, Code, Bold, Italic, Underline, Strikethrough } from "lucide-react";
+import { Plus, Upload, FileText, Image, Save, X, Tag, Code, Bold, Italic, Underline, Strikethrough, FilePenLine } from "lucide-react";
 import { handleFileUpload } from "@/utils/blogUtils";
 import { BlogPost } from "@/types/blog";
 import { RichTextEditor } from "./RichTextEditor";
 import mammoth from 'mammoth';
 import * as pdfjs from 'pdfjs-dist';
 import { debounce } from 'lodash';
-import { toast } from 'react-toastify';
+import { motion } from "framer-motion";
 import {cn} from '@/lib/utils';
+import { useToast } from "@/components/ui/use-toast";
 
-const FileUploadLabel = ({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) => (
-  <Label className="flex items-center gap-2 cursor-pointer group">
-    <Icon className="h-4 w-4 transition-colors group-hover:text-primary" />
-    <span className="group-hover:text-primary transition-colors">{children}</span>
+// Add FileUploadLabel component
+const FileUploadLabel = ({ children, icon: Icon }: { children: React.ReactNode; icon: React.ComponentType<any> }) => (
+  <Label className="flex items-center gap-2">
+    <Icon className="h-4 w-4" />
+    {children}
   </Label>
 );
 
+// Add new interface for file info
+interface UploadedFileInfo {
+  name: string;
+  type: string;
+  size: number;
+  timestamp: Date;
+}
+
 const FileUploadArea = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <div className={cn(
-    "relative border-2 border-dashed rounded-lg p-4 hover:border-primary transition-colors cursor-pointer",
-    "hover:bg-primary/5",
-    className
-  )}>
+  <div className={cn("relative border-2 border-dashed rounded-lg p-6 min-h-[200px] flex items-center justify-center", className)}>
     {children}
   </div>
+);
+
+// Add this new component for displaying file info
+const FileInfoCard = ({ fileInfo, onRemove }: { fileInfo: UploadedFileInfo; onRemove: () => void }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="mt-4 bg-muted/50 rounded-lg p-4 border border-dashed relative group"
+  >
+    <div className="flex items-start justify-between">
+      <div className="flex items-start space-x-3">
+        <div className="p-2 bg-primary/10 rounded-lg">
+          <FilePenLine className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <p className="font-medium text-sm truncate max-w-[200px]">{fileInfo.name}</p>
+          <div className="flex items-center space-x-2 mt-1 text-xs text-muted-foreground">
+            <span>{fileInfo.type.split('/')[1].toUpperCase()}</span>
+            <span>•</span>
+            <span>{(fileInfo.size / 1024).toFixed(1)} KB</span>
+            <span>•</span>
+            <span>{fileInfo.timestamp.toLocaleTimeString()}</span>
+          </div>
+        </div>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={onRemove}
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+    <div className="w-full bg-primary/10 h-1 rounded-full mt-3">
+      <div className="bg-primary h-full w-full rounded-full" />
+    </div>
+  </motion.div>
 );
 
 interface BlogFormProps {
@@ -35,8 +79,8 @@ interface BlogFormProps {
   onCancel: () => void;
   loading: boolean;
 }
-
 export const BlogForm = ({ initialData, onSubmit, onCancel, loading }: BlogFormProps) => {
+  const { toast } = useToast();
   const [post, setPost] = useState({
     title: initialData?.title || "",
     excerpt: initialData?.excerpt || "",
@@ -47,6 +91,7 @@ export const BlogForm = ({ initialData, onSubmit, onCancel, loading }: BlogFormP
   });
   const [tagInput, setTagInput] = useState("");
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<UploadedFileInfo | null>(null);
 
   const handleAddTag = () => {
     if (tagInput.trim()) {
@@ -117,6 +162,36 @@ export const BlogForm = ({ initialData, onSubmit, onCancel, loading }: BlogFormP
       handleAutoSave.cancel();
     };
   }, [handleAutoSave]);
+
+  // Update the file handling in your import content section:
+  const handleFileImport = async (file: File) => {
+    try {
+      let content = '';
+      
+      if (file.type === 'text/plain') {
+        content = await handleTextImport(file);
+      } else if (file.type === 'application/msword' || 
+                file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        content = await handleWordImport(file);
+      } else if (file.type === 'application/pdf') {
+        content = await handlePDFImport(file);
+      }
+
+      if (content) {
+        handleContentChange(content);
+        setUploadedFile({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          timestamp: new Date(),
+        });
+        toast({ description: 'Content imported successfully' });
+      }
+    } catch (error) {
+      console.error('Import failed:', error);
+      toast({ variant: "destructive", description: 'Failed to import content' });
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 p-4 max-w-4xl mx-auto">
@@ -223,39 +298,25 @@ export const BlogForm = ({ initialData, onSubmit, onCancel, loading }: BlogFormP
           <Input
             type="file"
             accept=".txt,.doc,.docx,.pdf"
-            onChange={async (e) => {
+            onChange={(e) => {
               const file = e.target.files?.[0];
-              if (!file) return;
-
-              try {
-                let content = '';
-                
-                if (file.type === 'text/plain') {
-                  content = await handleTextImport(file);
-                } else if (file.type === 'application/msword' || 
-                          file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-                  content = await handleWordImport(file);
-                } else if (file.type === 'application/pdf') {
-                  content = await handlePDFImport(file);
-                }
-
-                if (content) {
-                  handleContentChange(content);
-                  toast.success('Content imported successfully');
-                }
-              } catch (error) {
-                console.error('Import failed:', error);
-                toast.error('Failed to import content');
-              }
+              if (file) handleFileImport(file);
             }}
             disabled={loading}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
-          <div className="text-center text-muted-foreground">
-            <FileText className="mx-auto h-8 w-8 mb-2" />
-            <p>Drop your file here or click to browse</p>
-            <p className="text-xs mt-1">Supports TXT, DOC, DOCX, PDF</p>
-          </div>
+          {uploadedFile ? (
+            <FileInfoCard
+              fileInfo={uploadedFile}
+              onRemove={() => setUploadedFile(null)}
+            />
+          ) : (
+            <div className="text-center text-muted-foreground">
+              <FileText className="mx-auto h-8 w-8 mb-2" />
+              <p>Drop your file here or click to browse</p>
+              <p className="text-xs mt-1">Supports TXT, DOC, DOCX, PDF</p>
+            </div>
+          )}
         </FileUploadArea>
       </div>
 
