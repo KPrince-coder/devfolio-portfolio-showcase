@@ -243,15 +243,198 @@ export type Database = {
         }
         Relationships: []
       }
-
-      
+      page_views: {
+        Row: {
+          id: string
+          path: string
+          user_agent: string | null
+          referrer: string | null
+          timestamp: string
+          session_id: string | null
+          user_id: string | null
+          ip_address: string | null
+          country: string | null
+          device_type: string | null
+          browser: string | null
+        }
+        Insert: {
+          id?: string
+          path: string
+          user_agent?: string | null
+          referrer?: string | null
+          timestamp?: string
+          session_id?: string | null
+          user_id?: string | null
+          ip_address?: string | null
+          country?: string | null
+          device_type?: string | null
+          browser?: string | null
+        }
+        Update: {
+          id?: string
+          path?: string
+          user_agent?: string | null
+          referrer?: string | null
+          timestamp?: string
+          session_id?: string | null
+          user_id?: string | null
+          ip_address?: string | null
+          country?: string | null
+          device_type?: string | null
+          browser?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_views_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      blog_analytics: {
+        Row: {
+          id: string
+          blog_id: string
+          views: number
+          unique_views: number
+          likes: number
+          comments: number
+          avg_time_on_page: string | null
+          bounce_rate: number | null
+          last_updated: string
+        }
+        Insert: {
+          id?: string
+          blog_id: string
+          views?: number
+          unique_views?: number
+          likes?: number
+          comments?: number
+          avg_time_on_page?: string | null
+          bounce_rate?: number | null
+          last_updated?: string
+        }
+        Update: {
+          id?: string
+          blog_id?: string
+          views?: number
+          unique_views?: number
+          likes?: number
+          comments?: number
+          avg_time_on_page?: string | null
+          bounce_rate?: number | null
+          last_updated?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_analytics_blog_id_fkey"
+            columns: ["blog_id"]
+            referencedRelation: "blogs"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      events: {
+        Row: {
+          id: string
+          event_name: string
+          properties: Json
+          timestamp: string
+          session_id: string | null
+          user_id: string | null
+          page_path: string | null
+        }
+        Insert: {
+          id?: string
+          event_name: string
+          properties?: Json
+          timestamp?: string
+          session_id?: string | null
+          user_id?: string | null
+          page_path?: string | null
+        }
+        Update: {
+          id?: string
+          event_name?: string
+          properties?: Json
+          timestamp?: string
+          session_id?: string | null
+          user_id?: string | null
+          page_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
-    }
+      get_analytics_access: {
+        Args: Record<string, never>;
+        Returns: {
+          can_view: boolean;
+          can_edit: boolean;
+        }[];
+      };
+      get_dashboard_analytics: {
+        Args: {
+          start_date: string;
+          end_date: string;
+        };
+        Returns: {
+          visitorTrends: {
+            dates: string[];
+            visitors: number[];
+            pageViews: number[];
+          };
+          blogPerformance: Array<{
+            title: string;
+            views: number;
+            likes: number;
+            comments: number;
+          }>;
+          deviceStats: {
+            desktop: number;
+            mobile: number;
+            tablet: number;
+          };
+        };
+      };
+      get_blog_performance: {
+        Args: Record<string, never>;
+        Returns: Array<{
+          title: string;
+          views: number;
+          likes: number;
+          comments: number;
+        }>;
+      };
+      get_geo_stats: {
+        Args: Record<string, never>;
+        Returns: Array<{
+          country: string;
+          value: number;
+          code: string;
+          trend: number;
+        }>;
+      };
+      get_device_stats: {
+        Args: Record<string, never>;
+        Returns: {
+          desktop: number;
+          mobile: number;
+          tablet: number;
+        };
+      };
+    };
     Enums: {
       [_ in never]: never
     }
