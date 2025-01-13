@@ -12,7 +12,6 @@ import { slugify } from '@/utils/blogUtils';
 
 export const Blog = () => {
   const navigate = useNavigate();
-  // const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [showMore, setShowMore] = useState(false);
 
   const { data: blogPosts, isLoading } = useQuery({
