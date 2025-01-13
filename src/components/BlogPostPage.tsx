@@ -4,13 +4,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, Tag, User, Share, ArrowLeft, ArrowRight, Home } from "lucide-react";
 import { BlogPost, BlogPostResponse } from "@/types/blog";
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
 import { slugify } from '@/utils/slugify';
+import { ShareDialog } from "@/components/ui/share-dialog";
 
 
 
@@ -20,7 +19,6 @@ interface BlogPostPageProps {
 
 export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
   const navigate = useNavigate();
-  const [isCopied, setIsCopied] = useState(false);
 
   const { data: post, isLoading: isPostLoading, error } = useQuery<BlogPost>({
     queryKey: ['blog-post', postId],
@@ -128,30 +126,6 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
     const words = textContent.trim().split(/\s+/).length;
     const minutes = Math.ceil(words / wordsPerMinute);
     return `${minutes} min read`;
-  };
-
-  // Update sharing function to use slug
-  const handleShare = async (platform: 'copy' | 'twitter' | 'facebook' | 'linkedin') => {
-    const url = `${window.location.origin}/blog/${post?.slug || postId}`;
-    const title = post?.title || '';
-
-    switch (platform) {
-      case 'copy':
-        await navigator.clipboard.writeText(url);
-        toast.success("Link copied to clipboard!");
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-        break;
-      case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?url=${url}&text=${encodeURIComponent(title)}`, '_blank');
-        break;
-      case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
-        break;
-      case 'linkedin':
-        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
-        break;
-    }
   };
 
   if (isPostLoading) {
@@ -336,37 +310,10 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
             >
               <Card className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Share this post</h3>
-                <div className="space-y-3">
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => handleShare('copy')}
-                  >
-                    <Share className="mr-2 h-4 w-4" />
-                    {isCopied ? "Copied!" : "Copy link"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => handleShare('twitter')}
-                  >
-                    Share on Twitter
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => handleShare('facebook')}
-                  >
-                    Share on Facebook
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => handleShare('linkedin')}
-                  >
-                    Share on LinkedIn
-                  </Button>
-                </div>
+                <ShareDialog 
+                  url={`${window.location.origin}/blog/${post.slug || post.id}`}
+                  title={post.title}
+                />
               </Card>
 
               {post.tags && post.tags.length > 0 && (

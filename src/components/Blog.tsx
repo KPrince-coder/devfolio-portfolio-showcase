@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { slugify } from '@/utils/blogUtils';
+import { ShareDialog } from "@/components/ui/share-dialog";
 
 export const Blog = () => {
   const navigate = useNavigate();
@@ -48,13 +49,6 @@ export const Blog = () => {
   const handlePostClick = (post: BlogPost) => {
     const postSlug = post.slug || slugify(post.title);
     navigate(`/blog/${encodeURIComponent(postSlug)}`);
-  };
-
-  const handleShare = (post: BlogPost) => {
-    const postSlug = post.slug || slugify(post.title);
-    const url = `${window.location.origin}/blog/${encodeURIComponent(postSlug)}`;
-    navigator.clipboard.writeText(url);
-    toast.success("Link copied to clipboard!");
   };
 
   if (isLoading) {
@@ -155,18 +149,15 @@ export const Blog = () => {
                         </span>
                       ))}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
+                    <div 
                       className="mt-4"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleShare(post.id);
-                      }}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <Share className="h-4 w-4" />
-                      Share
-                    </Button>
+                      <ShareDialog
+                        url={`${window.location.origin}/blog/${post.slug || slugify(post.title)}`}
+                        title={post.title}
+                      />
+                    </div>
                   </div>
                 </div>
               </Card>

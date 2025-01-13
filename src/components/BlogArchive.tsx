@@ -21,15 +21,17 @@ import { Badge } from "@/components/ui/badge";
 import {slugify} from "@/utils/slugify";
 import { Home } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ShareDialog } from "@/components/ui/share-dialog";
 
 interface BlogCardProps {
   post: BlogPost;
   viewMode: "grid" | "list";
-  onShare: () => void;
   onClick: () => void;
 }
 
-const BlogCard: React.FC<BlogCardProps> = ({ post, viewMode, onShare, onClick }) => {
+const BlogCard: React.FC<BlogCardProps> = ({ post, viewMode, onClick }) => {
+  const shareUrl = `${window.location.origin}/blog/${post.slug || slugify(post.title)}`;
+
   return (
     <motion.div
       layout
@@ -92,17 +94,9 @@ const BlogCard: React.FC<BlogCardProps> = ({ post, viewMode, onShare, onClick })
                 </span>
               )}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onShare();
-              }}
-            >
-              <Share className="h-4 w-4" />
-              Share
-            </Button>
+            <div onClick={(e) => e.stopPropagation()}>
+              <ShareDialog url={shareUrl} title={post.title} />
+            </div>
           </div>
         </div>
       </Card>
@@ -180,12 +174,6 @@ export const BlogArchive = () => {
         }
       });
   }, [blogPosts, searchQuery, selectedTag, sortBy]);
-
-  const handleShare = (post: BlogPost) => {
-    const url = `${window.location.origin}/blog/${post.slug || slugify(post.title)}`;
-    navigator.clipboard.writeText(url);
-    toast.success("Link copied to clipboard!");
-  };
 
   if (isLoading) {
     return (
@@ -361,7 +349,6 @@ export const BlogArchive = () => {
                   key={post.id}
                   post={post}
                   viewMode={viewMode}
-                  onShare={() => handleShare(post)}
                   onClick={() => navigate(`/blog/${post.slug || slugify(post.title)}`)}
                 />
               ))}
