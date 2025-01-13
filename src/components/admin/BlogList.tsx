@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash, Tag, Calendar, Link } from "lucide-react";
 import { BlogPost } from "@/types/blog";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface BlogListProps {
   posts: BlogPost[];
@@ -11,6 +12,21 @@ interface BlogListProps {
 }
 
 export const BlogList = ({ posts, onEdit, onDelete }: BlogListProps) => {
+  const queryClient = useQueryClient();
+
+  const optimisticDelete = (postId: string) => {
+    const currentData = queryClient.getQueryData(['blog-posts-admin']);
+    queryClient.setQueryData(['blog-posts-admin'], (old: any) => 
+      old.filter((post: BlogPost) => post.id !== postId)
+    );
+    return { currentData };
+  };
+
+  const handleDelete = (postId: string) => {
+    const { currentData } = optimisticDelete(postId);
+    onDelete(postId);
+  };
+
   const handleCopyLink = (post: BlogPost) => {
     const url = `${window.location.origin}/blog/${encodeURIComponent(post.slug)}`;
     navigator.clipboard.writeText(url);
@@ -42,7 +58,7 @@ export const BlogList = ({ posts, onEdit, onDelete }: BlogListProps) => {
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => onDelete(post.id)}
+                onClick={() => handleDelete(post.id)}
               >
                 <Trash className="h-4 w-4" />
               </Button>

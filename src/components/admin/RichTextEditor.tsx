@@ -2,36 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { extensions, defaultEditorConfig } from '@/lib/editor/extensions';
 import debounce from 'lodash/debounce';
-import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { Toolbar } from './Toolbar';
-import {
-  ImageIcon,
-  Link2,
-  Table,
-  Video,
-  FileCode,
-  Eye,
-  Edit,
-  Save,
-  FileUp,
-  FileText,
-} from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 
 interface RichTextEditorProps {
@@ -132,154 +105,58 @@ export const RichTextEditor = ({
     }
   }, [content, editor]);
 
-  const handleImageInsert = () => {
-    if (editor && imageUrl) {
-      editor
-        .chain()
-        .focus()
-        .setImage({ src: imageUrl, alt: 'Inserted image' })
-        .run();
-      setImageUrl('');
-    }
+  // Create media handlers
+  const mediaHandlers = {
+    handleImageInsert: (url: string) => {
+      if (editor) {
+        editor
+          .chain()
+          .focus()
+          .setImage({ src: url, alt: 'Inserted image' })
+          .run();
+      }
+    },
+    handleVideoInsert: (url: string) => {
+      if (editor) {
+        editor.chain().focus().setYoutubeVideo({ src: url }).run();
+      }
+    },
+    handleLinkInsert: (url: string, text?: string) => {
+      if (editor) {
+        if (text) {
+          editor.chain().focus().insertContent(text).run();
+        }
+        editor
+          .chain()
+          .focus()
+          .setLink({ href: url, target: '_blank' })
+          .run();
+      }
+    },
+    handleTableInsert: () => {
+      if (editor) {
+        editor
+          .chain()
+          .focus()
+          .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+          .run();
+      }
+    },
   };
-
-  const handleVideoInsert = () => {
-    if (editor && videoUrl) {
-      editor.chain().focus().setYoutubeVideo({ src: videoUrl }).run();
-      setVideoUrl('');
-    }
-  };
-
-  const handleLinkInsert = () => {
-    if (editor && linkUrl) {
-      editor
-        .chain()
-        .focus()
-        .setLink({ href: linkUrl, target: '_blank' })
-        .run();
-      setLinkUrl('');
-      setLinkText('');
-    }
-  };
-
-  const handleTableInsert = () => {
-    if (editor) {
-      editor
-        .chain()
-        .focus()
-        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-        .run();
-    }
-  };
-
-  const MediaDialog = ({ type }: { type: 'image' | 'video' | 'link' }) => (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          type="button" // Ensure the button type is "button"
-          variant="outline"
-          size="sm"
-          onClick={(e) => e.preventDefault()} // Prevent default behavior
-        >
-          {type === 'image' && <ImageIcon className="h-4 w-4" />}
-          {type === 'video' && <Video className="h-4 w-4" />}
-          {type === 'link' && <Link2 className="h-4 w-4" />}
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Insert {type}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          {type === 'link' && (
-            <div className="space-y-2">
-              <Label>Text</Label>
-              <Input
-                value={linkText}
-                onChange={(e) => setLinkText(e.target.value)}
-                placeholder="Link text"
-              />
-            </div>
-          )}
-          <div className="space-y-2">
-            <Label>URL</Label>
-            <Input
-              value={type === 'image' ? imageUrl : type === 'video' ? videoUrl : linkUrl}
-              onChange={(e) => {
-                if (type === 'image') setImageUrl(e.target.value);
-                else if (type === 'video') setVideoUrl(e.target.value);
-                else setLinkUrl(e.target.value);
-              }}
-              placeholder={`Enter ${type} URL`}
-            />
-          </div>
-          <Button
-            type="button" // Ensure the button type is "button"
-            onClick={() => {
-              if (type === 'image') handleImageInsert();
-              else if (type === 'video') handleVideoInsert();
-              else handleLinkInsert();
-            }}
-          >
-            Insert
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
 
   return (
     <div className="border rounded-lg">
-      <div className="border-b p-2 flex items-center justify-between">
-        <Toolbar editor={editor} />
-        <div className="flex items-center gap-2">
-          <MediaDialog type="image" />
-          <MediaDialog type="video" />
-          <MediaDialog type="link" />
-          <Button
-            type="button" // Ensure the button type is "button"
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.preventDefault(); // Prevent default behavior
-              handleTableInsert();
-            }}
-          >
-            <Table className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button" // Ensure the button type is "button"
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.preventDefault(); // Prevent default behavior
-              setIsPreview(!isPreview);
-            }}
-          >
-            {isPreview ? (
-              <Edit className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
-          </Button>
-          {onSave && (
-            <Button
-              type="button" // Ensure the button type is "button"
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault(); // Prevent default behavior
-                onSave();
-              }}
-              className="flex items-center gap-2"
-            >
-              <Save className="h-4 w-4" />
-              {autoSaveStatus === 'saving' ? 'Saving...' : 'Saved'}
-            </Button>
-          )}
-        </div>
+      <div className="border-b p-2">
+        <Toolbar 
+          editor={editor}
+          onPreviewToggle={() => setIsPreview(!isPreview)}
+          isPreview={isPreview}
+          onSave={onSave}
+          isSaving={autoSaveStatus === 'saving'}
+          mediaHandlers={mediaHandlers}
+        />
       </div>
-
+      
       <div
         ref={editorRef}
         className={cn(
@@ -287,8 +164,14 @@ export const RichTextEditor = ({
           '[&_.text-color]:!text-current [&_.highlight-text]:!bg-current',
           '[&_.imported-content]:space-y-4',
           '[&_.pdf-page]:mb-8 [&_.page-break]:border-t [&_.page-break]:my-6',
+          // Add code block styles
+          '[&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-md [&_pre]:overflow-x-auto',
+          '[&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-sm',
+          '[&_.code-block-wrapper]:relative [&_.code-block-wrapper]:my-4',
+          '[&_.hljs]:bg-transparent',
           {
             'cursor-text': !readOnly,
+            'hidden': isPreview,
           },
           className
         )}
@@ -303,6 +186,12 @@ export const RichTextEditor = ({
           </div>
         )}
       </div>
+
+      {isPreview && (
+        <div className="prose prose-lg prose-invert max-w-none min-h-[200px] p-4">
+          <div dangerouslySetInnerHTML={{ __html: editor?.getHTML() || '' }} />
+        </div>
+      )}
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { BlogPost } from "@/types/blog";
 import { BlogForm } from "./BlogForm";
@@ -33,6 +33,163 @@ export const BlogManager = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  const createMutation = useMutation({
+    mutationFn: async (postData: Partial<BlogPost>) => {
+      const { data: existingSlugs } = await supabase
+        .from('blogs')
+        .select('slug')
+        .not('id', 'eq', postData.id || '');
+
+      const baseSlug = slugify(postData.title || '');
+      const slug = generateUniqueSlug(baseSlug, (existingSlugs || []).map(p => p.slug || ''));
+
+      const { data, error } = await supabase
+        .from('blogs')
+        .insert([{
+          title: postData.title,
+          content: postData.content,
+          excerpt: postData.excerpt,
+          image_url: postData.coverImage,
+          published: true,
+          author: postData.author,
+          tags: postData.tags,
+          coverimage: postData.coverImage,
+          publishedat: new Date().toISOString(),
+          slug: slug,
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blog-posts-admin'] });
+      setIsCreating(false);
+      toast({
+        title: "Success",
+        description: "Blog post created successfully",
+      });
+    },
+    onError: (error) => {
+      console.error("Error creating blog post:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create blog post",
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (postData: Partial<BlogPost>) => {
+      const { data: existingSlugs } = await supabase
+        .from('blogs')
+        .select('slug')
+        .not('id', 'eq', postData.id || '');
+
+      const baseSlug = slugify(postData.title || '');
+      const slug = generateUniqueSlug(baseSlug, (existingSlugs || []).map(p => p.slug || ''));
+
+      const { data, error } = await supabase
+        .from('blogs')
+        .update({
+          title: postData.title,
+          content: postData.content,
+          excerpt: postData.excerpt,
+          image_url: postData.coverImage,
+          published: true,
+          author: postData.author,
+          tags: postData.tags,
+          coverimage: postData.coverImage,
+          updated_at: new Date().toISOString(),
+          slug: slug,
+        })
+        .eq('id', postData.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blog-posts-admin'] });
+      setIsEditing(null);
+      setIsCreating(false);
+      toast({
+        title: "Success",
+        description: "Blog post updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error("Error updating blog post:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update blog post",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      const { error } = await supabase
+        .from('blogs')
+        .delete()
+        .eq('id', postId);
+
+      if (error) throw error;
+      return postId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blog-posts-admin'] });
+      toast({
+        title: "Success",
+        description: "Blog post deleted successfully",
+      });
+    },
+    onError: (error) => {
+      console.error("Error deleting blog post:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete blog post",
+      });
+    },
+  });
+
+  const handleSubmit = async (postData: Partial<BlogPost>) => {
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    createMutation.mutate(postData);
+  };
+
+  const handleUpdate = async (postData: Partial<BlogPost>) => {
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    updateMutation.mutate(postData);
+  };
+
+  const handleDelete = async (postId: string) => {
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete this blog post?")) {
+      return;
+    }
+
+    deleteMutation.mutate(postId);
+  };
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ['blog-posts-admin'],
@@ -68,162 +225,10 @@ export const BlogManager = () => {
         tags: post.tags || [],
         slug: slugify(post.title)
       }));
-    }
+    },
+    staleTime: 0,
+    gcTime: 0,
   });
-
-  const handleSubmit = async (postData: Partial<BlogPost>) => {
-    const isAuthenticated = await checkAuth();
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
-
-    setLoading(true);
-    console.log("Submitting blog post...");
-
-    try {
-      // Get existing slugs for uniqueness check
-      const { data: existingSlugs } = await supabase
-        .from('blogs')
-        .select('slug')
-        .not('id', 'eq', postData.id || '');
-
-      const baseSlug = slugify(postData.title || '');
-      const slug = generateUniqueSlug(baseSlug, (existingSlugs || []).map(p => p.slug || ''));
-
-      const { error } = await supabase
-        .from('blogs')
-        .insert([{
-          title: postData.title,
-          content: postData.content,
-          excerpt: postData.excerpt,
-          image_url: postData.coverImage,
-          published: true,
-          author: postData.author,
-          tags: postData.tags,
-          coverimage: postData.coverImage,
-          publishedat: new Date().toISOString(),
-          slug: slug,
-        }]);
-
-      if (error) throw error;
-
-      console.log("Blog post created successfully");
-      queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
-      setIsCreating(false);
-      toast({
-        title: "Success",
-        description: "Blog post created successfully",
-      });
-    } catch (error) {
-      console.error("Error creating blog post:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create blog post",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdate = async (postData: Partial<BlogPost>) => {
-    const isAuthenticated = await checkAuth();
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
-
-    setLoading(true);
-    console.log("Updating blog post...");
-
-    try {
-      // Get existing slugs for uniqueness check
-      const { data: existingSlugs } = await supabase
-        .from('blogs')
-        .select('slug')
-        .not('id', 'eq', postData.id || '');
-
-      const baseSlug = slugify(postData.title || '');
-      const slug = generateUniqueSlug(baseSlug, (existingSlugs || []).map(p => p.slug || ''));
-
-      const { error } = await supabase
-        .from('blogs')
-        .update({
-          title: postData.title,
-          content: postData.content,
-          excerpt: postData.excerpt,
-          image_url: postData.coverImage,
-          published: true,
-          author: postData.author,
-          tags: postData.tags,
-          coverimage: postData.coverImage,
-          updated_at: new Date().toISOString(),
-          slug: slug,
-        })
-        .eq('id', isEditing);
-
-      if (error) throw error;
-
-      console.log("Blog post updated successfully");
-      queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
-      setIsCreating(false);
-      setIsEditing(null);
-      toast({
-        title: "Success",
-        description: "Blog post updated successfully",
-      });
-    } catch (error) {
-      console.error("Error updating blog post:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update blog post",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (postId: string) => {
-    const isAuthenticated = await checkAuth();
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
-
-    if (!window.confirm("Are you sure you want to delete this blog post?")) {
-      return;
-    }
-
-    setLoading(true);
-    console.log("Deleting blog post...");
-
-    try {
-      const { error } = await supabase
-        .from('blogs')
-        .delete()
-        .eq('id', postId);
-
-      if (error) throw error;
-
-      console.log("Blog post deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
-      toast({
-        title: "Success",
-        description: "Blog post deleted successfully",
-      });
-    } catch (error) {
-      console.error("Error deleting blog post:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete blog post",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (isLoading) {
     return (
