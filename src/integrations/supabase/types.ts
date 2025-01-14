@@ -416,6 +416,33 @@ export type Database = {
         }
         Relationships: []
       }
+      hobbies: {
+        Row: {
+          category: string
+          created_at: string | null
+          icon_key: string
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          icon_key?: string
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          icon_key?: string
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       page_views: {
         Row: {
           browser: string | null
@@ -537,7 +564,7 @@ export type Database = {
           image_url?: string | null
           live_link?: string | null
           tags?: string[] | null
-          title: string
+          title?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -662,33 +689,6 @@ export type Database = {
         }
         Relationships: []
       }
-      hobbies: {
-        Row: {
-          id: string
-          name: string
-          category: string
-          icon_key: string
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          name: string
-          category: string
-          icon_key?: string
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          name?: string
-          category?: string
-          icon_key?: string
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -757,7 +757,7 @@ export type Tables<
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
         Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never,
+    : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
@@ -811,8 +811,8 @@ export type TablesUpdate<
     : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
     ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-      Update: infer U
-    }
+        Update: infer U
+      }
       ? U
       : never
     : never

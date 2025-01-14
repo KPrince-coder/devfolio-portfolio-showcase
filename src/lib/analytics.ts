@@ -53,33 +53,33 @@ export const trackEvent = async (eventName: string, properties: Record<string, a
       }
     ]);
 
-    if (error) {
-      console.error('Error tracking event:', error);
-    }
-  };
+  if (error) {
+    console.error('Error tracking event:', error);
+  }
+};
 
 export const fetchAnalyticsData = async (): Promise<AnalyticsData> => {
   try {
-    const [dashboardRes, blogStatsRes, geoStatsRes, deviceStatsRes] = await Promise.all([
+    const [dashboardRes, blogStatsRes, deviceStatsRes, geoStatsRes] = await Promise.all([
       supabase.rpc('get_dashboard_analytics', {
         start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
         end_date: new Date().toISOString(),
       }),
       supabase.rpc('get_blog_performance'),
-      supabase.rpc('get_geo_stats'),
-      supabase.rpc('get_device_stats')
+      supabase.rpc('get_device_stats'),
+      supabase.rpc('get_geo_stats')
     ]);
 
-    if (dashboardRes.error) throw new Error(dashboardRes.error.message);
-    if (blogStatsRes.error) throw new Error(blogStatsRes.error.message);
-    if (geoStatsRes.error) throw new Error(geoStatsRes.error.message);
-    if (deviceStatsRes.error) throw new Error(deviceStatsRes.error.message);
+    if (dashboardRes.error) throw dashboardRes.error;
+    if (blogStatsRes.error) throw blogStatsRes.error;
+    if (deviceStatsRes.error) throw deviceStatsRes.error;
+    if (geoStatsRes.error) throw geoStatsRes.error;
 
     return {
-      visitorTrends: dashboardRes.data?.visitorTrends || { dates: [], visitors: [], pageViews: [] },
-      blogPerformance: blogStatsRes.data || [],
-      deviceStats: deviceStatsRes.data || { desktop: 0, mobile: 0, tablet: 0 },
-      geoData: geoStatsRes.data || []
+      visitorTrends: dashboardRes.data as AnalyticsData['visitorTrends'],
+      blogPerformance: blogStatsRes.data as AnalyticsData['blogPerformance'],
+      deviceStats: deviceStatsRes.data as AnalyticsData['deviceStats'],
+      geoData: geoStatsRes.data as AnalyticsData['geoData']
     };
   } catch (error) {
     console.error('Error fetching analytics:', error);
