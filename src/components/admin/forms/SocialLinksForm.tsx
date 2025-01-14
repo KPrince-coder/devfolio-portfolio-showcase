@@ -65,7 +65,7 @@ export const SocialLinksForm = ({ initialData, onClose }: SocialLinksFormProps) 
             {...register("platform", { required: "Platform name is required" })}
           />
           {errors.platform && (
-            <p className="text-sm text-red-500">{errors.platform.message}</p>
+            <p className="text-sm text-red-500">{errors.platform.message?.toString()}</p>
           )}
         </div>
 
@@ -76,7 +76,7 @@ export const SocialLinksForm = ({ initialData, onClose }: SocialLinksFormProps) 
             {...register("url", { required: "URL is required" })}
           />
           {errors.url && (
-            <p className="text-sm text-red-500">{errors.url.message}</p>
+            <p className="text-sm text-red-500">{errors.url.message?.toString()}</p>
           )}
         </div>
 
@@ -87,7 +87,7 @@ export const SocialLinksForm = ({ initialData, onClose }: SocialLinksFormProps) 
             {...register("icon_key", { required: "Icon key is required" })}
           />
           {errors.icon_key && (
-            <p className="text-sm text-red-500">{errors.icon_key.message}</p>
+            <p className="text-sm text-red-500">{errors.icon_key.message?.toString()}</p>
           )}
         </div>
 
