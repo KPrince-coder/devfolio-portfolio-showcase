@@ -11,6 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { slugify } from '@/utils/slugify';
 import { ShareDialog } from "@/components/ui/share-dialog";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { generateTableOfContents, injectHeadingIds } from "@/utils/toc";
+import { TableOfContents } from "@/components/ui/table-of-contents";
 
 
 interface BlogPostPageProps {
@@ -18,6 +21,7 @@ interface BlogPostPageProps {
 }
 
 export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
+  const [activeHeading, setActiveHeading] = useState<string>();
   const navigate = useNavigate();
 
   const { data: post, isLoading: isPostLoading, error } = useQuery<BlogPost>({
@@ -128,25 +132,26 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
     return `${minutes} min read`;
   };
 
-  // Process content to add IDs to headings and extract TOC items
-  const processContent = (content: string) => {
-    const headings: { id: string; title: string; level: number }[] = [];
-    
-    // Add IDs to headings and collect TOC items
-    const processedContent = content.replace(
-      /<h([2-3])[^>]*>(.*?)<\/h[2-3]>/g,
-      (match, level, title) => {
-        const plainText = title.replace(/<[^>]*>/g, '');
-        const id = slugify(plainText);
-        headings.push({ id, title: plainText, level: parseInt(level, 10) });
-        return `<h${level} id="${id}">${title}</h${level}>`;
-      }
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveHeading(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: '-100px 0px -66% 0px' }
     );
 
-    return { processedContent, headings };
-  };
+    const headings = document.querySelectorAll('h2, h3, h4, h5, h6');
+    headings.forEach((heading) => observer.observe(heading));
 
-  // Smooth scroll to heading
+    return () => {
+      headings.forEach((heading) => observer.unobserve(heading));
+    };
+  }, [post]);
+
   const scrollToHeading = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -159,6 +164,13 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
         behavior: "smooth"
       });
     }
+  };
+
+  // Process content and generate TOC
+  const processContent = (content: string) => {
+    const processedContent = injectHeadingIds(content);
+    const tocItems = generateTableOfContents(content);
+    return { processedContent, tocItems };
   };
 
   if (isPostLoading) {
@@ -197,7 +209,7 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
     );
   }
 
-  const { processedContent, headings } = processContent(post.content);
+  const { processedContent, tocItems } = processContent(post.content);
 
   return (
     <AnimatePresence mode="wait">
@@ -442,30 +454,13 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
         </section>
 
         {/* Updated Table of Contents */}
-        {headings.length > 0 && (
+        {tocItems.length > 0 && (
           <div className="fixed top-24 right-4 w-64 hidden xl:block">
-            <Card className="p-4 bg-background/95 backdrop-blur-sm border-border/40">
-              <h4 className="font-semibold mb-4">Table of Contents</h4>
-              <nav className="space-y-2 max-h-[calc(100vh-12rem)] overflow-y-auto">
-                {headings.map((heading, index) => (
-                  <a
-                    key={index}
-                    href={`#${heading.id}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      scrollToHeading(heading.id);
-                    }}
-                    className={cn(
-                      "block text-sm text-muted-foreground hover:text-primary transition-colors py-1",
-                      heading.level === 3 && "pl-4",
-                      "hover:bg-accent/50 rounded px-2"
-                    )}
-                  >
-                    {heading.title}
-                  </a>
-                ))}
-              </nav>
-            </Card>
+            <TableOfContents
+              items={tocItems}
+              activeId={activeHeading}
+              onItemClick={scrollToHeading}
+            />
           </div>
         )}
       </motion.article>
