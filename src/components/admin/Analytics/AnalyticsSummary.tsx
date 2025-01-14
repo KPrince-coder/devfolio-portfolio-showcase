@@ -18,7 +18,7 @@ export const AnalyticsSummary = () => {
       });
       
       if (error) throw error;
-      return data as DashboardAnalytics;
+      return data as unknown as DashboardAnalytics;
     }
   });
 

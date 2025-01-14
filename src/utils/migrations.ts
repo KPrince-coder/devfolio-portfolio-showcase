@@ -8,10 +8,7 @@ type MigrationFunction =
   | "get_geo_stats" 
   | "increment_blog_view_count" 
   | "increment_comment_count" 
-  | "increment_view_count"
-  | "create_hobbies_table"
-  | "add_hobbies_rls_policies"
-  | "create_hobbies_updated_at_trigger";
+  | "increment_view_count";
 
 export const runMigration = async (functionName: MigrationFunction, params?: any) => {
   try {
