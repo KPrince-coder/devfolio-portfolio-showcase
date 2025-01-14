@@ -33,53 +33,256 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_analytics: {
+        Row: {
+          avg_time_on_page: unknown | null
+          blog_id: string | null
+          bounce_rate: number | null
+          comments: number | null
+          id: string
+          last_updated: string | null
+          likes: number | null
+          unique_views: number | null
+          views: number | null
+        }
+        Insert: {
+          avg_time_on_page?: unknown | null
+          blog_id?: string | null
+          bounce_rate?: number | null
+          comments?: number | null
+          id?: string
+          last_updated?: string | null
+          likes?: number | null
+          unique_views?: number | null
+          views?: number | null
+        }
+        Update: {
+          avg_time_on_page?: unknown | null
+          blog_id?: string | null
+          bounce_rate?: number | null
+          comments?: number | null
+          id?: string
+          last_updated?: string | null
+          likes?: number | null
+          unique_views?: number | null
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_analytics_blog_id_fkey"
+            columns: ["blog_id"]
+            isOneToOne: false
+            referencedRelation: "blogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_bookmarks: {
+        Row: {
+          blog_id: string | null
+          created_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          blog_id?: string | null
+          created_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          blog_id?: string | null
+          created_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_bookmarks_blog_id_fkey"
+            columns: ["blog_id"]
+            isOneToOne: false
+            referencedRelation: "blogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_comments: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          blog_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          likes: number | null
+          parent_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          author_name: string
+          blog_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          likes?: number | null
+          parent_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          blog_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          likes?: number | null
+          parent_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_comments_blog_id_fkey"
+            columns: ["blog_id"]
+            isOneToOne: false
+            referencedRelation: "blogs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "blog_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_likes: {
+        Row: {
+          blog_id: string
+          created_at: string | null
+          user_id: string
+        }
+        Insert: {
+          blog_id: string
+          created_at?: string | null
+          user_id: string
+        }
+        Update: {
+          blog_id?: string
+          created_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_likes_blog_id_fkey"
+            columns: ["blog_id"]
+            isOneToOne: false
+            referencedRelation: "blogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blogs: {
         Row: {
           author: string | null
+          author_avatar: string | null
+          category: string | null
+          comment_count: number | null
           content: string
           coverimage: string | null
           created_at: string | null
           excerpt: string | null
+          hasliked: boolean | null
           id: string
           image_url: string | null
+          like_count: number | null
+          likes: number | null
           published: boolean | null
           publishedat: string | null
+          reading_time: string | null
           slug: string | null
           tags: string[] | null
           title: string
           updated_at: string | null
+          view_count: number | null
+          viewcount: number | null
         }
         Insert: {
           author?: string | null
+          author_avatar?: string | null
+          category?: string | null
+          comment_count?: number | null
           content: string
           coverimage?: string | null
           created_at?: string | null
           excerpt?: string | null
+          hasliked?: boolean | null
           id?: string
           image_url?: string | null
+          like_count?: number | null
+          likes?: number | null
           published?: boolean | null
           publishedat?: string | null
+          reading_time?: string | null
           slug?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string | null
+          view_count?: number | null
+          viewcount?: number | null
         }
         Update: {
           author?: string | null
+          author_avatar?: string | null
+          category?: string | null
+          comment_count?: number | null
           content?: string
           coverimage?: string | null
           created_at?: string | null
           excerpt?: string | null
+          hasliked?: boolean | null
           id?: string
           image_url?: string | null
+          like_count?: number | null
+          likes?: number | null
           published?: boolean | null
           publishedat?: string | null
+          reading_time?: string | null
           slug?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null
+          view_count?: number | null
+          viewcount?: number | null
         }
         Relationships: []
+      }
+      comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "blog_comments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contact_submissions: {
         Row: {
@@ -105,6 +308,36 @@ export type Database = {
           message?: string
           name?: string
           read?: boolean | null
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          event_name: string
+          id: string
+          page_path: string | null
+          properties: Json | null
+          session_id: string | null
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          event_name: string
+          id?: string
+          page_path?: string | null
+          properties?: Json | null
+          session_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          event_name?: string
+          id?: string
+          page_path?: string | null
+          properties?: Json | null
+          session_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -150,6 +383,48 @@ export type Database = {
         }
         Relationships: []
       }
+      page_views: {
+        Row: {
+          browser: string | null
+          country: string | null
+          device_type: string | null
+          id: string
+          ip_address: string | null
+          path: string
+          referrer: string | null
+          session_id: string | null
+          timestamp: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          browser?: string | null
+          country?: string | null
+          device_type?: string | null
+          id?: string
+          ip_address?: string | null
+          path: string
+          referrer?: string | null
+          session_id?: string | null
+          timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          browser?: string | null
+          country?: string | null
+          device_type?: string | null
+          id?: string
+          ip_address?: string | null
+          path?: string
+          referrer?: string | null
+          session_id?: string | null
+          timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profile_data: {
         Row: {
           about_text: string | null
@@ -170,6 +445,24 @@ export type Database = {
           id?: string
           profile_image_url?: string | null
           resume_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          id?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -243,134 +536,47 @@ export type Database = {
         }
         Relationships: []
       }
-      page_views: {
+      visitors: {
         Row: {
-          id: string
-          path: string
-          user_agent: string | null
-          referrer: string | null
-          timestamp: string
-          session_id: string | null
-          user_id: string | null
-          ip_address: string | null
+          browser: string | null
+          city: string | null
           country: string | null
           device_type: string | null
-          browser: string | null
-        }
-        Insert: {
-          id?: string
-          path: string
-          user_agent?: string | null
-          referrer?: string | null
-          timestamp?: string
-          session_id?: string | null
-          user_id?: string | null
-          ip_address?: string | null
-          country?: string | null
-          device_type?: string | null
-          browser?: string | null
-        }
-        Update: {
-          id?: string
-          path?: string
-          user_agent?: string | null
-          referrer?: string | null
-          timestamp?: string
-          session_id?: string | null
-          user_id?: string | null
-          ip_address?: string | null
-          country?: string | null
-          device_type?: string | null
-          browser?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "page_views_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      blog_analytics: {
-        Row: {
+          first_seen: string | null
           id: string
-          blog_id: string
-          views: number
-          unique_views: number
-          likes: number
-          comments: number
-          avg_time_on_page: string | null
-          bounce_rate: number | null
-          last_updated: string
-        }
-        Insert: {
-          id?: string
-          blog_id: string
-          views?: number
-          unique_views?: number
-          likes?: number
-          comments?: number
-          avg_time_on_page?: string | null
-          bounce_rate?: number | null
-          last_updated?: string
-        }
-        Update: {
-          id?: string
-          blog_id?: string
-          views?: number
-          unique_views?: number
-          likes?: number
-          comments?: number
-          avg_time_on_page?: string | null
-          bounce_rate?: number | null
-          last_updated?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "blog_analytics_blog_id_fkey"
-            columns: ["blog_id"]
-            referencedRelation: "blogs"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      events: {
-        Row: {
-          id: string
-          event_name: string
-          properties: Json
-          timestamp: string
+          last_seen: string | null
+          os: string | null
           session_id: string | null
           user_id: string | null
-          page_path: string | null
+          visit_count: number | null
         }
         Insert: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          device_type?: string | null
+          first_seen?: string | null
           id?: string
-          event_name: string
-          properties?: Json
-          timestamp?: string
+          last_seen?: string | null
+          os?: string | null
           session_id?: string | null
           user_id?: string | null
-          page_path?: string | null
+          visit_count?: number | null
         }
         Update: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          device_type?: string | null
+          first_seen?: string | null
           id?: string
-          event_name?: string
-          properties?: Json
-          timestamp?: string
+          last_seen?: string | null
+          os?: string | null
           session_id?: string | null
           user_id?: string | null
-          page_path?: string | null
+          visit_count?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "events_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -378,63 +584,50 @@ export type Database = {
     }
     Functions: {
       get_analytics_access: {
-        Args: Record<string, never>;
+        Args: Record<PropertyKey, never>
         Returns: {
-          can_view: boolean;
-          can_edit: boolean;
-        }[];
-      };
+          can_view: boolean
+          can_edit: boolean
+        }[]
+      }
+      get_blog_performance: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_dashboard_analytics: {
         Args: {
-          start_date: string;
-          end_date: string;
-        };
-        Returns: {
-          visitorTrends: {
-            dates: string[];
-            visitors: number[];
-            pageViews: number[];
-          };
-          blogPerformance: Array<{
-            title: string;
-            views: number;
-            likes: number;
-            comments: number;
-          }>;
-          deviceStats: {
-            desktop: number;
-            mobile: number;
-            tablet: number;
-          };
-        };
-      };
-      get_blog_performance: {
-        Args: Record<string, never>;
-        Returns: Array<{
-          title: string;
-          views: number;
-          likes: number;
-          comments: number;
-        }>;
-      };
-      get_geo_stats: {
-        Args: Record<string, never>;
-        Returns: Array<{
-          country: string;
-          value: number;
-          code: string;
-          trend: number;
-        }>;
-      };
+          start_date: string
+          end_date: string
+        }
+        Returns: Json
+      }
       get_device_stats: {
-        Args: Record<string, never>;
-        Returns: {
-          desktop: number;
-          mobile: number;
-          tablet: number;
-        };
-      };
-    };
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_geo_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      increment_blog_view_count: {
+        Args: {
+          blog_id: string
+        }
+        Returns: undefined
+      }
+      increment_comment_count: {
+        Args: {
+          post_id: string
+        }
+        Returns: undefined
+      }
+      increment_view_count: {
+        Args: {
+          post_id: string
+        }
+        Returns: undefined
+      }
+    }
     Enums: {
       [_ in never]: never
     }
