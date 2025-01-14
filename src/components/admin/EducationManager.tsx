@@ -32,7 +32,7 @@ export const EducationManager = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supa base
+      const { error } = await supabase
         .from("education")
         .delete()
         .eq("id", id);
