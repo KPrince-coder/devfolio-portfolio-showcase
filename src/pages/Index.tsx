@@ -6,6 +6,8 @@ import { AboutMe } from "@/components/AboutMe";
 import { CursorLight } from "@/components/CursorLight";
 import { Blog } from "@/components/Blog";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { TechnicalSkills } from "@/components/technical/TechnicalSkills";
 import { Education } from "@/components/education/Education";
 import { TechnicalProficiency } from "@/components/technical/TechnicalProficiency";
@@ -30,6 +32,8 @@ const Index = () => {
         <Blog />
         <Contact />
       </div>
+      <ScrollToTop />
+      <Footer />
     </>
   );
 };

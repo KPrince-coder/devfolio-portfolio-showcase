@@ -596,6 +596,36 @@ export type Database = {
         }
         Relationships: []
       }
+      social_links: {
+        Row: {
+          created_at: string | null
+          icon_key: string
+          id: string
+          is_active: boolean | null
+          platform: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          icon_key?: string
+          id?: string
+          is_active?: boolean | null
+          platform: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          icon_key?: string
+          id?: string
+          is_active?: boolean | null
+          platform?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       technical_proficiency: {
         Row: {
           created_at: string | null

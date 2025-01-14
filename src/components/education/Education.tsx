@@ -84,22 +84,24 @@ export const Education = () => {
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className="p-6 h-full">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-primary/10 mt-1">
+              <Card className="p-6 h-full flex flex-col">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="p-2 rounded-lg bg-primary/10 shrink-0">
                     {item.type === 'degree' ? (
                       <GraduationCap className="w-6 h-6 text-primary" />
                     ) : (
                       <Award className="w-6 h-6 text-primary" />
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold">{item.degree}</h3>
-                    <p className="text-muted-foreground">{item.institution}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {item.year_start} - {item.year_end || 'Present'}
-                    </p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold truncate">{item.degree}</h3>
+                    <p className="text-muted-foreground truncate">{item.institution}</p>
                   </div>
+                </div>
+                <div className="mt-auto">
+                  <p className="text-sm text-muted-foreground">
+                    {item.year_start} - {item.year_end || 'Present'}
+                  </p>
                 </div>
               </Card>
             </motion.div>
