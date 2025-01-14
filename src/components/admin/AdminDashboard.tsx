@@ -17,7 +17,10 @@ import {
   BarChart2, 
   Users, 
   Eye, 
-  ThumbsUp
+  ThumbsUp,
+  Code,
+  GraduationCap,
+  ChartBar
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -33,6 +36,7 @@ import { AnalyticsDashboard } from './Analytics/AnalyticsDashboard';
 import { TechnicalSkillsManager } from './TechnicalSkillsManager';
 import { EducationManager } from './EducationManager';
 import { TechnicalProficiencyManager } from './TechnicalProficiencyManager';
+import { AnalyticsSummary } from './Analytics/AnalyticsSummary';
 
 const DashboardStats = () => {
   const [stats, setStats] = useState({

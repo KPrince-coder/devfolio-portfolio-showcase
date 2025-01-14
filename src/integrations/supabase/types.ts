@@ -22,7 +22,7 @@ export type Database = {
           email: string
           id?: string
           last_login?: string | null
-          password_hash: string
+          password_hash?: string
         }
         Update: {
           created_at?: string | null
@@ -578,6 +578,87 @@ export type Database = {
         }
         Relationships: []
       }
+      education: {
+        Row: {
+          id: string
+          degree: string
+          institution: string
+          year_start: string
+          year_end: string | null
+          type: 'degree' | 'certification'
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          degree: string
+          institution: string
+          year_start: string
+          year_end?: string | null
+          type: 'degree' | 'certification'
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          degree?: string
+          institution?: string
+          year_start?: string
+          year_end?: string | null
+          type?: 'degree' | 'certification'
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      technical_skills: {
+        Row: {
+          id: string
+          category: string
+          icon_key: string
+          skills: string[]
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          category: string
+          icon_key?: string
+          skills: string[]
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          category?: string
+          icon_key?: string
+          skills?: string[]
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      technical_proficiency: {
+        Row: {
+          id: string
+          skill: string
+          proficiency: number
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          skill: string
+          proficiency: number
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          skill?: string
+          proficiency?: number
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -646,7 +727,7 @@ export type Tables<
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
         Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
@@ -658,10 +739,10 @@ export type Tables<
         PublicSchema["Views"])
     ? (PublicSchema["Tables"] &
         PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
+      Row: infer R
+    }
+    ? R
+    : never
     : never
 
 export type TablesInsert<
