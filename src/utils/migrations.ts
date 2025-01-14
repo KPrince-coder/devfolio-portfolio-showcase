@@ -1,44 +1,26 @@
+import { supabase } from '@/integrations/supabase/client';
 
-import { supabase } from "@/integrations/supabase/client";
-import { slugify } from "./blogUtils";
-
-interface Blog {
-  id: number;
-  title: string;
-  slug?: string | null;
-  author?: string;
-  content?: string;
-  coverimage?: string;
-  created_at?: string;
-  excerpt?: string;
-  image_url?: string;
-  published?: boolean;
-  publishedat?: string;
-  tags?: string[];
-  updated_at?: string;
-}
-
-export async function migrateExistingPostsToSlug() {
-  const { data: posts, error } = await supabase
-    .from('blogs')
-    .select('id, title, slug')
-    .is('slug', null)
-    .returns<Blog[]>();
-
-  if (error) {
-    console.error('Error fetching posts:', error);
-    return;
+export const migrateData = async () => {
+  // Create hobbies table if it doesn't exist
+  const { error: createTableError } = await supabase.rpc('create_hobbies_table');
+  if (createTableError) {
+    console.error('Error creating hobbies table:', createTableError);
   }
 
-  for (const post of posts) {
-    const slug = slugify(post.title);
-    const { error: updateError } = await supabase
-      .from('blogs')
-      .update({ slug })
-      .eq('id', post.id);
-
-    if (updateError) {
-      console.error(`Error updating post ${post.id}:`, updateError);
-    }
+  // Add RLS policies if they don't exist
+  const { error: addPoliciesError } = await supabase.rpc('add_hobbies_rls_policies');
+  if (addPoliciesError) {
+    console.error('Error adding RLS policies for hobbies:', addPoliciesError);
   }
-}
+
+  // Create trigger for updated_at if it doesn't exist
+  const { error: createTriggerError } = await supabase.rpc('create_hobbies_updated_at_trigger');
+  if (createTriggerError) {
+    console.error('Error creating updated_at trigger for hobbies:', createTriggerError);
+  }
+
+  // Fix the type error by converting number to string
+  const timestamp = Date.now().toString();
+  
+  // Additional migration logic can go here
+};

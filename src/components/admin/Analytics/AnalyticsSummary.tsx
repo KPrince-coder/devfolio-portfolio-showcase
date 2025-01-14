@@ -2,8 +2,14 @@ import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface DashboardAnalytics {
+  totalViews: number;
+  uniqueVisitors: number;
+  avgTimeOnSite: string;
+}
+
 export const AnalyticsSummary = () => {
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<DashboardAnalytics>({
     queryKey: ["analytics-summary"],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_dashboard_analytics', {
@@ -12,7 +18,7 @@ export const AnalyticsSummary = () => {
       });
       
       if (error) throw error;
-      return data;
+      return data as DashboardAnalytics;
     }
   });
 

@@ -1,5 +1,30 @@
 import { supabase } from '@/integrations/supabase/client';
 
+interface AnalyticsData {
+  visitorTrends: {
+    dates: string[];
+    visitors: number[];
+    pageViews: number[];
+  };
+  blogPerformance: Array<{
+    title: string;
+    views: number;
+    likes: number;
+    comments: number;
+  }>;
+  deviceStats: {
+    desktop: number;
+    mobile: number;
+    tablet: number;
+  };
+  geoData: Array<{
+    country: string;
+    value: number;
+    code: string;
+    trend: number;
+  }>;
+}
+
 export const trackPageView = async (path: string) => {
   const { error } = await supabase
     .from('page_views')
@@ -61,29 +86,3 @@ export const fetchAnalyticsData = async (): Promise<AnalyticsData> => {
     throw error;
   }
 };
-
-// Also add the AnalyticsData type if not already defined elsewhere
-export interface AnalyticsData {
-  visitorTrends: {
-    dates: string[];
-    visitors: number[];
-    pageViews: number[];
-  };
-  blogPerformance: Array<{
-    title: string;
-    views: number;
-    likes: number;
-    comments: number;
-  }>;
-  deviceStats: {
-    desktop: number;
-    mobile: number;
-    tablet: number;
-  };
-  geoData: Array<{
-    country: string;
-    value: number;
-    code: string;
-    trend: number;
-  }>;
-}
