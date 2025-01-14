@@ -30,6 +30,9 @@ import { BlogManager } from "./BlogManager";
 import { ProfileManager } from "./ProfileManager";
 import { TimelineManager } from "./TimelineManager";
 import { AnalyticsDashboard } from './Analytics/AnalyticsDashboard';
+import { TechnicalSkillsManager } from './TechnicalSkillsManager';
+import { EducationManager } from './EducationManager';
+import { TechnicalProficiencyManager } from './TechnicalProficiencyManager';
 
 const DashboardStats = () => {
   const [stats, setStats] = useState({
@@ -166,79 +169,16 @@ export const AdminDashboard = () => {
 
   const tabs = [
     { value: "dashboard", icon: LayoutDashboard, label: "Dashboard", color: "text-indigo-600" },
-    { value: "analytics", icon: BarChart2, label: "Analytics", color: "text-purple-600" }, // Add analytics tab
+    { value: "analytics", icon: BarChart2, label: "Analytics", color: "text-purple-600" },
     { value: "messages", icon: MessageCircle, label: "Messages", color: "text-blue-600" },
     { value: "projects", icon: Laptop, label: "Projects", color: "text-green-600" },
     { value: "blog", icon: Newspaper, label: "Blog", color: "text-pink-600" },
+    { value: "technical-skills", icon: Code, label: "Technical Skills", color: "text-orange-600" },
+    { value: "education", icon: GraduationCap, label: "Education", color: "text-cyan-600" },
+    { value: "proficiency", icon: ChartBar, label: "Proficiency", color: "text-yellow-600" },
     { value: "profile", icon: User, label: "Profile", color: "text-purple-600" },
     { value: "timeline", icon: Clock, label: "Timeline", color: "text-orange-600" }
   ];
-
-  // Add analytics summary stats
-  const AnalyticsSummary = () => {
-    const stats = [
-      {
-        label: "Total Visitors",
-        value: "12.5K",
-        trend: "+12%",
-        icon: Users,
-        color: "bg-indigo-600",
-      },
-      {
-        label: "Page Views",
-        value: "48.2K",
-        trend: "+18%",
-        icon: Eye,
-        color: "bg-pink-600",
-      },
-      {
-        label: "Engagement Rate",
-        value: "6.8%",
-        trend: "+2.3%",
-        icon: ThumbsUp,
-        color: "bg-green-600",
-      },
-      {
-        label: "Avg. Session",
-        value: "3m 45s",
-        trend: "+0.8%",
-        icon: Clock,
-        color: "bg-orange-600",
-      },
-    ];
-
-    const AnalyticsCard = ({ title, value, trend, icon, color }: { 
-      title: string;
-      value: string;
-      trend: number;
-      icon: React.ReactNode;
-      color: string;
-    }) => (
-      <div className={`${color} p-4 rounded-lg text-white`}>
-        <div className="flex justify-between items-center">
-          {icon}
-          <span className={trend > 0 ? "text-green-300" : "text-red-300"}>{trend}%</span>
-        </div>
-        <h3 className="mt-2 text-xl font-bold">{value}</h3>
-        <p className="text-sm opacity-80">{title}</p>
-      </div>
-    );
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        {stats.map((stat) => (
-          <AnalyticsCard
-            key={stat.label}
-            title={stat.label}
-            value={stat.value}
-            trend={parseFloat(stat.trend)}
-            icon={<stat.icon className="h-6 w-6 text-white" />}
-            color={stat.color}
-          />
-        ))}
-      </div>
-    );
-  };
 
   return (
     <TooltipProvider>
@@ -429,6 +369,9 @@ export const AdminDashboard = () => {
                   {activeTab === "messages" && <MessageList />}
                   {activeTab === "projects" && <ProjectManager />}
                   {activeTab === "blog" && <BlogManager />}
+                  {activeTab === "technical-skills" && <TechnicalSkillsManager />}
+                  {activeTab === "education" && <EducationManager />}
+                  {activeTab === "proficiency" && <TechnicalProficiencyManager />}
                   {activeTab === "profile" && <ProfileManager />}
                   {activeTab === "timeline" && <TimelineManager />}
                 </motion.div>
