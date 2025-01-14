@@ -1,30 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { GraduationCap, Award } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
 
-interface Education {
+interface Hobby {
   id: string;
-  degree: string;
-  institution: string;
-  year_start: string;
-  year_end: string | null;
-  type: 'degree' | 'certification';
+  name: string;
+  category: string;
+  icon_key: string;
 }
 
-export const Education = () => {
-  const { data: education, isLoading } = useQuery({
-    queryKey: ["education"],
+export const Hobbies = () => {
+  const { data: hobbies, isLoading } = useQuery({
+    queryKey: ["hobbies"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("education")
+        .from("hobbies")
         .select("*")
-        .order("year_start", { ascending: false });
+        .order("category", { ascending: true });
 
       if (error) throw error;
-      return data as Education[];
+      return data as Hobby[];
     },
   });
 
@@ -33,8 +31,8 @@ export const Education = () => {
       <section className="py-10">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
-            <GraduationCap className="h-6 w-6" />
-            Education & Certifications
+            <Heart className="h-6 w-6" />
+            Interests & Hobbies
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
@@ -46,16 +44,16 @@ export const Education = () => {
     );
   }
 
-  if (!education?.length) {
+  if (!hobbies?.length) {
     return (
       <section className="py-10">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
-            <GraduationCap className="h-6 w-6" />
-            Education & Certifications
+            <Heart className="h-6 w-6" />
+            Interests & Hobbies
           </h2>
           <Card className="p-8 text-center text-muted-foreground">
-            No education or certifications added yet.
+            No hobbies or interests added yet.
           </Card>
         </div>
       </section>
@@ -71,14 +69,14 @@ export const Education = () => {
           viewport={{ once: true }}
           className="text-2xl font-bold mb-8 flex items-center gap-2"
         >
-          <GraduationCap className="h-6 w-6" />
-          Education & Certifications
+          <Heart className="h-6 w-6" />
+          Interests & Hobbies
         </motion.h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {education?.map((item, index) => (
+          {hobbies?.map((hobby, index) => (
             <motion.div
-              key={item.id}
+              key={hobby.id}
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -86,19 +84,12 @@ export const Education = () => {
             >
               <Card className="p-6 h-full">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-primary/10 mt-1">
-                    {item.type === 'degree' ? (
-                      <GraduationCap className="w-6 h-6 text-primary" />
-                    ) : (
-                      <Award className="w-6 h-6 text-primary" />
-                    )}
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Heart className="w-6 h-6 text-primary" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold">{item.degree}</h3>
-                    <p className="text-muted-foreground">{item.institution}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {item.year_start} - {item.year_end || 'Present'}
-                    </p>
+                  <div>
+                    <h3 className="font-medium">{hobby.name}</h3>
+                    <p className="text-sm text-muted-foreground">{hobby.category}</p>
                   </div>
                 </div>
               </Card>
