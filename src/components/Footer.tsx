@@ -4,6 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Github, Linkedin, Mail, Twitter, Instagram, Facebook, Youtube, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useSocialLinks } from "@/hooks/useSocialLinks";
 
 const iconMap: Record<string, React.ComponentType<any>> = {
   github: Github,
@@ -25,24 +32,7 @@ const quickLinks = [
 ];
 
 export const Footer = () => {
-  const { data: socialLinks } = useQuery({
-    queryKey: ["social-links"],
-    queryFn: async () => {
-      console.log("Fetching social links...");
-      const { data, error } = await supabase
-        .from("social_links")
-        .select("*")
-        .eq("is_active", true);
-
-      if (error) {
-        console.error("Error fetching social links:", error);
-        throw error;
-      }
-
-      console.log("Social links fetched:", data);
-      return data;
-    },
-  });
+  const { data: socialLinks } = useSocialLinks();
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -81,70 +71,70 @@ export const Footer = () => {
               Crafting innovative solutions at the intersection of technology and creativity.
             </p>
             <div className="flex space-x-6">
-              {socialLinks?.map((link) => {
-                const Icon = iconMap[link.icon_key.toLowerCase()] || iconMap.link;
-                return (
-                  <motion.a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{ scale: 1.1, y: -2 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    <span className="sr-only">{link.platform}</span>
-                    <Icon className="h-6 w-6" />
-                  </motion.a>
-                );
-              })}
+              <TooltipProvider>
+                {socialLinks?.map((link) => {
+                  const Icon = iconMap[link.icon_key.toLowerCase()] || iconMap.link;
+                  return (
+                    <Tooltip key={link.id}>
+                      <TooltipTrigger asChild>
+                        <motion.a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          whileHover={{ scale: 1.1, y: -2 }}
+                          whileTap={{ scale: 0.9 }}
+                          className="text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <span className="sr-only">{link.platform}</span>
+                          <Icon className="h-6 w-6" />
+                        </motion.a>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p>Connect on {link.platform}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </TooltipProvider>
             </div>
           </motion.div>
 
           {/* Quick Links */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0"
-          >
-            <div>
-              <h3 className="text-sm font-semibold leading-6 text-primary">Quick Links</h3>
-              <ul role="list" className="mt-6 space-y-4">
-                {quickLinks.map((link) => (
-                  <li key={link.name}>
-                    <a
-                      href={link.href}
-                      className="text-sm leading-6 text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      {link.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Contact Info */}
-            <div>
-              <h3 className="text-sm font-semibold leading-6 text-primary">Let's Connect</h3>
-              <ul role="list" className="mt-6 space-y-4">
-                <li>
+          <div>
+            <h3 className="text-sm font-semibold leading-6 text-primary">Quick Links</h3>
+            <ul role="list" className="mt-6 space-y-4">
+              {quickLinks.map((link) => (
+                <li key={link.name}>
                   <a
-                    href="mailto:contact@example.com"
+                    href={link.href}
                     className="text-sm leading-6 text-muted-foreground hover:text-primary transition-colors"
                   >
-                    contact@example.com
+                    {link.name}
                   </a>
                 </li>
-                <li>
-                  <span className="text-sm leading-6 text-muted-foreground">
-                    Location: Your City, Country
-                  </span>
-                </li>
-              </ul>
-            </div>
-          </motion.div>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact Info */}
+          <div>
+            <h3 className="text-sm font-semibold leading-6 text-primary">Let's Connect</h3>
+            <ul role="list" className="mt-6 space-y-4">
+              <li>
+                <a
+                  href="mailto:contact@example.com"
+                  className="text-sm leading-6 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  contact@example.com
+                </a>
+              </li>
+              <li>
+                <span className="text-sm leading-6 text-muted-foreground">
+                  Location: Your City, Country
+                </span>
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Footer Bottom */}
