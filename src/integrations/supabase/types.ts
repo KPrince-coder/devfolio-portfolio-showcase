@@ -286,34 +286,28 @@ export type Database = {
       }
       contact_submissions: {
         Row: {
-          created_at: string
+          created_at: string | null
           email: string
-          full_name: string
-          id: number
-          is_read: boolean
+          id: string
           message: string
-          subject: string
-          updated_at: string
+          name: string
+          read: boolean | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           email: string
-          full_name: string
-          id?: number
-          is_read?: boolean
+          id?: string
           message: string
-          subject: string
-          updated_at?: string
+          name: string
+          read?: boolean | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           email?: string
-          full_name?: string
-          id?: number
-          is_read?: boolean
+          id?: string
           message?: string
-          subject?: string
-          updated_at?: string
+          name?: string
+          read?: boolean | null
         }
         Relationships: []
       }
