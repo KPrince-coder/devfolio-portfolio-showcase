@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
 import * as Icons from "lucide-react";
-import { Mail, User, MessageSquare, MapPin } from "lucide-react";
+import { Mail, User, MessageSquare, MapPin, Send } from "lucide-react";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 
 export const Contact = () => {
