@@ -4,6 +4,12 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 import * as Icons from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const navItems = [
   { name: "Home", href: "#home", color: "from-pink-500 to-rose-500" },
@@ -97,21 +103,29 @@ export const Header = () => {
 
           {/* Social Links */}
           <div className="flex items-center space-x-4">
-            {socialLinks?.map((link) => (
-              <motion.a
-                key={link.id}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(
-                  "p-2 rounded-full hover:bg-accent transition-colors hover:text-primary"
-                )}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {renderSocialIcon(link.icon_key)}
-              </motion.a>
-            ))}
+            <TooltipProvider>
+              {socialLinks?.map((link) => (
+                <Tooltip key={link.id}>
+                  <TooltipTrigger asChild>
+                    <motion.a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "p-2 rounded-full hover:bg-accent transition-colors hover:text-primary"
+                      )}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {renderSocialIcon(link.icon_key)}
+                    </motion.a>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" sideOffset={5}>
+                    <p>Connect on {link.platform}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </TooltipProvider>
           </div>
         </motion.div>
 
@@ -153,20 +167,28 @@ export const Header = () => {
                 </a>
               ))}
               <div className="flex items-center space-x-4 pt-4">
-                {socialLinks?.map((link) => (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn(
-                      "p-3 rounded-full hover:bg-accent transition-colors hover:text-primary"
-                    )}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {renderSocialIcon(link.icon_key)}
-                  </a>
-                ))}
+                <TooltipProvider>
+                  {socialLinks?.map((link) => (
+                    <Tooltip key={link.id}>
+                      <TooltipTrigger asChild>
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(
+                            "p-3 rounded-full hover:bg-accent transition-colors hover:text-primary"
+                          )}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {renderSocialIcon(link.icon_key)}
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" sideOffset={5}>
+                        <p>Connect on {link.platform}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </TooltipProvider>
               </div>
             </nav>
           </motion.div>

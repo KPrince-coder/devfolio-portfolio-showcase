@@ -1,15 +1,15 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowDown, FileText, Github, Linkedin, Mail } from "lucide-react";
+import { ArrowDown, FileText } from "lucide-react";
 import { ParticlesBackground } from "./ParticlesBackground";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 import * as Icons from "lucide-react";
@@ -175,7 +175,7 @@ export const Hero = () => {
             className="flex justify-center gap-4 pt-4 pb-8"
           >
             {socialLinks?.map((link) => (
-              <Tooltip key={link.id} delayDuration={200}>
+              <Tooltip key={link.id}>
                 <TooltipTrigger asChild>
                   <motion.a
                     href={link.url}
