@@ -10,7 +10,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
-import { Mail, User, MessageSquare, Github, Linkedin, Send, MapPin } from "lucide-react";
+import * as Icons from "lucide-react";
+import { Mail, User, MessageSquare, MapPin } from "lucide-react";
+import { useSocialLinks } from "@/hooks/useSocialLinks";
 
 export const Contact = () => {
   const [formData, setFormData] = useState({
