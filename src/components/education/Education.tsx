@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { GraduationCap, Award, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { SkeletonCard } from "@/components/ui/skeleton-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Education {
   id: string;
@@ -38,7 +38,13 @@ export const Education = () => {
           </h2>
           <div className="grid grid-cols-1 gap-6">
             {[1, 2].map((i) => (
-              <SkeletonCard key={i} className="h-40" />
+              <Card key={i} className="p-6">
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+              </Card>
             ))}
           </div>
         </div>
