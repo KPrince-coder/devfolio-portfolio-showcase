@@ -1,39 +1,26 @@
 import React, { useState } from 'react';
-import { 
-  Calendar, 
-  Filter, 
-  Tag, 
-  User 
-} from 'lucide-react';
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from '@/components/ui/popover';
+import { Calendar, Filter, Tag, User } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { DateRange } from '@/types/messages';
 
 interface AdvancedFilterProps {
   onFilterApply: (filters: {
-    dateRange?: { from: Date; to: Date };
+    dateRange: DateRange;
     tags?: string[];
     sender?: string;
     status?: 'all' | 'read' | 'unread' | 'replied';
   }) => void;
 }
 
-export const AdvancedMessageFilter: React.FC<AdvancedFilterProps> = ({ 
-  onFilterApply 
-}) => {
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+export const AdvancedMessageFilter: React.FC<AdvancedFilterProps> = ({ onFilterApply }) => {
+  const [dateRange, setDateRange] = useState<DateRange>({ 
+    from: new Date(), 
+    to: new Date() 
+  });
   const [tags, setTags] = useState<string[]>([]);
   const [sender, setSender] = useState('');
   const [status, setStatus] = useState<'all' | 'read' | 'unread' | 'replied'>('all');
@@ -62,7 +49,7 @@ export const AdvancedMessageFilter: React.FC<AdvancedFilterProps> = ({
           <CalendarComponent
             mode="range"
             selected={dateRange}
-            onSelect={setDateRange}
+            onSelect={(range) => range && setDateRange(range)}
           />
         </div>
 

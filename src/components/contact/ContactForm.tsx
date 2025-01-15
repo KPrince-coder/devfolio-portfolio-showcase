@@ -1,149 +1,130 @@
-import React, { useState } from "react";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import { AlertCircle } from "lucide-react";
-import { submitContactForm } from "@/services/contact-service";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { User, Mail, MessageSquare, Send } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
-interface ContactFormProps {
-  toast: any;
+interface ContactFormData {
+  full_name: string;
+  email: string;
+  subject: string;
+  message: string;
 }
 
-export const ContactForm: React.FC<ContactFormProps> = ({ toast }) => {
-  const [formData, setFormData] = useState({
-    full_name: "",
-    email: "",
-    subject: "",
-    message: "",
+export const ContactForm = () => {
+  const [formData, setFormData] = useState<ContactFormData>({
+    full_name: '',
+    email: '',
+    subject: '',
+    message: ''
   });
-  const [errors, setErrors] = useState<{
-    full_name?: string;
-    email?: string;
-    subject?: string;
-    message?: string;
-  }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Zod validation schema
-  const contactFormSchema = z.object({
-    full_name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
-    subject: z.string().min(3, "Subject must be at least 3 characters"),
-    message: z.string().min(10, "Message must be at least 10 characters")
-  });
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});
     setIsSubmitting(true);
 
     try {
-      // Validate form data
-      const validatedData = contactFormSchema.parse(formData);
+      const { error } = await supabase
+        .from('contact_submissions')
+        .insert([formData]);
 
-      // Submit form
-      const result = await submitContactForm(validatedData);
+      if (error) throw error;
 
-      if (result.success) {
-        toast({
-          title: "Message Sent!",
-          description: "Thanks for reaching out. We'll get back to you soon.",
-          variant: "default"
-        });
+      toast({
+        title: "Message sent!",
+        description: "Thank you for your message. We'll get back to you soon.",
+      });
 
-        // Reset form
-        setFormData({
-          full_name: "",
-          email: "",
-          subject: "",
-          message: "",
-        });
-      } else {
-        toast({
-          title: "Submission Failed",
-          description: result.error || "An unexpected error occurred",
-          variant: "destructive"
-        });
-      }
+      setFormData({
+        full_name: '',
+        email: '',
+        subject: '',
+        message: ''
+      });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        // Handle validation errors
-        const fieldErrors: any = {};
-        error.errors.forEach(err => {
-          fieldErrors[err.path[0]] = err.message;
-        });
-        setErrors(fieldErrors);
-      } else {
-        toast({
-          title: "Error",
-          description: "An unexpected error occurred",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const renderInputWithError = (
-    name: keyof typeof formData, 
-    icon: React.ElementType, 
-    type: string = "text",
-    placeholder: string
-  ) => (
-    <div className="relative">
-      <icon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-      <Input
-        type={type}
-        placeholder={placeholder}
-        value={formData[name]}
-        onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}
-        className={`pl-10 ${errors[name] ? 'border-red-500' : ''}`}
-        required
-      />
-      {errors[name] && (
-        <div className="text-red-500 text-sm mt-1 flex items-center">
-          <AlertCircle className="mr-2 h-4 w-4" />
-          {errors[name]}
-        </div>
-      )}
-    </div>
-  );
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {renderInputWithError("full_name", User, "text", "Full Name")}
-      {renderInputWithError("email", Mail, "email", "Email Address")}
-      {renderInputWithError("subject", MessageSquare, "text", "Email Subject")}
-      
-      <div>
+      <div className="space-y-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <User className="h-5 w-5 text-gray-400" />
+          </div>
+          <Input
+            type="text"
+            placeholder="Full Name"
+            className="pl-10"
+            value={formData.full_name}
+            onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+            required
+          />
+        </div>
+
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Mail className="h-5 w-5 text-gray-400" />
+          </div>
+          <Input
+            type="email"
+            placeholder="Email"
+            className="pl-10"
+            value={formData.email}
+            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+            required
+          />
+        </div>
+
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <MessageSquare className="h-5 w-5 text-gray-400" />
+          </div>
+          <Input
+            type="text"
+            placeholder="Subject"
+            className="pl-10"
+            value={formData.subject}
+            onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+            required
+          />
+        </div>
+
         <Textarea
-          placeholder="Your Message"
+          placeholder="Your message..."
+          className="min-h-[150px]"
           value={formData.message}
-          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-          className={`min-h-[150px] resize-none ${errors.message ? 'border-red-500' : ''}`}
+          onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
           required
         />
-        {errors.message && (
-          <div className="text-red-500 text-sm mt-1 flex items-center">
-            <AlertCircle className="mr-2 h-4 w-4" />
-            {errors.message}
-          </div>
-        )}
       </div>
-      
-      <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
         <Button
           type="submit"
+          className="w-full"
           disabled={isSubmitting}
-          className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600"
-          >
-            <Send className="mr-2 h-4 w-4" /> 
-            {isSubmitting ? "Sending..." : "Send Message"}
-          </Button>
-        </motion.div>
-      </form>
-    );
-  };
+        >
+          <Send className="mr-2 h-4 w-4" />
+          {isSubmitting ? 'Sending...' : 'Send Message'}
+        </Button>
+      </motion.div>
+    </form>
+  );
+};
