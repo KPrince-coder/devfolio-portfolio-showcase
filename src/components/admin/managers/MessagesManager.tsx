@@ -1,3 +1,20 @@
+import { useMessageManager } from "@/hooks/useMessageManager";
+import { useState } from "react";
+import { ContactSubmission } from '@/types/messages';
+import { MessageSearchFilter } from "../messages/MessageSearchFilter";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Trash2 } from "lucide-react";
+import { MessageListItem } from "../messages/MessageListItem";
+import { Button } from "@/components/ui/button";
+import { MessageReplyDialog } from "../messages/MessageReplyDialog";
+import { MessageDetailsDialog } from "../messages/MessageDetailsDialog";
+import {supabase} from "@/integrations/supabase/client";
+// import { toast } from "sonner";
+import {toast} from '@/components/ui/use-toast';
+
+
 export const MessagesManager: React.FC = () => {
     const { 
       messages, 
@@ -170,7 +187,7 @@ export const MessagesManager: React.FC = () => {
       try {
         const { error } = await supabase
           .from('contact_submissions')
-          .update({ is_read: true })
+          .update({ read: true })
           .in('id', messageIds);
     
         if (error) throw error;
