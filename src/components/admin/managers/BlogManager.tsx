@@ -7,8 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { BlogPost } from "@/types/blog";
-import { BlogForm } from "./BlogForm";
-import { BlogList } from "./BlogList";
+import { BlogForm } from "../BlogForm";
+import { BlogList } from "../BlogList";
 import { checkAuth, generateUniqueSlug, slugify } from "@/utils/blogUtils";
 
 interface SupabaseBlogPost {

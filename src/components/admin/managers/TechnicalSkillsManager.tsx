@@ -8,23 +8,22 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { TechnicalProficiencyForm } from "./forms/TechnicalProficiencyForm";
+import { TechnicalSkillsForm } from "../forms/TechnicalSkillsForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Progress } from "@/components/ui/progress";
 
-export const TechnicalProficiencyManager = () => {
+export const TechnicalSkillsManager = () => {
   const { toast } = useToast();
-  const [selectedProficiency, setSelectedProficiency] = useState<any>(null);
+  const [selectedSkill, setSelectedSkill] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { data: proficiencies, refetch } = useQuery({
-    queryKey: ["technical-proficiency-admin"],
+  const { data: skills, refetch } = useQuery({
+    queryKey: ["technical-skills-admin"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("technical_proficiency")
+        .from("technical_skills")
         .select("*")
-        .order("proficiency", { ascending: false });
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
       return data;
@@ -34,7 +33,7 @@ export const TechnicalProficiencyManager = () => {
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("technical_proficiency")
+        .from("technical_skills")
         .delete()
         .eq("id", id);
 
@@ -42,16 +41,16 @@ export const TechnicalProficiencyManager = () => {
 
       toast({
         title: "Success",
-        description: "Technical proficiency deleted successfully",
+        description: "Technical skill deleted successfully",
       });
 
       refetch();
     } catch (error) {
-      console.error("Error deleting technical proficiency:", error);
+      console.error("Error deleting technical skill:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete technical proficiency",
+        description: "Failed to delete technical skill",
       });
     }
   };
@@ -59,17 +58,17 @@ export const TechnicalProficiencyManager = () => {
   return (
     <Card className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">Technical Proficiency</h2>
+        <h2 className="text-2xl font-semibold">Technical Skills</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setSelectedProficiency(null)}>
+            <Button onClick={() => setSelectedSkill(null)}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Proficiency
+              Add Skill
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <TechnicalProficiencyForm
-              initialData={selectedProficiency}
+            <TechnicalSkillsForm
+              initialData={selectedSkill}
               onClose={() => {
                 setIsDialogOpen(false);
                 refetch();
@@ -80,24 +79,28 @@ export const TechnicalProficiencyManager = () => {
       </div>
 
       <div className="space-y-4">
-        {proficiencies?.map((proficiency) => (
-          <Card key={proficiency.id} className="p-4">
+        {skills?.map((skill) => (
+          <Card key={skill.id} className="p-4">
             <div className="flex justify-between items-start">
-              <div className="flex-1 mr-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-medium">{proficiency.skill}</h3>
-                  <span className="text-sm text-muted-foreground">
-                    {proficiency.proficiency}%
-                  </span>
+              <div>
+                <h3 className="font-medium">{skill.category}</h3>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {skill.skills.map((item: string) => (
+                    <span
+                      key={item}
+                      className="px-2 py-1 bg-primary/10 rounded-full text-sm"
+                    >
+                      {item}
+                    </span>
+                  ))}
                 </div>
-                <Progress value={proficiency.proficiency} className="h-2" />
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => {
-                    setSelectedProficiency(proficiency);
+                    setSelectedSkill(skill);
                     setIsDialogOpen(true);
                   }}
                 >
@@ -106,7 +109,7 @@ export const TechnicalProficiencyManager = () => {
                 <Button
                   variant="destructive"
                   size="icon"
-                  onClick={() => handleDelete(proficiency.id)}
+                  onClick={() => handleDelete(skill.id)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

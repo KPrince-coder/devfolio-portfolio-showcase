@@ -8,22 +8,22 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { TechnicalSkillsForm } from "./forms/TechnicalSkillsForm";
+import { EducationForm } from "../forms/EducationForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
-export const TechnicalSkillsManager = () => {
+export const EducationManager = () => {
   const { toast } = useToast();
-  const [selectedSkill, setSelectedSkill] = useState<any>(null);
+  const [selectedEducation, setSelectedEducation] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { data: skills, refetch } = useQuery({
-    queryKey: ["technical-skills-admin"],
+  const { data: education, refetch } = useQuery({
+    queryKey: ["education-admin"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("technical_skills")
+        .from("education")
         .select("*")
-        .order("created_at", { ascending: true });
+        .order("year_start", { ascending: false });
 
       if (error) throw error;
       return data;
@@ -33,7 +33,7 @@ export const TechnicalSkillsManager = () => {
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("technical_skills")
+        .from("education")
         .delete()
         .eq("id", id);
 
@@ -41,16 +41,16 @@ export const TechnicalSkillsManager = () => {
 
       toast({
         title: "Success",
-        description: "Technical skill deleted successfully",
+        description: "Education entry deleted successfully",
       });
 
       refetch();
     } catch (error) {
-      console.error("Error deleting technical skill:", error);
+      console.error("Error deleting education entry:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete technical skill",
+        description: "Failed to delete education entry",
       });
     }
   };
@@ -58,17 +58,17 @@ export const TechnicalSkillsManager = () => {
   return (
     <Card className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">Technical Skills</h2>
+        <h2 className="text-2xl font-semibold">Education & Certifications</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setSelectedSkill(null)}>
+            <Button onClick={() => setSelectedEducation(null)}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Skill
+              Add Entry
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <TechnicalSkillsForm
-              initialData={selectedSkill}
+            <EducationForm
+              initialData={selectedEducation}
               onClose={() => {
                 setIsDialogOpen(false);
                 refetch();
@@ -79,28 +79,22 @@ export const TechnicalSkillsManager = () => {
       </div>
 
       <div className="space-y-4">
-        {skills?.map((skill) => (
-          <Card key={skill.id} className="p-4">
+        {education?.map((entry) => (
+          <Card key={entry.id} className="p-4">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="font-medium">{skill.category}</h3>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {skill.skills.map((item: string) => (
-                    <span
-                      key={item}
-                      className="px-2 py-1 bg-primary/10 rounded-full text-sm"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
+                <h3 className="font-medium">{entry.degree}</h3>
+                <p className="text-sm text-muted-foreground">{entry.institution}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {entry.year_start} - {entry.year_end || "Present"}
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => {
-                    setSelectedSkill(skill);
+                    setSelectedEducation(entry);
                     setIsDialogOpen(true);
                   }}
                 >
@@ -109,7 +103,7 @@ export const TechnicalSkillsManager = () => {
                 <Button
                   variant="destructive"
                   size="icon"
-                  onClick={() => handleDelete(skill.id)}
+                  onClick={() => handleDelete(entry.id)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
