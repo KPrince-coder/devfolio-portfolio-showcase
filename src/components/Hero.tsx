@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowDown, FileText, Github, Linkedin, Mail } from "lucide-react";
@@ -11,11 +10,12 @@ import {
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-  } from "@/components/ui/tooltip";
+} from "@/components/ui/tooltip";
+import { useSocialLinks } from "@/hooks/useSocialLinks";
+import * as Icons from "lucide-react";
 
 export const Hero = () => {
   const { toast } = useToast();
-
   const { data: profileData } = useQuery({
     queryKey: ['profile-data'],
     queryFn: async () => {
@@ -34,6 +34,8 @@ export const Hero = () => {
       return data;
     }
   });
+
+  const { data: socialLinks } = useSocialLinks();
 
   const handleDownloadCV = async () => {
     if (!profileData?.resume_url) {
@@ -74,13 +76,11 @@ export const Hero = () => {
       });
     }
   };
- const socialLinks = [
-  { icon: Github, href: "https://github.com", tooltip: "Visit GitHub Profile" },
-  { icon: Linkedin, href: "https://linkedin.com", tooltip: "Connect on LinkedIn" },
-  { icon: Mail, href: "mailto:contact@example.com", tooltip: "Send Email" },
-];
 
-
+  const renderSocialIcon = (iconKey: string) => {
+    const IconComponent = (Icons as any)[iconKey.charAt(0).toUpperCase() + iconKey.slice(1)];
+    return IconComponent ? <IconComponent className="h-5 w-5" /> : null;
+  };
 
   return (
     <section className="flex h-screen items-center justify-center overflow-hidden">
@@ -174,22 +174,22 @@ export const Hero = () => {
             transition={{ delay: 1 }}
             className="flex justify-center gap-4 pt-4 pb-8"
           >
-            {socialLinks.map((social, index) => (
-              <Tooltip key={index} delayDuration={200}>
+            {socialLinks?.map((link) => (
+              <Tooltip key={link.id} delayDuration={200}>
                 <TooltipTrigger asChild>
                   <motion.a
-                    href={social.href}
+                    href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     className="rounded-full bg-primary/10 p-3 text-primary transition-colors hover:bg-primary/20"
-                    >
-                    <social.icon className="h-5 w-5" />
+                  >
+                    {renderSocialIcon(link.icon_key)}
                   </motion.a>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" sideOffset={5}>
-                  <p>{social.tooltip}</p>
+                  <p>Connect on {link.platform}</p>
                 </TooltipContent>
               </Tooltip>
             ))}
@@ -258,4 +258,3 @@ export const Hero = () => {
     </section>
   );
 };
-

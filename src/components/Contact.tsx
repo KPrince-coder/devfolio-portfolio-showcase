@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +20,7 @@ export const Contact = () => {
     message: "",
   });
   const { toast } = useToast();
+  const { data: socialLinks } = useSocialLinks();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,10 +31,13 @@ export const Contact = () => {
     setFormData({ name: "", email: "", subject: "", message: "" });
   };
 
+  const renderSocialIcon = (iconKey: string) => {
+    const IconComponent = (Icons as any)[iconKey.charAt(0).toUpperCase() + iconKey.slice(1)];
+    return IconComponent ? <IconComponent className="h-5 w-5" /> : null;
+  };
+
   return (
     <div className="relative min-h-screen w-full py-12 md:py-20">
-      {/* Blur Background */}
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -71,61 +74,29 @@ export const Contact = () => {
               {/* Social Icons with Tooltips */}
               <div className="mt-6 flex gap-4">
                 <TooltipProvider>
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <motion.a
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        href="https://github.com"
-                        target="_blank"
-                        className="rounded-full bg-gray-800 p-3 text-blue-500 transition-colors hover:bg-gray-700"
-                      >
-                        <Github className="h-5 w-5" />
-                      </motion.a>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" sideOffset={5}>
-                      <p>Visit GitHub Profile</p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <motion.a
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        href="https://linkedin.com"
-                        target="_blank"
-                        className="rounded-full bg-gray-800 p-3 text-blue-500 transition-colors hover:bg-gray-700"
-                      >
-                        <Linkedin className="h-5 w-5" />
-                      </motion.a>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" sideOffset={5}>
-                      <p>Connect on LinkedIn</p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <motion.a
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        href="mailto:contact@example.com"
-                        className="rounded-full bg-gray-800 p-3 text-blue-500 transition-colors hover:bg-gray-700"
-                      >
-                        <Mail className="h-5 w-5" />
-                      </motion.a>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" sideOffset={5}>
-                      <p>Send Email</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  {socialLinks?.map((link) => (
+                    <Tooltip key={link.id} delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <motion.a
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          href={link.url}
+                          target="_blank"
+                          className="rounded-full bg-gray-800 p-3 text-blue-500 transition-colors hover:bg-gray-700"
+                        >
+                          {renderSocialIcon(link.icon_key)}
+                        </motion.a>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" sideOffset={5}>
+                        <p>Connect on {link.platform}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
                 </TooltipProvider>
               </div>
             </div>
           </motion.div>
 
-          {/* Contact Form */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}

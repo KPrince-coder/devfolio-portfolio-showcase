@@ -13,21 +13,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import * as Icons from "lucide-react";
 
 interface SocialLinksFormProps {
   initialData?: any;
   onClose: () => void;
 }
 
-const SOCIAL_ICONS = [
-  { value: "github", label: "GitHub" },
-  { value: "linkedin", label: "LinkedIn" },
-  { value: "twitter", label: "Twitter" },
-  { value: "instagram", label: "Instagram" },
-  { value: "facebook", label: "Facebook" },
-  { value: "youtube", label: "YouTube" },
-  { value: "mail", label: "Email" },
-  { value: "link", label: "Generic Link" },
+// Define available social media platforms and their corresponding icons
+const SOCIAL_PLATFORMS = [
+  { value: "github", label: "GitHub", icon: "Github" },
+  { value: "linkedin", label: "LinkedIn", icon: "Linkedin" },
+  { value: "twitter", label: "Twitter", icon: "Twitter" },
+  { value: "facebook", label: "Facebook", icon: "Facebook" },
+  { value: "instagram", label: "Instagram", icon: "Instagram" },
+  { value: "youtube", label: "YouTube", icon: "Youtube" },
+  { value: "mail", label: "Email", icon: "Mail" },
+  { value: "link", label: "Generic Link", icon: "Link" },
 ];
 
 export const SocialLinksForm = ({ initialData, onClose }: SocialLinksFormProps) => {
@@ -73,6 +75,9 @@ export const SocialLinksForm = ({ initialData, onClose }: SocialLinksFormProps) 
     }
   };
 
+  const selectedPlatform = SOCIAL_PLATFORMS.find(p => p.value === watch("icon_key"));
+  const IconComponent = selectedPlatform ? (Icons as any)[selectedPlatform.icon] : Icons.Link;
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="space-y-4">
@@ -83,7 +88,7 @@ export const SocialLinksForm = ({ initialData, onClose }: SocialLinksFormProps) 
             {...register("platform", { required: "Platform name is required" })}
           />
           {errors.platform && (
-            <p className="text-sm text-red-500">{errors.platform.message?.toString()}</p>
+            <p className="text-sm text-destructive">{errors.platform.message?.toString()}</p>
           )}
         </div>
 
@@ -91,28 +96,45 @@ export const SocialLinksForm = ({ initialData, onClose }: SocialLinksFormProps) 
           <Label htmlFor="url">URL</Label>
           <Input
             id="url"
-            {...register("url", { required: "URL is required" })}
+            {...register("url", { 
+              required: "URL is required",
+              pattern: {
+                value: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
+                message: "Please enter a valid URL"
+              }
+            })}
           />
           {errors.url && (
-            <p className="text-sm text-red-500">{errors.url.message?.toString()}</p>
+            <p className="text-sm text-destructive">{errors.url.message?.toString()}</p>
           )}
         </div>
 
         <div>
-          <Label htmlFor="icon_key">Icon</Label>
+          <Label>Icon</Label>
           <Select
             value={watch("icon_key")}
             onValueChange={(value) => setValue("icon_key", value)}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select an icon" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select an icon">
+                <div className="flex items-center gap-2">
+                  {IconComponent && <IconComponent className="h-4 w-4" />}
+                  <span>{selectedPlatform?.label || "Select an icon"}</span>
+                </div>
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {SOCIAL_ICONS.map((icon) => (
-                <SelectItem key={icon.value} value={icon.value}>
-                  {icon.label}
-                </SelectItem>
-              ))}
+              {SOCIAL_PLATFORMS.map((platform) => {
+                const PlatformIcon = (Icons as any)[platform.icon];
+                return (
+                  <SelectItem key={platform.value} value={platform.value}>
+                    <div className="flex items-center gap-2">
+                      <PlatformIcon className="h-4 w-4" />
+                      <span>{platform.label}</span>
+                    </div>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -120,8 +142,8 @@ export const SocialLinksForm = ({ initialData, onClose }: SocialLinksFormProps) 
         <div className="flex items-center space-x-2">
           <Switch
             id="is_active"
-            {...register("is_active")}
-            defaultChecked={initialData?.is_active ?? true}
+            checked={watch("is_active")}
+            onCheckedChange={(checked) => setValue("is_active", checked)}
           />
           <Label htmlFor="is_active">Active</Label>
         </div>

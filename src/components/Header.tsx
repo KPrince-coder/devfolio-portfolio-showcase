@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Github, Linkedin, Mail } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSocialLinks } from "@/hooks/useSocialLinks";
+import * as Icons from "lucide-react";
 
 const navItems = [
   { name: "Home", href: "#home", color: "from-pink-500 to-rose-500" },
@@ -12,30 +14,10 @@ const navItems = [
   { name: "Contact", href: "#contact", color: "from-amber-500 to-yellow-500" },
 ];
 
-const socialLinks = [
-  {
-    name: "GitHub",
-    href: "https://github.com/yourusername",
-    icon: Github,
-    color: "hover:text-gray-100",
-  },
-  {
-    name: "LinkedIn",
-    href: "https://linkedin.com/in/yourusername",
-    icon: Linkedin,
-    color: "hover:text-blue-400",
-  },
-  {
-    name: "Email",
-    href: "mailto:your@email.com",
-    icon: Mail,
-    color: "hover:text-red-400",
-  },
-];
-
 export const Header = () => {
   const [activeSection, setActiveSection] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { data: socialLinks } = useSocialLinks();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,6 +40,11 @@ export const Header = () => {
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const renderSocialIcon = (iconKey: string) => {
+    const IconComponent = (Icons as any)[iconKey.charAt(0).toUpperCase() + iconKey.slice(1)];
+    return IconComponent ? <IconComponent className="w-5 h-5" /> : null;
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-accent/20">
@@ -110,20 +97,19 @@ export const Header = () => {
 
           {/* Social Links */}
           <div className="flex items-center space-x-4">
-            {socialLinks.map((link) => (
+            {socialLinks?.map((link) => (
               <motion.a
-                key={link.name}
-                href={link.href}
+                key={link.id}
+                href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
-                  "p-2 rounded-full hover:bg-accent transition-colors",
-                  link.color
+                  "p-2 rounded-full hover:bg-accent transition-colors hover:text-primary"
                 )}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <link.icon className="w-5 h-5" />
+                {renderSocialIcon(link.icon_key)}
               </motion.a>
             ))}
           </div>
@@ -167,19 +153,18 @@ export const Header = () => {
                 </a>
               ))}
               <div className="flex items-center space-x-4 pt-4">
-                {socialLinks.map((link) => (
+                {socialLinks?.map((link) => (
                   <a
-                    key={link.name}
-                    href={link.href}
+                    key={link.id}
+                    href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={cn(
-                      "p-3 rounded-full hover:bg-accent transition-colors",
-                      link.color
+                      "p-3 rounded-full hover:bg-accent transition-colors hover:text-primary"
                     )}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <link.icon className="w-6 h-6" />
+                    {renderSocialIcon(link.icon_key)}
                   </a>
                 ))}
               </div>
