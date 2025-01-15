@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { Heart, Music, Camera, Book, Gamepad, Code, Palette, Dumbbell } from "lucide-react";
 
 interface HobbiesFormProps {
   initialData?: {
@@ -15,6 +16,28 @@ interface HobbiesFormProps {
   };
   onClose: () => void;
 }
+
+const CATEGORIES = [
+  "Arts & Crafts",
+  "Music",
+  "Photography",
+  "Reading",
+  "Gaming",
+  "Technology",
+  "Sports & Fitness",
+  "Other"
+];
+
+const ICONS = [
+  { key: "heart", icon: Heart, label: "Heart" },
+  { key: "music", icon: Music, label: "Music" },
+  { key: "camera", icon: Camera, label: "Camera" },
+  { key: "book", icon: Book, label: "Book" },
+  { key: "gamepad", icon: Gamepad, label: "Gaming" },
+  { key: "code", icon: Code, label: "Technology" },
+  { key: "palette", icon: Palette, label: "Art" },
+  { key: "dumbbell", icon: Dumbbell, label: "Fitness" }
+];
 
 export const HobbiesForm = ({ initialData, onClose }: HobbiesFormProps) => {
   const { toast } = useToast();
@@ -82,11 +105,21 @@ export const HobbiesForm = ({ initialData, onClose }: HobbiesFormProps) => {
 
         <div>
           <label className="block text-sm font-medium mb-1">Category</label>
-          <Input
+          <Select
             value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            required
-          />
+            onValueChange={(value) => setFormData({ ...formData, category: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
@@ -99,11 +132,14 @@ export const HobbiesForm = ({ initialData, onClose }: HobbiesFormProps) => {
               <SelectValue placeholder="Select icon" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="heart">Heart</SelectItem>
-              <SelectItem value="music">Music</SelectItem>
-              <SelectItem value="camera">Camera</SelectItem>
-              <SelectItem value="book">Book</SelectItem>
-              <SelectItem value="gamepad">Gamepad</SelectItem>
+              {ICONS.map(({ key, icon: Icon, label }) => (
+                <SelectItem key={key} value={key}>
+                  <div className="flex items-center gap-2">
+                    <Icon className="h-4 w-4" />
+                    <span>{label}</span>
+                  </div>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

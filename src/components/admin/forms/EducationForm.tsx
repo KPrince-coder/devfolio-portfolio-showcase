@@ -5,6 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 
 interface EducationFormProps {
   initialData?: {
@@ -28,6 +33,27 @@ export const EducationForm = ({ initialData, onClose }: EducationFormProps) => {
     year_end: initialData?.year_end || "",
     type: initialData?.type || "degree" as const,
   });
+
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    initialData?.year_start ? new Date(parseInt(initialData.year_start), 0) : undefined
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    initialData?.year_end ? new Date(parseInt(initialData.year_end), 0) : undefined
+  );
+
+  const handleStartDateSelect = (date: Date | undefined) => {
+    setStartDate(date);
+    if (date) {
+      setFormData({ ...formData, year_start: date.getFullYear().toString() });
+    }
+  };
+
+  const handleEndDateSelect = (date: Date | undefined) => {
+    setEndDate(date);
+    if (date) {
+      setFormData({ ...formData, year_end: date.getFullYear().toString() });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,22 +142,59 @@ export const EducationForm = ({ initialData, onClose }: EducationFormProps) => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Start Year</label>
-            <Input
-              type="text"
-              value={formData.year_start}
-              onChange={(e) => setFormData({ ...formData, year_start: e.target.value })}
-              required
-              placeholder="YYYY"
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !startDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate ? format(startDate, "yyyy") : <span>Select year</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={handleStartDateSelect}
+                  initialFocus
+                  disabled={(date) =>
+                    date > new Date() || date < new Date(1900, 0, 1)
+                  }
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">End Year</label>
-            <Input
-              type="text"
-              value={formData.year_end}
-              onChange={(e) => setFormData({ ...formData, year_end: e.target.value })}
-              placeholder="YYYY (or leave empty for ongoing)"
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !endDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, "yyyy") : <span>Select year</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={handleEndDateSelect}
+                  initialFocus
+                  disabled={(date) =>
+                    date > new Date() || date < new Date(1900, 0, 1)
+                  }
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 

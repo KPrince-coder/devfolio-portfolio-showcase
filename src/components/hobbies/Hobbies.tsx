@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart } from "lucide-react";
+import { Heart, Music, Camera, Book, Gamepad, Code, Palette, Dumbbell } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
 
@@ -11,6 +11,17 @@ interface Hobby {
   category: string;
   icon_key: string;
 }
+
+const ICON_MAP = {
+  heart: Heart,
+  music: Music,
+  camera: Camera,
+  book: Book,
+  gamepad: Gamepad,
+  code: Code,
+  palette: Palette,
+  dumbbell: Dumbbell
+};
 
 export const Hobbies = () => {
   const { data: hobbies, isLoading } = useQuery({
@@ -74,27 +85,31 @@ export const Hobbies = () => {
         </motion.h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {hobbies?.map((hobby, index) => (
-            <motion.div
-              key={hobby.id}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card className="p-6 h-full">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Heart className="w-6 h-6 text-primary" />
+          {hobbies?.map((hobby, index) => {
+            const IconComponent = ICON_MAP[hobby.icon_key as keyof typeof ICON_MAP] || Heart;
+            
+            return (
+              <motion.div
+                key={hobby.id}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className="p-6 h-full">
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <IconComponent className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">{hobby.name}</h3>
+                      <p className="text-sm text-muted-foreground">{hobby.category}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-medium">{hobby.name}</h3>
-                    <p className="text-sm text-muted-foreground">{hobby.category}</p>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
