@@ -1,3 +1,11 @@
+export interface DateRange {
+  from: Date;
+  to: Date;
+}
+
+export type MessageStatus = 'new' | 'read' | 'replied' | 'archived';
+export type MessageFilterStatus = 'all' | 'read' | 'unread' | 'replied';
+
 export interface ContactSubmission {
   id: number;
   full_name: string;
@@ -5,21 +13,16 @@ export interface ContactSubmission {
   subject: string;
   message: string;
   is_read: boolean;
-  status: 'new' | 'read' | 'replied' | 'archived';
   created_at: string;
   updated_at: string;
-  tags?: string[];
+  status: MessageStatus;
+  tags: string[];
 }
 
 export interface MessageFilters {
   searchTerm: string;
-  status: 'all' | 'read' | 'unread' | 'replied';
+  status: MessageFilterStatus;
   sortOrder: 'asc' | 'desc';
   page: number;
   pageSize: number;
-}
-
-export interface DateRange {
-  from: Date;
-  to: Date;
 }

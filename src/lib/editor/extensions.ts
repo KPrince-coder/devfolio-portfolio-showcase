@@ -128,13 +128,13 @@ const CustomTable = Table.extend({
 
 export const createEditorExtensions = (): Extensions => [
   StarterKit.configure({
-    heading: false,
-    codeBlock: false, // This is important to disable the default code block
+    heading: {
+      levels: [1, 2, 3, 4, 5, 6]
+    }
   }),
   CustomHeading.configure({
     levels: [1, 2, 3, 4, 5, 6]
   }),
-  // Replace the CodeBlockLowlight.configure with CustomCodeBlock.configure
   CustomCodeBlock.configure({
     lowlight,
     defaultLanguage: 'plaintext',

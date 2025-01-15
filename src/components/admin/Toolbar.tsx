@@ -102,7 +102,7 @@ export const Toolbar = ({
       case 'h4':
       case 'h5':
       case 'h6':
-        editor.chain().focus().toggleHeading({ level: parseInt(style[1]) as 1 | 2 | 3 | 4 | 5 | 6 }).run();
+        editor.chain().focus().setHeading({ level: parseInt(style[1]) as 1 | 2 | 3 | 4 | 5 | 6 }).run();
         break;
       case 'paragraph':
         editor.chain().focus().setParagraph().run();
