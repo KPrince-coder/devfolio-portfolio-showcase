@@ -1,6 +1,25 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ContactSubmission, MessageFilters } from '@/types/messages';
+import { useToast } from '@/components/ui/use-toast';
+
+interface MessageFilters {
+  searchTerm: string;
+  status: 'all' | 'read' | 'unread';
+  sortOrder: 'asc' | 'desc';
+  page: number;
+  pageSize: number;
+}
+
+interface ContactSubmission {
+  id: number;
+  full_name: string;
+  email: string;
+  subject: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export const useMessageManager = () => {
   const [messages, setMessages] = useState<ContactSubmission[]>([]);
@@ -12,64 +31,69 @@ export const useMessageManager = () => {
     pageSize: 10
   });
   const [totalMessages, setTotalMessages] = useState(0);
+  const { toast } = useToast();
 
-  // Fetch Messages with Advanced Filtering
+  useEffect(() => {
+    fetchMessages();
+  }, [filters]);
+
   const fetchMessages = async () => {
-    let query = supabase
-      .from('contact_submissions')
-      .select('*', { count: 'exact' });
+    try {
+      console.log('Fetching messages with filters:', filters);
+      
+      let query = supabase
+        .from('contact_submissions')
+        .select('*', { count: 'exact' });
 
-    // Apply Filters
-    if (filters.searchTerm) {
-      query = query.or(
-        `full_name.ilike.%${filters.searchTerm}%,` +
-        `email.ilike.%${filters.searchTerm}%,` +
-        `subject.ilike.%${filters.searchTerm}%,` +
-        `message.ilike.%${filters.searchTerm}%`
-      );
-    }
+      // Apply filters
+      if (filters.searchTerm) {
+        query = query.or(
+          `full_name.ilike.%${filters.searchTerm}%,` +
+          `email.ilike.%${filters.searchTerm}%,` +
+          `subject.ilike.%${filters.searchTerm}%,` +
+          `message.ilike.%${filters.searchTerm}%`
+        );
+      }
 
-    // Status Filtering
-    if (filters.status !== 'all') {
-      query = query.eq('is_read', filters.status === 'read');
-    }
+      if (filters.status !== 'all') {
+        query = query.eq('is_read', filters.status === 'read');
+      }
 
-    // Pagination
-    query = query
-      .order('created_at', { ascending: filters.sortOrder === 'asc' })
-      .range(
-        (filters.page - 1) * filters.pageSize, 
-        filters.page * filters.pageSize - 1
-      );
+      // Apply sorting and pagination
+      const { data, count, error } = await query
+        .order('created_at', { ascending: filters.sortOrder === 'asc' })
+        .range(
+          (filters.page - 1) * filters.pageSize,
+          filters.page * filters.pageSize - 1
+        );
 
-    const { data, count, error } = await query;
+      if (error) {
+        throw error;
+      }
 
-    if (error) {
+      console.log('Fetched messages:', data);
+      setMessages(data || []);
+      setTotalMessages(count || 0);
+    } catch (error) {
       console.error('Error fetching messages:', error);
-      return;
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch messages"
+      });
     }
-
-    setMessages(data || []);
-    setTotalMessages(count || 0);
   };
 
-  // Memoized Derived State
-  const pagination = useMemo(() => ({
-    currentPage: filters.page,
-    totalPages: Math.ceil(totalMessages / filters.pageSize),
-    pageSize: filters.pageSize,
-    totalMessages
-  }), [totalMessages, filters]);
-
-  // Update Filters
   const updateFilters = (newFilters: Partial<MessageFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
-  // Side Effects
-  useEffect(() => {
-    fetchMessages();
-  }, [filters]);
+  const pagination = {
+    currentPage: filters.page,
+    totalPages: Math.ceil(totalMessages / filters.pageSize),
+    pageSize: filters.pageSize,
+    totalMessages
+  };
 
   return {
     messages,
