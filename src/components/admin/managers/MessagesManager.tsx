@@ -10,42 +10,62 @@ import { MessageListItem } from "../messages/MessageListItem";
 import { Button } from "@/components/ui/button";
 import { MessageReplyDialog } from "../messages/MessageReplyDialog";
 import { MessageDetailsDialog } from "../messages/MessageDetailsDialog";
-import {supabase} from "@/integrations/supabase/client";
-// import { toast } from "sonner";
-import {toast} from '@/components/ui/use-toast';
-
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from '@/components/ui/use-toast';
 
 export const MessagesManager: React.FC = () => {
-    const { 
-      messages, 
-      filters, 
-      pagination, 
-      updateFilters 
-    } = useMessageManager();
-    
-    const [selectedMessages, setSelectedMessages] = useState<number[]>([]);
-    const [selectedMessage, setSelectedMessage] = useState<ContactSubmission | null>(null);
-    const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
+  const { 
+    messages, 
+    filters, 
+    pagination, 
+    updateFilters 
+  } = useMessageManager();
   
-    // Handlers
-    const handleSearchChange = (term: string) => {
-      updateFilters({ searchTerm: term, page: 1 });
-    };
-  
-    const handleFilterStatusChange = (status: 'all' | 'read' | 'unread') => {
-      updateFilters({ status, page: 1 });
-    };
-  
-    const handleSortToggle = () => {
-      updateFilters({ 
-        sortOrder: filters.sortOrder === 'asc' ? 'desc' : 'asc' 
+  const [selectedMessages, setSelectedMessages] = useState<number[]>([]);
+  const [selectedMessage, setSelectedMessage] = useState<ContactSubmission | null>(null);
+  const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
+
+  const handleSearchChange = (term: string) => {
+    updateFilters({ searchTerm: term, page: 1 });
+  };
+
+  const handleFilterStatusChange = (status: 'all' | 'read' | 'unread') => {
+    updateFilters({ status, page: 1 });
+  };
+
+  const handleSortToggle = () => {
+    updateFilters({ 
+      sortOrder: filters.sortOrder === 'asc' ? 'desc' : 'asc' 
+    });
+  };
+
+  const handlePageChange = (page: number) => {
+    updateFilters({ page });
+  };
+
+  const markMessagesAsRead = async (messageIds: number[]) => {
+    try {
+      const { error } = await supabase
+        .from('contact_submissions')
+        .update({ status: 'read' as const })
+        .in('id', messageIds);
+
+      if (error) throw error;
+
+      toast({
+        title: "Messages Marked",
+        description: `${messageIds.length} message(s) marked as read`,
       });
-    };
-  
-    const handlePageChange = (page: number) => {
-      updateFilters({ page });
-    };
-  
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark messages as read",
+        variant: "destructive"
+      });
+    }
+  };
+
     return (
       <div className="space-y-6">
         <MessageSearchFilter 
@@ -182,30 +202,6 @@ export const MessagesManager: React.FC = () => {
         });
       }
     };
-    
-    const markMessagesAsRead = async (messageIds: number[]) => {
-      try {
-        const { error } = await supabase
-          .from('contact_submissions')
-          .update({ read: true })
-          .in('id', messageIds);
-    
-        if (error) throw error;
-    
-        // Optionally, show a success toast
-        toast({
-          title: "Messages Marked",
-          description: `${messageIds.length} message(s) marked as read`,
-        });
-      } catch (error) {
-        console.error('Error marking messages as read:', error);
-        toast({
-          title: "Error",
-          description: "Failed to mark messages as read",
-          variant: "destructive"
-        });
-      }
-    };
-    
-    // Export the component
-    export default MessagesManager;
+};
+
+export default MessagesManager;
