@@ -1,13 +1,16 @@
-import React, { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import React, { ReactNode } from "react";
+import { motion } from "framer-motion";
 
 interface DashboardContentProps {
   children: ReactNode;
+  className?: string;
 }
 
-export const DashboardContent: React.FC<DashboardContentProps> = ({ children }) => {
+export const DashboardContent: React.FC<DashboardContentProps> = ({
+  children,
+}) => {
   return (
-    <motion.main 
+    <motion.main
       className="
         flex-1 
         p-6 

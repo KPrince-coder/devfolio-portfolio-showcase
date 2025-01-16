@@ -42,6 +42,7 @@ export const AdminDashboard: React.FC = () => {
     "profile-main"
   );
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Replace useResponsive with useIsMobile
   const isMobile = useIsMobile();
@@ -51,6 +52,11 @@ export const AdminDashboard: React.FC = () => {
   // Add sidebar toggle handler
   const toggleSidebar = useCallback(() => {
     setIsSidebarOpen((prev) => !prev);
+  }, []);
+
+  // Add toggle handler
+  const handleToggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((prev) => !prev);
   }, []);
 
   // Memoized Tab Configurations
@@ -189,12 +195,15 @@ export const AdminDashboard: React.FC = () => {
           isMobile={isMobile}
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebar}
         />
 
         <DashboardContent
           className={`
-            w-full md:flex-1 p-4 overflow-auto
+            w-full md:flex-1 p-4 overflow-auto transition-all duration-200
             ${isMobile && isSidebarOpen ? "hidden" : "block"}
+            ${!isMobile && isSidebarCollapsed ? "md:ml-20" : "md:ml-64"}
           `}
         >
           <AnimatePresence mode="wait">

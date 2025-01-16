@@ -1,37 +1,63 @@
-import React from 'react';
-import { User, Bell, LogOut, Sun, Moon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import React from "react";
+import { User, Bell, LogOut, Sun, Moon, Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DashboardHeaderProps {
   user: any;
   isDarkMode: boolean;
   toggleTheme: () => void;
   onLogout: () => void;
+  onMenuClick: () => void;
+  isMobile: boolean;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
-  user, 
-  isDarkMode, 
-  toggleTheme, 
-  onLogout
+  user,
+  isDarkMode,
+  toggleTheme,
+  onLogout,
+  onMenuClick,
+  isMobile,
 }) => {
   return (
-    <header className="flex justify-between items-center p-4 bg-white/80 dark:bg-gray-800/80 shadow-sm">
-      <div className="flex items-center space-x-4">
-        <User className="w-8 h-8 text-gray-600 dark:text-gray-300" />
-        <h1 className="text-xl font-bold">
-          Welcome, {user?.name || 'User'}
-        </h1>
+    <header className="sticky top-0 z-40 flex items-center justify-between p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+      <div className="flex items-center gap-3">
+        {isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onMenuClick}
+            className="md:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        )}
+
+        <div className="hidden md:flex items-center space-x-3">
+          <User className="h-6 w-6 text-foreground/80" />
+          <h1 className="text-lg font-semibold">
+            Welcome, {user?.name || "User"}
+          </h1>
+        </div>
       </div>
-      
-      <div className="flex items-center space-x-4">
+
+      <div className="flex items-center gap-2 md:gap-4">
+        {/* Mobile user name */}
+        <span className="md:hidden text-sm font-medium">
+          {user?.name || "User"}
+        </span>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="outline" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full px-1 text-xs">
+              <Bell className="h-5 w-5" />
+              <span className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs bg-primary text-primary-foreground rounded-full">
                 3
               </span>
             </Button>
@@ -39,24 +65,35 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <TooltipContent>Notifications</TooltipContent>
         </Tooltip>
 
-        <div className="flex items-center space-x-2">
-          <Sun className="w-5 h-5 text-yellow-500" />
-          <Switch 
+        <div className="hidden md:flex items-center gap-2">
+          <Sun className="h-5 w-5 text-yellow-500 dark:text-yellow-400" />
+          <Switch
             checked={isDarkMode}
             onCheckedChange={toggleTheme}
-            aria-label="Toggle dark mode"
+            aria-label="Toggle theme"
           />
-          <Moon className="w-5 h-5 text-blue-500" />
+          <Moon className="h-5 w-5 text-slate-600 dark:text-slate-400" />
         </div>
 
-        <Button 
-          variant="destructive" 
+        <Button
+          variant="destructive"
           onClick={onLogout}
-          className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
+          className="hidden md:inline-flex"
         >
           <LogOut className="mr-2 h-4 w-4" />
           Sign out
         </Button>
+
+        {/* Mobile theme toggle and logout */}
+        <div className="md:hidden">
+          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+            {isDarkMode ? (
+              <Sun className="h-5 w-5 text-yellow-500" />
+            ) : (
+              <Moon className="h-5 w-5 text-slate-600" />
+            )}
+          </Button>
+        </div>
       </div>
     </header>
   );
