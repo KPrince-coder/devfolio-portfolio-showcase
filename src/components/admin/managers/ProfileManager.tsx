@@ -1,10 +1,10 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ProfileForm } from '../profile/ProfileForm';
-import { HobbiesManager } from '../profile/HobbiesManager';
-import { EducationManager } from '../profile/EducationManager';
-import { SocialLinksManager } from '../profile/SocialLinksManager';
+import { ProfileForm } from '../forms/ProfileForm';
+import { HobbiesManager } from './HobbiesManager';
+import { EducationManager } from './EducationManager';
+import { SocialLinksManager } from './SocialLinksManager';
 import { Tab } from '@/types/dashboard';
 
 interface ProfileManagerProps {
