@@ -14,13 +14,14 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { MessageFilterStatus } from '@/types/messages';
 
 interface MessageSearchFilterProps {
   searchTerm: string;
-  filterStatus: 'all' | 'read' | 'unread';
+  filterStatus: MessageFilterStatus;
   sortOrder: 'asc' | 'desc';
   onSearchChange: (term: string) => void;
-  onFilterChange: (status: 'all' | 'read' | 'unread') => void;
+  onFilterChange: (status: MessageFilterStatus) => void;
   onSortToggle: () => void;
   pagination: {
     currentPage: number;
@@ -54,7 +55,7 @@ export const MessageSearchFilter: React.FC<MessageSearchFilterProps> = ({
 
         <Select 
           value={filterStatus} 
-          onValueChange={(val: 'all' | 'read' | 'unread') => onFilterChange(val)}
+          onValueChange={(val: MessageFilterStatus) => onFilterChange(val)}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter Status" />
@@ -63,6 +64,7 @@ export const MessageSearchFilter: React.FC<MessageSearchFilterProps> = ({
             <SelectItem value="all">All Messages</SelectItem>
             <SelectItem value="read">Read Messages</SelectItem>
             <SelectItem value="unread">Unread Messages</SelectItem>
+            <SelectItem value="replied">Replied Messages</SelectItem>
           </SelectContent>
         </Select>
 
