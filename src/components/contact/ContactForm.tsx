@@ -29,11 +29,41 @@ export const ContactForm = () => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
+      // Save to database
+      const { error: dbError } = await supabase
         .from('contact_submissions')
         .insert([formData]);
 
-      if (error) throw error;
+      if (dbError) throw dbError;
+
+      // Send admin notification
+      const adminNotificationRes = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'admin_notification',
+          submission: formData,
+          dashboardUrl: `${window.location.origin}/admin/messages`,
+        }),
+      });
+
+      if (!adminNotificationRes.ok) {
+        throw new Error('Failed to send admin notification');
+      }
+
+      // Send user confirmation
+      const userConfirmationRes = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'user_confirmation',
+          submission: formData,
+        }),
+      });
+
+      if (!userConfirmationRes.ok) {
+        throw new Error('Failed to send user confirmation');
+      }
 
       toast({
         title: "Message sent!",
@@ -47,6 +77,7 @@ export const ContactForm = () => {
         message: ''
       });
     } catch (error) {
+      console.error('Error submitting form:', error);
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
