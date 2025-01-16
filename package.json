@@ -101,8 +101,6 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "tiptap-markdown": "^0.8.10",
-    "tsparticles": "^2.12.0",
-    "tsparticles-engine": "^2.12.0",
     "tsparticles-slim": "^2.12.0",
     "vaul": "^0.9.3",
     "xlsx": "^0.18.5",
