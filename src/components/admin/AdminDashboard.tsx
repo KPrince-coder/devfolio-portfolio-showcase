@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -21,8 +20,6 @@ import { DashboardContent } from "./dashboard/DashboardContent";
 import { AnalyticsDashboard } from "./Analytics/AnalyticsDashboard";
 
 // Managers
-// import { DashboardManager } from "./managers/DashboardManager";
-// import { DashboardManager } from "./managers/DashboardManager";
 import { MessagesManager } from "./managers/MessagesManager";
 import { ProjectManager } from "./managers/ProjectManager";
 import { BlogManager } from "./managers/BlogManager";
@@ -34,7 +31,7 @@ import { Tab } from "@/types/dashboard";
 
 export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("dashboard");
-  const [activeSubTab, setActiveSubTab] = useState<string | null>(null);
+  const [activeSubTab, setActiveSubTab] = useState<string | null>("profile-main");
 
   // Custom Hooks
   const { isDarkMode, toggleTheme } = useTheme();
@@ -116,14 +113,21 @@ export const AdminDashboard: React.FC = () => {
 
   // Tab Change Handler
   const handleTabChange = useCallback((tab: string) => {
+    console.log("Changing tab to:", tab);
     setActiveTab(tab);
-    setActiveSubTab(tab === "profile" ? "profile-main" : null);
+    if (tab === "profile") {
+      setActiveSubTab("profile-main");
+    } else {
+      setActiveSubTab(null);
+    }
   }, []);
 
   // Content Rendering Logic
   const renderContent = useCallback(() => {
+    console.log("Rendering content for tab:", activeTab);
+    console.log("Active subtab:", activeSubTab);
+
     const contentMap: { [key: string]: React.ReactNode } = {
-      // dashboard: <DashboardManager />,
       analytics: <AnalyticsDashboard />,
       messages: <MessagesManager />,
       projects: <ProjectManager />,
