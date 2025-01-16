@@ -12,11 +12,13 @@ import { TechnicalSkills } from "@/components/technical/TechnicalSkills";
 import { Education } from "@/components/education/Education";
 import { TechnicalProficiency } from "@/components/technical/TechnicalProficiency";
 import { Hobbies } from "@/components/hobbies/Hobbies";
+import { P5Background } from "@/components/P5Background";
 
 const Index = () => {
   return (
     <>
       <Header />
+      <P5Background />
       <div className="container mx-auto px-4 pt-16">
         <CursorLight />
         <Hero />

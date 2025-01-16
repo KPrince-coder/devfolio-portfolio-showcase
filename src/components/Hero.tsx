@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowDown, FileText } from "lucide-react";
-import { ParticlesBackground } from "./ParticlesBackground";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,22 +16,22 @@ import * as Icons from "lucide-react";
 export const Hero = () => {
   const { toast } = useToast();
   const { data: profileData } = useQuery({
-    queryKey: ['profile-data'],
+    queryKey: ["profile-data"],
     queryFn: async () => {
-      console.log('Fetching profile data...');
+      console.log("Fetching profile data...");
       const { data, error } = await supabase
-        .from('profile_data')
-        .select('*')
+        .from("profile_data")
+        .select("*")
         .limit(1)
         .maybeSingle();
-      
+
       if (error) {
-        console.error('Error fetching profile data:', error);
+        console.error("Error fetching profile data:", error);
         throw error;
       }
-      console.log('Profile data fetched:', data);
+      console.log("Profile data fetched:", data);
       return data;
-    }
+    },
   });
 
   const { data: socialLinks } = useSocialLinks();
@@ -55,7 +54,7 @@ export const Hero = () => {
       const response = await fetch(profileData.resume_url);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = "YourName_CV.pdf";
       document.body.appendChild(a);
@@ -68,7 +67,7 @@ export const Hero = () => {
         description: "CV has been downloaded successfully.",
       });
     } catch (error) {
-      console.error('Download error:', error);
+      console.error("Download error:", error);
       toast({
         variant: "destructive",
         title: "Download failed",
@@ -78,17 +77,17 @@ export const Hero = () => {
   };
 
   const renderSocialIcon = (iconKey: string) => {
-    const IconComponent = (Icons as any)[iconKey.charAt(0).toUpperCase() + iconKey.slice(1)];
+    const IconComponent = (Icons as any)[
+      iconKey.charAt(0).toUpperCase() + iconKey.slice(1)
+    ];
     return IconComponent ? <IconComponent className="h-5 w-5" /> : null;
   };
 
   return (
     <section className="flex h-screen items-center justify-center overflow-hidden">
-      <ParticlesBackground />
-      
       {/* Animated Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent animate-pulse" />
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -103,7 +102,7 @@ export const Hero = () => {
             transition={{
               type: "spring",
               stiffness: 260,
-              damping: 20
+              damping: 20,
             }}
             className="relative mx-auto"
           >
@@ -129,7 +128,7 @@ export const Hero = () => {
         )}
 
         {/* Name with Animated Highlight */}
-        <motion.h1 
+        <motion.h1
           className="text-4xl font-bold sm:text-6xl"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -206,7 +205,9 @@ export const Hero = () => {
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               onClick={() => {
-                document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
+                document
+                  .getElementById("projects")
+                  ?.scrollIntoView({ behavior: "smooth" });
               }}
               className="group relative overflow-hidden bg-primary px-6 py-2"
             >
@@ -220,7 +221,7 @@ export const Hero = () => {
               <ArrowDown className="ml-2 h-4 w-4" />
             </Button>
           </motion.div>
-          
+
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               variant="outline"

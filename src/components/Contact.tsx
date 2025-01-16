@@ -17,32 +17,30 @@ export const Contact = () => {
   }) => {
     try {
       console.log("Submitting contact form:", data);
-      
-      const { error } = await supabase
-        .from('contact_submissions')
-        .insert([
-          {
-            full_name: data.name,
-            email: data.email,
-            subject: data.subject,
-            message: data.message,
-            status: 'new',
-            is_read: false
-          }
-        ]);
+
+      const { error } = await supabase.from("contact_submissions").insert([
+        {
+          full_name: data.name,
+          email: data.email,
+          subject: data.subject,
+          message: data.message,
+          status: "new",
+          is_read: false,
+        },
+      ]);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Your message has been sent successfully!"
+        description: "Your message has been sent successfully!",
       });
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error("Error submitting form:", error);
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
