@@ -16,19 +16,23 @@ export const Contact = () => {
             email: data.email,
             subject: data.subject,
             message: data.message,
-            status: 'new'
+            status: 'new',
+            is_read: false
           }
         ]);
 
       if (error) throw error;
 
-      // Call the edge function to send emails
-      const { error: emailError } = await supabase.functions.invoke('send-contact-emails', {
+      // Send emails via edge function
+      const { error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
-          name: data.name,
-          email: data.email,
-          subject: data.subject,
-          message: data.message
+          type: "admin_notification",
+          submission: {
+            full_name: data.name,
+            email: data.email,
+            subject: data.subject,
+            message: data.message
+          }
         }
       });
 

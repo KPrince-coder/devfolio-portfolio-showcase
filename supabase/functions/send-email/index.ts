@@ -1,10 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { render } from "@react-email/render";
-import AdminNotification from "../../../src/emails/AdminNotification.tsx";
-import UserConfirmation from "../../../src/emails/UserConfirmation.tsx";
+import { render } from "npm:@react-email/render";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") || "admin@example.com";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,29 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const emailRequest: EmailRequest = await req.json();
-    let html: string;
-    let to: string[];
-    let subject: string;
-
-    if (emailRequest.type === "admin_notification") {
-      html = render(
-        AdminNotification({
-          submission: emailRequest.submission,
-          dashboardUrl: emailRequest.dashboardUrl || "https://your-dashboard-url.com",
-        })
-      );
-      to = [ADMIN_EMAIL];
-      subject = `New Contact Form Submission: ${emailRequest.submission.subject}`;
-    } else {
-      html = render(
-        UserConfirmation({
-          name: emailRequest.submission.full_name,
-        })
-      );
-      to = [emailRequest.submission.email];
-      subject = "Thank you for contacting us";
-    }
-
+    
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -61,10 +36,21 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "Your Website <onboarding@resend.dev>",
-        to,
-        subject,
-        html,
-        reply_to: emailRequest.type === "admin_notification" ? emailRequest.submission.email : undefined,
+        to: emailRequest.type === "admin_notification" ? 
+          [Deno.env.get("ADMIN_EMAIL") || ""] : 
+          [emailRequest.submission.email],
+        subject: emailRequest.type === "admin_notification" ? 
+          `New Contact Form Submission: ${emailRequest.submission.subject}` :
+          "Thank you for contacting us",
+        html: emailRequest.type === "admin_notification" ?
+          `<h1>New Contact Form Submission</h1>
+           <p><strong>Name:</strong> ${emailRequest.submission.full_name}</p>
+           <p><strong>Email:</strong> ${emailRequest.submission.email}</p>
+           <p><strong>Subject:</strong> ${emailRequest.submission.subject}</p>
+           <p><strong>Message:</strong> ${emailRequest.submission.message}</p>` :
+          `<h1>Thank you for contacting us</h1>
+           <p>Dear ${emailRequest.submission.full_name},</p>
+           <p>We have received your message and will get back to you soon.</p>`,
       }),
     });
 

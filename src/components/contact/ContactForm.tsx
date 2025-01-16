@@ -4,84 +4,35 @@ import { User, Mail, MessageSquare, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
-interface ContactFormData {
-  full_name: string;
-  email: string;
-  subject: string;
-  message: string;
+interface ContactFormProps {
+  onSubmit: (data: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }) => Promise<void>;
 }
 
-export const ContactForm = () => {
-  const [formData, setFormData] = useState<ContactFormData>({
-    full_name: '',
+export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit }) => {
+  const [formData, setFormData] = useState({
+    name: '',
     email: '',
     subject: '',
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      // Save to database
-      const { error: dbError } = await supabase
-        .from('contact_submissions')
-        .insert([formData]);
-
-      if (dbError) throw dbError;
-
-      // Send admin notification
-      const adminNotificationRes = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'admin_notification',
-          submission: formData,
-          dashboardUrl: `${window.location.origin}/admin/messages`,
-        }),
-      });
-
-      if (!adminNotificationRes.ok) {
-        throw new Error('Failed to send admin notification');
-      }
-
-      // Send user confirmation
-      const userConfirmationRes = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'user_confirmation',
-          submission: formData,
-        }),
-      });
-
-      if (!userConfirmationRes.ok) {
-        throw new Error('Failed to send user confirmation');
-      }
-
-      toast({
-        title: "Message sent!",
-        description: "Thank you for your message. We'll get back to you soon.",
-      });
-
+      await onSubmit(formData);
       setFormData({
-        full_name: '',
+        name: '',
         email: '',
         subject: '',
         message: ''
-      });
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -99,8 +50,8 @@ export const ContactForm = () => {
             type="text"
             placeholder="Full Name"
             className="pl-10"
-            value={formData.full_name}
-            onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
             required
           />
         </div>
