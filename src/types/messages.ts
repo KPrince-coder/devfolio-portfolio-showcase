@@ -26,3 +26,12 @@ export interface MessageFilters {
   page: number;
   pageSize: number;
 }
+
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  html_content: string;
+  created_at: string;
+  updated_at: string;
+}
