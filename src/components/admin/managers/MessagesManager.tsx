@@ -1,6 +1,6 @@
 import { useMessageManager } from "@/hooks/useMessageManager";
 import { useState } from "react";
-import { ContactSubmission } from '@/types/messages';
+import { ContactSubmission, MessageFilterStatus } from '@/types/messages';
 import { MessageSearchFilter } from "../messages/MessageSearchFilter";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -53,7 +53,7 @@ export const MessagesManager: React.FC = () => {
     updateFilters({ searchTerm: term, page: 1 });
   };
 
-  const handleFilterStatusChange = (status: 'all' | 'read' | 'unread') => {
+  const handleFilterStatusChange = (status: MessageFilterStatus) => {
     updateFilters({ status, page: 1 });
   };
 
