@@ -63,7 +63,13 @@ export const useMessageManager = () => {
 
       if (error) throw error;
 
-      setMessages(data || []);
+      // Ensure the data matches the ContactSubmission type
+      const typedMessages = data?.map(msg => ({
+        ...msg,
+        status: msg.status || 'new'
+      })) as ContactSubmission[];
+
+      setMessages(typedMessages || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast({

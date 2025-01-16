@@ -25,6 +25,15 @@ export const AdvancedMessageFilter: React.FC<AdvancedFilterProps> = ({ onFilterA
   const [sender, setSender] = useState('');
   const [status, setStatus] = useState<'all' | 'read' | 'unread' | 'replied'>('all');
 
+  const handleDateRangeChange = (range: { from?: Date; to?: Date } | undefined) => {
+    if (range?.from) {
+      setDateRange({
+        from: range.from,
+        to: range.to || range.from
+      });
+    }
+  };
+
   const handleApplyFilters = () => {
     onFilterApply({
       dateRange,
@@ -48,8 +57,8 @@ export const AdvancedMessageFilter: React.FC<AdvancedFilterProps> = ({ onFilterA
           </h4>
           <CalendarComponent
             mode="range"
-            selected={dateRange}
-            onSelect={(range) => range && setDateRange(range)}
+            selected={{ from: dateRange.from, to: dateRange.to }}
+            onSelect={handleDateRangeChange}
           />
         </div>
 

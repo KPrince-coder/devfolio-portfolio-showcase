@@ -3,7 +3,7 @@ export interface DateRange {
   to: Date;
 }
 
-export type MessageStatus = 'new' | 'read' | 'replied' | 'archived';
+export type MessageStatus = 'new' | 'read' | 'unread' | 'replied' | 'archived';
 export type MessageFilterStatus = 'all' | 'read' | 'unread' | 'replied';
 
 export interface ContactSubmission {
@@ -16,7 +16,7 @@ export interface ContactSubmission {
   created_at: string;
   updated_at: string;
   status: MessageStatus;
-  tags: string[];
+  tags?: string[];
 }
 
 export interface MessageFilters {

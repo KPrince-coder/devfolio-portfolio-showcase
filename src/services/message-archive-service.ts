@@ -7,8 +7,8 @@ export class MessageArchiveService {
       await supabase
         .from('contact_submissions')
         .update({ 
-          status: 'archived',
-          archived_at: new Date().toISOString()
+          status: 'archived' as const,
+          updated_at: new Date().toISOString()
         })
         .in('id', messageIds);
     } catch (error) {
@@ -22,8 +22,8 @@ export class MessageArchiveService {
       await supabase
         .from('contact_submissions')
         .update({ 
-          status: 'new',
-          archived_at: null 
+          status: 'new' as const,
+          updated_at: new Date().toISOString()
         })
         .in('id', messageIds);
     } catch (error) {
@@ -44,10 +44,13 @@ export class MessageArchiveService {
       .select('*', { count: 'exact' })
       .eq('status', 'archived')
       .range((page - 1) * pageSize, page * pageSize - 1)
-      .order('archived_at', { ascending: false });
+      .order('updated_at', { ascending: false });
 
     return {
-      messages: data || [],
+      messages: (data || []).map(msg => ({
+        ...msg,
+        status: msg.status as ContactSubmission['status']
+      })),
       total: count || 0
     };
   }
