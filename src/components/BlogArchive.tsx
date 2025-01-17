@@ -1,102 +1,139 @@
 // components/BlogArchive.tsx
-import { motion, AnimatePresence } from "framer-motion";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Clock, Tag, User, Share, LayoutGrid, List } from "lucide-react";
-import { useState, useMemo } from "react";
-import { BlogPost, BlogPostResponse } from "@/types/blog";
+import { motion } from "framer-motion";
+import { BlogPost } from "@/types/blog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { slugify } from '@/utils/slugify';
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue 
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import {slugify} from "@/utils/slugify";
-import { Home } from "lucide-react";
-import { Link } from "react-router-dom";
-import { ShareDialog } from "@/components/ui/share-dialog";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar, Search, Tag, X, Filter, ArrowRight } from "lucide-react";
+import { useState, useMemo } from "react";
 
-interface BlogCardProps {
+interface BlogCard {
   post: BlogPost;
-  viewMode: "grid" | "list";
-  onClick: () => void;
+  viewMode?: "grid" | "list";
+  onClick?: () => void;
 }
 
-const BlogCard: React.FC<BlogCardProps> = ({ post, viewMode, onClick }) => {
-  const shareUrl = `${window.location.origin}/blog/${post.slug || slugify(post.title)}`;
+const BlogCard = ({ post, viewMode = "grid", onClick }: BlogCard) => {
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  if (viewMode === "list") {
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="w-full"
+      >
+        <Card
+          className="group cursor-pointer transition-all duration-300 hover:shadow-xl dark:hover:shadow-primary-teal/5 overflow-hidden"
+          onClick={onClick}
+        >
+          <div className="flex flex-col md:flex-row">
+            <div className="md:w-1/3 aspect-video md:aspect-square relative">
+              <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent z-10" />
+              <img
+                src={post.coverImage || "https://images.unsplash.com/photo-1587620962725-abab7fe55159"}
+                alt={post.title}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                loading="lazy"
+              />
+            </div>
+            <div className="p-6 md:w-2/3 flex flex-col">
+              <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                {formatDate(post.publishedAt)}
+              </div>
+              <h3 className="text-xl font-semibold mb-2 transition-colors group-hover:text-primary-teal line-clamp-2">
+                {post.title}
+              </h3>
+              <p className="text-muted-foreground mb-4 line-clamp-2">
+                {post.excerpt}
+              </p>
+              <div className="mt-auto flex flex-wrap gap-2">
+                {post.tags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    className="group/tag transition-colors hover:bg-primary-teal/20"
+                  >
+                    <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className={viewMode === "grid" ? "h-full" : "w-full"}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="h-full"
     >
       <Card
-        className={`group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl ${
-          viewMode === "list" ? "flex h-64" : "flex flex-col h-full"
-        }`}
+        className="group cursor-pointer h-full flex flex-col transition-all duration-300 hover:shadow-xl dark:hover:shadow-primary-teal/5 overflow-hidden bg-gradient-to-b from-card to-card/50"
         onClick={onClick}
       >
-        <div className={`
-          overflow-hidden flex-shrink-0
-          ${viewMode === "list" ? "w-72" : "aspect-video"}
-        `}>
+        <div className="aspect-video relative">
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent z-10" />
           <img
             src={post.coverImage || "https://images.unsplash.com/photo-1587620962725-abab7fe55159"}
             alt={post.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
           />
         </div>
-        
-        <div className={`
-          flex flex-col flex-grow
-          ${viewMode === "list" ? "w-full p-6" : "p-6"}
-        `}>
-          <div className="mb-2 flex items-center gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              {new Date(post.publishedAt).toLocaleDateString()}
-            </span>
-            <span className="flex items-center gap-1">
-              <User className="h-4 w-4" />
-              {post.author}
-            </span>
+        <div className="p-6 flex-grow flex flex-col">
+          <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            {formatDate(post.publishedAt)}
           </div>
-          <h3 className="mb-2 text-xl font-semibold transition-colors group-hover:text-primary line-clamp-2">
+          <h3 className="text-xl font-semibold mb-2 transition-colors group-hover:text-primary-teal line-clamp-2">
             {post.title}
           </h3>
-          <p className="mb-4 text-muted-foreground line-clamp-2">
+          <p className="text-muted-foreground mb-4 line-clamp-2 flex-grow">
             {post.excerpt}
           </p>
-          <div className="mt-auto flex items-center justify-between">
+          <div className="mt-auto space-y-4">
             <div className="flex flex-wrap gap-2">
-              {post.tags.slice(0, viewMode === "list" ? 3 : undefined).map((tag) => (
-                <span
+              {post.tags.map((tag) => (
+                <Badge
                   key={tag}
-                  className="flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs text-accent-foreground"
+                  variant="secondary"
+                  className="group/tag transition-colors hover:bg-primary-teal/20"
                 >
-                  <Tag className="h-3 w-3" />
+                  <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
                   {tag}
-                </span>
+                </Badge>
               ))}
-              {viewMode === "list" && post.tags.length > 3 && (
-                <span className="text-xs text-muted-foreground">
-                  +{post.tags.length - 3} more
-                </span>
-              )}
             </div>
-            <div onClick={(e) => e.stopPropagation()}>
-              <ShareDialog url={shareUrl} title={post.title} />
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-between hover:bg-transparent hover:text-primary-teal group/btn"
+            >
+              Read more
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+            </Button>
           </div>
         </div>
       </Card>
@@ -106,25 +143,22 @@ const BlogCard: React.FC<BlogCardProps> = ({ post, viewMode, onClick }) => {
 
 export const BlogArchive = () => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
   const { data: blogPosts, isLoading } = useQuery({
-    queryKey: ['blog-posts-archive'],
+    queryKey: ['blog-posts'],
     queryFn: async () => {
-      console.log("Fetching blog posts...");
       const { data, error } = await supabase
         .from('blogs')
         .select('*')
         .eq('published', true)
-        .order('publishedat', { ascending: false })
-        .returns<BlogPostResponse[]>();
+        .order('publishedat', { ascending: false });
 
-      if (error) {
-        console.error("Error fetching blog posts:", error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log("Blog posts fetched:", data);
-      
-      return data.map((post): BlogPost => ({
+      return data.map((post: any) => ({
         id: post.id,
         slug: post.slug || slugify(post.title),
         title: post.title,
@@ -138,244 +172,200 @@ export const BlogArchive = () => {
     }
   });
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTag, setSelectedTag] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<"latest" | "oldest" | "title">("latest");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-
-  // Get unique tags from all posts
   const allTags = useMemo(() => {
     if (!blogPosts) return [];
     const tags = new Set<string>();
-    blogPosts.forEach(post => post.tags.forEach(tag => tags.add(tag)));
-    return ["all", ...Array.from(tags)];
+    blogPosts.forEach(post => {
+      post.tags.forEach(tag => tags.add(tag));
+    });
+    return Array.from(tags);
   }, [blogPosts]);
 
-  // Filter and sort posts
   const filteredPosts = useMemo(() => {
     if (!blogPosts) return [];
-    return blogPosts
-      .filter(post => {
-        const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesTag = selectedTag === "all" || post.tags.includes(selectedTag);
-        return matchesSearch && matchesTag;
-      })
-      .sort((a, b) => {
-        switch (sortBy) {
-          case "latest":
-            return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
-          case "oldest":
-            return new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime();
-          case "title":
-            return a.title.localeCompare(b.title);
-          default:
-            return 0;
-        }
-      });
-  }, [blogPosts, searchQuery, selectedTag, sortBy]);
+    return blogPosts.filter(post => {
+      const matchesSearch = searchQuery === "" || 
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.content.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesTags = selectedTags.length === 0 || 
+        selectedTags.every(tag => post.tags.includes(tag));
+
+      return matchesSearch && matchesTags;
+    });
+  }, [blogPosts, searchQuery, selectedTags]);
+
+  const handlePostClick = (post: BlogPost) => {
+    const postSlug = post.slug || slugify(post.title);
+    navigate(`/blog/${encodeURIComponent(postSlug)}`);
+  };
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
 
   if (isLoading) {
     return (
-      <section id="blog-archive" className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center">Loading blog posts...</div>
+      <div className="container mx-auto px-4 py-20">
+        <div className="mb-12 space-y-8">
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-6 w-96" />
+          </div>
+          <div className="flex gap-4">
+            <Skeleton className="h-10 w-full max-w-md" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-8 w-24" />
+            ))}
+          </div>
         </div>
-      </section>
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <Card key={i} className="overflow-hidden">
+              <Skeleton className="h-48 w-full" />
+              <div className="p-6 space-y-4">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-6 w-16" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="min-h-screen bg-gradient-to-b from-background to-background/80"
-    >
-      {/* Updated Navigation Bar spacing */}
-      <nav className="sticky top-0 z-50 backdrop-blur-lg border-b border-border/40">
-        <div className="container mx-auto px-4 h-14 flex items-center">
-          <div className="flex items-center gap-4">
-            <Link 
-              to="/"
-              className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
-            >
-              <Home className="h-4 w-4" />
-              Home
-            </Link>
-            <span className="text-sm text-muted-foreground">
-              /
-            </span>
-            <span className="text-sm">
-              Blog Archive
-            </span>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
+      <div className="container mx-auto px-4 py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-12 text-center"
+        >
+          <h1 className="text-4xl font-bold mb-4">
+            Blog <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-teal to-secondary-blue">Archive</span>
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+            Explore our collection of articles about technology, development, and more.
+          </p>
 
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          {/* Header and Controls */}
-          <div className="mb-12 space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center"
-            >
-              <h2 className="text-4xl font-bold mb-4">Blog Archive</h2>
-              <p className="text-muted-foreground">Explore our collection of articles</p>
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
-            >
-              <Input
-                placeholder="Search posts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full focus-visible:ring-1 focus-visible:ring-offset-0"
-              />
-              
-              <Select value={selectedTag} onValueChange={setSelectedTag}>
-                <SelectTrigger className="focus-visible:ring-1 focus-visible:ring-offset-0">
-                  <SelectValue placeholder="Select a tag" />
-                </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg">
-                  {allTags.map(tag => (
-                    <SelectItem 
-                      key={tag} 
-                      value={tag}
-                      className="focus:bg-accent focus:text-accent-foreground"
-                    >
-                      {tag.charAt(0).toUpperCase() + tag.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-                <SelectTrigger className="focus-visible:ring-1 focus-visible:ring-offset-0">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg">
-                  <SelectItem 
-                    value="latest"
-                    className="focus:bg-accent focus:text-accent-foreground"
-                  >
-                    Latest First
-                  </SelectItem>
-                  <SelectItem 
-                    value="oldest"
-                    className="focus:bg-accent focus:text-accent-foreground"
-                  >
-                    Oldest First
-                  </SelectItem>
-                  <SelectItem 
-                    value="title"
-                    className="focus:bg-accent focus:text-accent-foreground"
-                  >
-                    By Title
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="flex gap-2">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
-                  onClick={() => setViewMode("grid")}
-                  size="icon"
-                  className="focus-visible:ring-1 focus-visible:ring-offset-0"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "outline"}
-                  onClick={() => setViewMode("list")}
-                  size="icon"
-                  className="focus-visible:ring-1 focus-visible:ring-offset-0"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-            </motion.div>
-
-            {/* Tags ScrollArea */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="relative"
-            >
-              {/* Add fade effects on edges */}
-              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10" />
-              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10" />
-              
-              {/* Scrollable container with added padding */}
-              <div className="overflow-x-auto flex-nowrap hide-scrollbar px-4">
-                <div className="flex gap-2 pb-2">
-                  {allTags.map(tag => (
-                    <Badge
-                      key={tag}
-                      variant={selectedTag === tag ? "default" : "outline"}
-                      className="cursor-pointer whitespace-nowrap hover:bg-accent/50"
-                      onClick={() => setSelectedTag(tag)}
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-
-          </div>
-
-          {/* Posts Grid/List */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              // Include all filter states in the key
-              key={`${viewMode}-${searchQuery}-${selectedTag}-${sortBy}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className={
-                viewMode === "grid"
-                  ? "grid gap-8 md:grid-cols-2 lg:grid-cols-3"
-                  : "space-y-8"
-              }
-            >
-              {filteredPosts.map((post) => (
-                <BlogCard
-                  key={post.id}
-                  post={post}
-                  viewMode={viewMode}
-                  onClick={() => navigate(`/blog/${post.slug || slugify(post.title)}`)}
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex gap-4 flex-col sm:flex-row">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search posts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
                 />
-              ))}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </section>
-    </motion.div>
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setViewMode(prev => prev === "grid" ? "list" : "grid")}
+                className="shrink-0"
+              >
+                <Filter className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {allTags.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="flex flex-wrap gap-2"
+              >
+                {allTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant={selectedTags.includes(tag) ? "default" : "secondary"}
+                    className={`cursor-pointer group/tag transition-colors ${
+                      selectedTags.includes(tag) 
+                        ? "hover:bg-primary-teal/80" 
+                        : "hover:bg-primary-teal/20"
+                    }`}
+                    onClick={() => toggleTag(tag)}
+                  >
+                    <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
+                    {tag}
+                    {selectedTags.includes(tag) && (
+                      <X className="h-3 w-3 ml-1 transition-transform group-hover/tag:rotate-90" />
+                    )}
+                  </Badge>
+                ))}
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+
+        {filteredPosts.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-center py-20"
+          >
+            <div className="relative w-32 h-32 mx-auto mb-8">
+              <motion.div
+                className="absolute inset-0 rounded-full bg-gradient-to-r from-primary-teal to-secondary-blue opacity-20"
+                animate={{
+                  scale: [1, 1.2, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Search className="w-12 h-12 text-primary-teal" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold mb-4">No posts found</h2>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Try adjusting your search or filter criteria to find what you're looking for.
+            </p>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className={`
+              grid gap-8
+              ${viewMode === "grid" 
+                ? "md:grid-cols-2 lg:grid-cols-3" 
+                : "grid-cols-1"
+              }
+            `}
+          >
+            {filteredPosts.map((post, index) => (
+              <BlogCard
+                key={post.id}
+                post={post}
+                viewMode={viewMode}
+                onClick={() => handlePostClick(post)}
+              />
+            ))}
+          </motion.div>
+        )}
+      </div>
+    </div>
   );
 };
-
-// Add this CSS either in your global CSS file or as a style tag
-const styles = `
-  .hide-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;     /* Firefox */
-  }
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;            /* Chrome, Safari and Opera */
-  }
-`;
-
-// Add the styles to the document
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = styles;
-  document.head.appendChild(styleSheet);
-}
-
-export default BlogArchive;
