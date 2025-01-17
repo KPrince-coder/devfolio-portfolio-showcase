@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Button } from "./ui/button";
+import { Menu, X, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
+import { Logo } from "./Logo";
 import * as Icons from "lucide-react";
 import {
   Tooltip,
@@ -12,188 +15,196 @@ import {
 } from "@/components/ui/tooltip";
 
 const navItems = [
-  { name: "Home", href: "#home", color: "from-pink-500 to-rose-500" },
-  { name: "About", href: "#about", color: "from-purple-500 to-indigo-500" },
-  { name: "Projects", href: "#projects", color: "from-blue-500 to-cyan-500" },
-  { name: "Skills", href: "#skills", color: "from-teal-500 to-emerald-500" },
-  { name: "Blog", href: "#blog", color: "from-green-500 to-lime-500" },
-  { name: "Contact", href: "#contact", color: "from-amber-500 to-yellow-500" },
+  { name: "About", href: "#about" },
+  { name: "Projects", href: "#projects" },
+  { name: "Skills", href: "#skills" },
+  { name: "Blog", href: "#blog" },
+  { name: "Contact", href: "#contact" },
 ];
 
 export const Header = () => {
-  const [activeSection, setActiveSection] = useState("");
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { scrolled, activeSection, isOpen, setIsOpen, scrollToTop } =
+    useScrollToTop();
   const { data: socialLinks } = useSocialLinks();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = navItems.map((item) => ({
-        id: item.href.substring(1),
-        top: document.getElementById(item.href.substring(1))?.offsetTop || 0,
-      }));
+  const handleNavClick = (href: string) => {
+    const targetId = href.slice(1);
+    const element = document.getElementById(targetId);
 
-      const scrollPosition = window.scrollY + 100;
+    if (element) {
+      const headerOffset = 80;
+      const elementPosition =
+        element.getBoundingClientRect().top + window.scrollY;
+      const offsetPosition = elementPosition - headerOffset;
 
-      const currentSection = sections.reduce((acc, section) => {
-        return scrollPosition >= section.top ? section.id : acc;
-      }, sections[0].id);
-
-      setActiveSection(currentSection);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+      setTimeout(() => {
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth",
+        });
+      }, 100);
+    }
+    setIsOpen(false);
+  };
 
   const renderSocialIcon = (iconKey: string) => {
-    const IconComponent = (Icons as any)[iconKey.charAt(0).toUpperCase() + iconKey.slice(1)];
-    return IconComponent ? <IconComponent className="w-5 h-5" /> : null;
+    const IconComponent = (Icons as any)[
+      iconKey.charAt(0).toUpperCase() + iconKey.slice(1)
+    ];
+    return IconComponent ? <IconComponent className="h-4 w-4" /> : null;
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-accent/20">
-      <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <motion.a
-          href="#home"
-          className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          DevFolio
-        </motion.a>
+    <header
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        scrolled || isOpen
+          ? "bg-background/95 backdrop-blur-lg shadow-lg"
+          : "bg-transparent"
+      )}
+    >
+      <nav className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
+          <Logo onLogoClick={scrollToTop} />
 
-        {/* Desktop Navigation */}
-        <motion.div
-          className="hidden md:flex items-center space-x-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          {/* Nav Items */}
-          <div className="flex items-center space-x-1">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => (
-              <a
+              <motion.button
                 key={item.name}
-                href={item.href}
+                onClick={() => handleNavClick(item.href)}
                 className={cn(
-                  "px-4 py-2 rounded-full text-sm font-medium transition-colors relative group",
-                  activeSection === item.href.substring(1)
-                    ? "text-primary"
-                    : "hover:text-primary"
+                  "relative px-4 py-2 text-sm transition-colors",
+                  activeSection === item.href.slice(1)
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {item.name}
-                {activeSection === item.href.substring(1) && (
+                {activeSection === item.href.slice(1) && (
                   <motion.div
                     layoutId="activeSection"
-                    className={cn(
-                      "absolute inset-0 -z-10 rounded-full bg-gradient-to-r opacity-20",
-                      item.color
-                    )}
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    className="absolute inset-0 rounded-full bg-gradient-to-r from-primary-teal/20 to-secondary-blue/20"
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
-              </a>
+                <span className="relative z-10">{item.name}</span>
+              </motion.button>
             ))}
           </div>
 
-          {/* Social Links */}
-          <div className="flex items-center space-x-4">
-            <TooltipProvider>
-              {socialLinks?.map((link) => (
-                <Tooltip key={link.id}>
-                  <TooltipTrigger asChild>
-                    <motion.a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(
-                        "p-2 rounded-full hover:bg-accent transition-colors hover:text-primary"
-                      )}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {renderSocialIcon(link.icon_key)}
-                    </motion.a>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" sideOffset={5}>
-                    <p>Connect on {link.platform}</p>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
-            </TooltipProvider>
+          {/* Desktop Social Links and Download CV */}
+          <div className="hidden md:flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <TooltipProvider>
+                {socialLinks?.map((link) => (
+                  <Tooltip key={link.id}>
+                    <TooltipTrigger asChild>
+                      <motion.a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        {link.icon_key && renderSocialIcon(link.icon_key)}
+                      </motion.a>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" sideOffset={10}>
+                      <p>Connect on {link.platform}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
+            </div>
+            <div className="h-6 w-px bg-border" />
+            <motion.button
+              onClick={() => window.open("/assets/cv.pdf", "_blank")}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground hover:text-primary-teal transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Download className="h-4 w-4" />
+              <span>CV</span>
+            </motion.button>
           </div>
-        </motion.div>
 
-        {/* Mobile Menu Button */}
-        <motion.button
-          className="md:hidden p-2 rounded-lg hover:bg-accent"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          initial={false}
-          animate={{ rotate: isMenuOpen ? 90 : 0 }}
-        >
-          {isMenuOpen ? <X /> : <Menu />}
-        </motion.button>
-      </nav>
-
-      {/* Mobile Navigation */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            className="fixed inset-0 top-16 bg-background/80 backdrop-blur-md md:hidden"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
+          {/* Mobile Menu Button */}
+          <motion.button
+            className="md:hidden"
+            onClick={() => setIsOpen(!isOpen)}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
           >
-            <nav className="container mx-auto px-4 py-8 flex flex-col space-y-4">
-              {navItems.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    "px-4 py-3 rounded-lg text-lg font-medium transition-colors",
-                    activeSection === item.href.substring(1)
-                      ? "bg-accent text-primary"
-                      : "hover:bg-accent"
-                  )}
-                  onClick={() => setIsMenuOpen(false)}
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </motion.button>
+        </div>
+
+        {/* Mobile Navigation */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden"
+            >
+              <div className="py-4 space-y-2 bg-background/95 backdrop-blur-lg rounded-lg shadow-lg">
+                {navItems.map((item) => (
+                  <motion.button
+                    key={item.name}
+                    onClick={() => handleNavClick(item.href)}
+                    className={cn(
+                      "block w-full px-4 py-2 text-sm text-left transition-colors",
+                      activeSection === item.href.slice(1)
+                        ? "text-foreground bg-gradient-to-r from-primary-teal/20 to-secondary-blue/20"
+                        : "text-muted-foreground hover:bg-primary-teal/10 hover:text-foreground"
+                    )}
+                    whileHover={{ x: 10 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {item.name}
+                  </motion.button>
+                ))}
+
+                {/* Mobile Social Links */}
+                <div className="px-4 pt-4 border-t border-border">
+                  <div className="flex items-center space-x-2">
+                    {socialLinks?.map((link) => (
+                      <motion.a
+                        key={link.id}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        {link.icon_key && renderSocialIcon(link.icon_key)}
+                      </motion.a>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Mobile Download CV */}
+                <motion.button
+                  onClick={() => window.open("/assets/cv.pdf", "_blank")}
+                  className="flex items-center gap-2 w-full px-4 py-2 text-sm font-medium text-foreground hover:bg-primary-teal/10 transition-colors"
+                  whileHover={{ x: 10 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  {item.name}
-                </a>
-              ))}
-              <div className="flex items-center space-x-4 pt-4">
-                <TooltipProvider>
-                  {socialLinks?.map((link) => (
-                    <Tooltip key={link.id}>
-                      <TooltipTrigger asChild>
-                        <a
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={cn(
-                            "p-3 rounded-full hover:bg-accent transition-colors hover:text-primary"
-                          )}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          {renderSocialIcon(link.icon_key)}
-                        </a>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" sideOffset={5}>
-                        <p>Connect on {link.platform}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
-                </TooltipProvider>
+                  <Download className="h-4 w-4" />
+                  <span>Download CV</span>
+                </motion.button>
               </div>
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
     </header>
   );
 };
