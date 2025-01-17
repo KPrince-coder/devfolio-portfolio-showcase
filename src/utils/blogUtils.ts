@@ -1,35 +1,37 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { slugify, generateUniqueSlug, isValidSlug } from './slugify';
-
+import { slugify, generateUniqueSlug, isValidSlug } from "./slugify";
 
 export const checkAuth = async () => {
   console.log("Checking authentication status...");
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
   if (sessionError) {
     console.error("Session check error:", sessionError);
     return false;
   }
-  
+
   if (!session) {
     console.log("No active session found");
     return false;
   }
 
   console.log("Checking admin status for user:", session.user.id);
-  
+
   const { data: adminData, error: adminError } = await supabase
-    .from('admin_users')
-    .select('id')
-    .eq('id', session.user.id)
+    .from("admin_users")
+    .select("id")
+    .eq("id", session.user.id)
     .maybeSingle();
-  
+
   if (adminError || !adminData) {
     console.error("Admin check error:", adminError);
     return false;
   }
-  
+
   console.log("Authentication check passed - user is admin");
   return true;
 };
@@ -67,8 +69,22 @@ export const handleFileUpload = async (file: File) => {
   }
 };
 
-export {
-  slugify,
-  generateUniqueSlug,
-  isValidSlug
+// Function to format date
+export const formatDate = (date: string) => {
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 };
+
+// Update reading time calculation to be more accurate
+export const calculateReadingTime = (content: string) => {
+  const wordsPerMinute = 200;
+  const textContent = content.replace(/<[^>]*>/g, ""); // Remove HTML tags
+  const words = textContent.trim().split(/\s+/).length;
+  const minutes = Math.ceil(words / wordsPerMinute);
+  return `${minutes} min read`;
+};
+
+export { slugify, generateUniqueSlug, isValidSlug };
