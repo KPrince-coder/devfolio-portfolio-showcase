@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "./ui/button";
 import { Menu, X, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
-import { useScrollToTop } from "@/hooks/useScrollToTop";
-import { Logo } from "./Logo";
 import * as Icons from "lucide-react";
 import {
   Tooltip,
@@ -22,9 +21,46 @@ const navItems = [
 ];
 
 export const Header = () => {
-  const { scrolled, activeSection, isOpen, setIsOpen, scrollToTop } =
-    useScrollToTop();
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("about");
+  const [scrolled, setScrolled] = useState(false);
   const { data: socialLinks } = useSocialLinks();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+
+      const scrollPosition = window.scrollY + window.innerHeight / 3;
+
+      const sections = navItems.map((item) => {
+        const element = document.getElementById(item.href.slice(1));
+        return {
+          id: item.href.slice(1),
+          offset: element?.offsetTop || 0,
+          height: element?.offsetHeight || 0,
+        };
+      });
+
+      for (const section of sections.reverse()) {
+        if (scrollPosition >= section.offset) {
+          setActiveSection(section.id);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+    setIsOpen(false);
+  };
 
   const handleNavClick = (href: string) => {
     const targetId = href.slice(1);
@@ -32,8 +68,7 @@ export const Header = () => {
 
     if (element) {
       const headerOffset = 80;
-      const elementPosition =
-        element.getBoundingClientRect().top + window.scrollY;
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       const offsetPosition = elementPosition - headerOffset;
 
       setTimeout(() => {
@@ -64,7 +99,35 @@ export const Header = () => {
     >
       <nav className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <Logo onLogoClick={scrollToTop} />
+          {/* Logo */}
+          <motion.button
+            onClick={scrollToTop}
+            className="relative flex items-center gap-2 text-2xl font-bold"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <div className="relative w-8 h-8">
+              <motion.div
+                className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary-teal via-secondary-blue to-primary-teal bg-[length:200%_100%]"
+                animate={{
+                  backgroundPosition: ["0%", "100%"],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                }}
+              />
+              <span className="relative z-10 flex items-center justify-center w-full h-full text-background font-bold">
+                D
+              </span>
+            </div>
+            <div className="hidden sm:block">
+              <span className="bg-gradient-to-r from-primary-teal to-secondary-blue bg-clip-text text-transparent">
+                DevFolio
+              </span>
+            </div>
+          </motion.button>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
