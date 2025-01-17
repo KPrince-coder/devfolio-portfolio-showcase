@@ -56,10 +56,14 @@ export const Skills = () => {
       const { data, error } = await supabase
         .from("skills")
         .select("*")
-        .order("proficiency", { ascending: false });
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
-      return data;
+      
+      return data.map((skill: any) => ({
+        ...skill,
+        proficiency: skill.proficiency_level || 0
+      }));
     },
   });
 

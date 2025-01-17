@@ -9,10 +9,12 @@ interface TechnicalProficiency {
   id: string;
   skill: string;
   proficiency: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const TechnicalProficiency = () => {
-  const { data: proficiencies, isLoading } = useQuery({
+  const { data: proficiencies } = useQuery<TechnicalProficiency[]>({
     queryKey: ["technical-proficiency"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -21,30 +23,9 @@ export const TechnicalProficiency = () => {
         .order("proficiency", { ascending: false });
 
       if (error) throw error;
-      return data as TechnicalProficiency[];
+      return data;
     },
   });
-
-  if (isLoading) {
-    return (
-      <section className="py-10">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
-            <ChartBar className="h-6 w-6" />
-            Technical Proficiency
-          </h2>
-          <div className="grid gap-6 max-w-2xl">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="p-4">
-                <div className="h-4 w-1/3 bg-gray-200 rounded mb-2" />
-                <div className="h-2 w-full bg-gray-200 rounded" />
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   if (!proficiencies?.length) {
     return (
@@ -87,7 +68,9 @@ export const TechnicalProficiency = () => {
             >
               <div className="flex justify-between items-center">
                 <span className="font-medium">{item.skill}</span>
-                <span className="text-sm text-muted-foreground">{item.proficiency}%</span>
+                <span className="text-sm text-muted-foreground">
+                  {item.proficiency}%
+                </span>
               </div>
               <motion.div
                 initial={{ width: 0 }}

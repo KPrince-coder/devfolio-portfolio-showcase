@@ -17,25 +17,18 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-interface TagFilterInputProps {
-  allTags: string[];
-  selectedTags: string[];
-  onToggleTag: (tag: string) => void;
-  onClearTags: () => void;
-}
-
 export function TagFilterInput({
-  allTags,
-  selectedTags,
+  allTags = [], // Provide default empty array
+  selectedTags = [],
   onToggleTag,
   onClearTags,
 }: TagFilterInputProps) {
-  const [open, setOpen] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState("");
+  const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Filter out "All" from regular tags and handle search
   const regularTags = React.useMemo(() => {
-    const tags = allTags.filter((tag) => tag !== "All");
+    const tags = (allTags || []).filter((tag) => tag !== "All");
     if (!searchQuery) return tags;
     return tags.filter((tag) =>
       tag.toLowerCase().includes(searchQuery.toLowerCase())

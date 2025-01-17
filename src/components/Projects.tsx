@@ -53,7 +53,14 @@ export const Projects = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      return data.map((project: any) => ({
+        ...project,
+        technologies: project.tags || [], // Map tags to technologies
+        type: project.category || "web", // Default to web type
+        features: [], // Initialize empty features array
+        long_description: project.description // Use description as long_description
+      }));
     },
   });
 
