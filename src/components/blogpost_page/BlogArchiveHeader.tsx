@@ -42,19 +42,19 @@ export const BlogArchiveHeader = ({
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Button variant="ghost" size="sm" asChild className="group">
-            <Link to="/" className="flex items-center gap-2">
-              <Home className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              Home
-            </Link>
-          </Button>
+          <div className="flex items-center gap-4 flex-1">
+            <Button variant="ghost" size="sm" asChild className="group">
+              <Link to="/" className="flex items-center gap-2">
+                <Home className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                Home
+              </Link>
+            </Button>
 
-          {/* Desktop Controls */}
-          {showControls && (
-            <div className="hidden md:flex items-center gap-4">
-              <div className="h-6 border-l border-border/40" />
-              <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="relative flex-grow max-w-md">
+            {/* Desktop Search */}
+            {showControls && (
+              <div className="hidden md:flex items-center gap-4 flex-1 max-w-xl">
+                <div className="h-6 border-l border-border/40" />
+                <div className="relative flex-grow">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
@@ -64,14 +64,20 @@ export const BlogArchiveHeader = ({
                     className="pl-10"
                   />
                 </div>
-                <TagFilterInput
-                  allTags={allTags}
-                  selectedTags={selectedTags}
-                  onToggleTag={onToggleTag}
-                  onClearTags={onClearTags}
-                />
-                <ViewToggle viewMode={viewMode} onChange={onViewModeChange} />
               </div>
+            )}
+          </div>
+
+          {/* Desktop Controls */}
+          {showControls && (
+            <div className="hidden md:flex items-center gap-4">
+              <TagFilterInput
+                allTags={allTags}
+                selectedTags={selectedTags}
+                onToggleTag={onToggleTag}
+                onClearTags={onClearTags}
+              />
+              <ViewToggle viewMode={viewMode} onChange={onViewModeChange} />
             </div>
           )}
 

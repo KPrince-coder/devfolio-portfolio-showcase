@@ -27,6 +27,7 @@ import { BlogArchiveHeader } from "./blogpost_page/BlogArchiveHeader";
 import { ShareDialog } from "@/components/ui/share-dialog";
 import { TagFilterInput } from "./blogpost_page/TagFilterInput";
 import { useScroll } from "@/hooks/useScroll";
+import { cn } from "@/lib/utils";
 
 interface BlogCard {
   post: BlogPost;
@@ -34,104 +35,7 @@ interface BlogCard {
   onClick?: () => void;
 }
 
-const BlogCard = ({ post, viewMode = "grid", onClick }: BlogCard) => {
-  const [isShareOpen, setIsShareOpen] = useState(false);
-
-  const calculateReadingTime = (content: string) => {
-    const wordsPerMinute = 200;
-    const textContent = content.replace(/<[^>]*>/g, "");
-    const words = textContent.trim().split(/\s+/).length;
-    const minutes = Math.ceil(words / wordsPerMinute);
-    return `${minutes} min read`;
-  };
-
-  if (viewMode === "list") {
-    return (
-      <motion.div
-        layout
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        className="w-full"
-      >
-        <Card
-          className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl dark:hover:shadow-primary-teal/5 flex flex-col md:flex-row bg-gradient-to-b from-card to-card/50"
-          onClick={onClick}
-        >
-          <div className="md:w-48 aspect-video md:aspect-square relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent z-10" />
-            <img
-              src={
-                post.coverImage ||
-                "https://images.unsplash.com/photo-1587620962725-abab7fe55159"
-              }
-              alt={post.title}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-              loading="lazy"
-            />
-            <div className="absolute bottom-4 left-4 z-20">
-              <Badge
-                variant="secondary"
-                className="bg-background/50 backdrop-blur-sm"
-              >
-                {calculateReadingTime(post.content)}
-              </Badge>
-            </div>
-          </div>
-          <div className="p-6 flex-grow flex flex-col">
-            <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                {new Date(post.publishedAt).toLocaleDateString()}
-              </span>
-              <span className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                {post.author}
-              </span>
-            </div>
-            <h3 className="mb-2 text-xl font-semibold transition-colors group-hover:text-primary-teal line-clamp-2">
-              {post.title}
-            </h3>
-            <p className="mb-4 text-muted-foreground line-clamp-3 flex-grow">
-              {post.excerpt}
-            </p>
-            <div className="mt-auto space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {post.tags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant="secondary"
-                    className="group/tag transition-colors hover:bg-primary-teal/20"
-                  >
-                    <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-              <div
-                className="flex items-center justify-between"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="p-0 hover:bg-transparent hover:text-primary-teal group/btn"
-                >
-                  Read more
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
-                </Button>
-                <ShareDialog
-                  url={`${window.location.origin}/blog/${post.slug || slugify(post.title)}`}
-                  title={post.title}
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
-      </motion.div>
-    );
-  }
-
+const BlogCard = ({ post, viewMode, onClick }: BlogCard) => {
   return (
     <motion.div
       layout
@@ -164,6 +68,7 @@ const BlogCard = ({ post, viewMode = "grid", onClick }: BlogCard) => {
             </Badge>
           </div>
         </div>
+
         <div className="p-6 flex-grow flex flex-col">
           <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
@@ -187,7 +92,11 @@ const BlogCard = ({ post, viewMode = "grid", onClick }: BlogCard) => {
                 <Badge
                   key={tag}
                   variant="secondary"
-                  className="group/tag transition-colors hover:bg-primary-teal/20"
+                  className="group/tag transition-colors hover:bg-primary-teal/20 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Add tag toggle functionality here
+                  }}
                 >
                   <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
                   {tag}
@@ -206,6 +115,7 @@ const BlogCard = ({ post, viewMode = "grid", onClick }: BlogCard) => {
                 Read more
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
               </Button>
+
               <ShareDialog
                 url={`${window.location.origin}/blog/${post.slug || slugify(post.title)}`}
                 title={post.title}
@@ -218,11 +128,20 @@ const BlogCard = ({ post, viewMode = "grid", onClick }: BlogCard) => {
   );
 };
 
+const calculateReadingTime = (content: string) => {
+  const wordsPerMinute = 200;
+  const textContent = content.replace(/<[^>]*>/g, "");
+  const words = textContent.trim().split(/\s+/).length;
+  const minutes = Math.ceil(words / wordsPerMinute);
+  return `${minutes} min read`;
+};
+
 export const BlogArchive = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [sharePostId, setSharePostId] = useState<string | null>(null);
   const { scrollY } = useScroll();
   const showHeaderControls = scrollY > 200;
 
@@ -373,11 +292,11 @@ export const BlogArchive = () => {
                 scale: showHeaderControls ? 0.8 : 1,
               }}
               transition={{ duration: 0.2 }}
-              className="max-w-4xl mx-auto space-y-6"
+              className="max-w-4xl mx-auto"
             >
-              <div className="flex gap-4 flex-col sm:flex-row items-center justify-between">
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="relative flex-grow">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+                <div className="w-full sm:w-auto flex-1">
+                  <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       type="text"
@@ -389,41 +308,61 @@ export const BlogArchive = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    <span className="text-sm text-muted-foreground">
-                      {selectedTags.length} / {allTags.length} tags
+                  <TagFilterInput
+                    allTags={allTags}
+                    selectedTags={selectedTags}
+                    onToggleTag={toggleTag}
+                    onClearTags={() => setSelectedTags([])}
+                  />
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/50">
+                    <Tag className="h-4 w-4 text-primary-teal" />
+                    <span className="text-sm font-medium">
+                      {selectedTags.length} / {allTags.length}
                     </span>
                   </div>
                   <ViewToggle viewMode={viewMode} onChange={setViewMode} />
                 </div>
               </div>
 
-              {allTags.length > 0 && (
+              {allTags.length > 0 && selectedTags.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="flex flex-wrap gap-2"
+                  className="flex flex-wrap gap-2 mb-6"
                 >
-                  {allTags.map((tag) => (
-                    <Badge
+                  {selectedTags.map((tag) => (
+                    <motion.div
                       key={tag}
-                      variant={selectedTags.includes(tag) ? "default" : "secondary"}
-                      className={`cursor-pointer group/tag transition-colors ${
-                        selectedTags.includes(tag)
-                          ? "bg-primary-teal hover:bg-primary-teal/90"
-                          : "hover:bg-primary-teal/20"
-                      }`}
-                      onClick={() => toggleTag(tag)}
+                      layout
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
-                      {tag}
-                      {selectedTags.includes(tag) && (
-                        <X className="h-3 w-3 ml-1 transition-transform group-hover/tag:rotate-90" />
-                      )}
-                    </Badge>
+                      <Badge
+                        variant="default"
+                        className="bg-primary-teal hover:bg-primary-teal/90 cursor-pointer group"
+                        onClick={() => toggleTag(tag)}
+                      >
+                        <span className="truncate">{tag}</span>
+                        <X className="ml-1 h-3 w-3 transition-transform group-hover:rotate-90" />
+                      </Badge>
+                    </motion.div>
                   ))}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedTags([])}
+                      className="h-6 px-2 text-xs hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      Clear all
+                    </Button>
+                  </motion.div>
                 </motion.div>
               )}
             </motion.div>
@@ -431,11 +370,12 @@ export const BlogArchive = () => {
 
           <motion.div
             layout
-            className={`grid gap-8 ${
+            className={cn(
+              "grid gap-6",
               viewMode === "grid"
                 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                : "grid-cols-1"
-            }`}
+                : "grid-cols-1 max-w-4xl mx-auto"
+            )}
           >
             <AnimatePresence mode="popLayout">
               {filteredPosts.map((post) => (
@@ -449,7 +389,7 @@ export const BlogArchive = () => {
             </AnimatePresence>
           </motion.div>
 
-          {filteredPosts.length === 0 ? (
+          {filteredPosts.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -477,9 +417,16 @@ export const BlogArchive = () => {
                 looking for.
               </p>
             </motion.div>
-          ) : null}
+          )}
         </div>
       </div>
+
+      {sharePostId && (
+        <ShareDialog
+          url={`${window.location.origin}/blog/${sharePostId}`}
+          title={filteredPosts.find((post) => post.id === sharePostId)?.title}
+        />
+      )}
     </>
   );
 };
