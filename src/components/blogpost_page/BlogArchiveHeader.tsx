@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Home, Search } from "lucide-react";
+import { Home, Search, Filter } from "lucide-react";
 import { ViewToggle } from "./ViewToggle";
 import { TagFilterInput } from "./TagFilterInput";
 
@@ -38,14 +38,15 @@ export const BlogArchiveHeader = ({
     >
       <div className="container h-full flex items-center justify-between gap-4 transition-all duration-200">
         <div className="flex items-center gap-4 flex-1">
-          <Link to="/">
+          <Link to="/" className="flex items-center gap-2">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="shrink-0"
+              className="shrink-0 hover:text-primary-teal"
               aria-label="Go to home page"
             >
               <Home className="h-5 w-5" />
+              <span className="ml-2 text-sm font-medium">Home</span>
             </Button>
           </Link>
           
@@ -62,9 +63,10 @@ export const BlogArchiveHeader = ({
                   size="default"
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    "h-10 px-3 py-2", // Match the height and padding of other inputs
+                    "h-10 px-3 py-2",
                     "focus-visible:ring-offset-2",
-                    "relative pl-10" // Space for the search icon
+                    "relative pl-10",
+                    "border-primary-teal/50 focus-visible:ring-primary-teal/50"
                   )}
                   asChild
                 >
@@ -85,12 +87,28 @@ export const BlogArchiveHeader = ({
                 </Button>
               </div>
 
-              <TagFilterInput
-                allTags={["All", ...allTags]}
-                selectedTags={selectedTags}
-                onToggleTag={onToggleTag}
-                onClearTags={onClearTags}
-              />
+              <div className="flex items-center gap-2">
+                <TagFilterInput
+                  allTags={["All", ...allTags]}
+                  selectedTags={selectedTags}
+                  onToggleTag={onToggleTag}
+                  onClearTags={onClearTags}
+                />
+
+                {selectedTags.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={onClearTags}
+                    className="relative h-9 w-9"
+                  >
+                    <Filter className="h-4 w-4 translate-y-[2px]" />
+                    <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-primary-teal text-[9px] text-primary-foreground flex items-center justify-center shadow-sm">
+                      {selectedTags.length}
+                    </span>
+                  </Button>
+                )}
+              </div>
             </motion.div>
           )}
         </div>

@@ -1,4 +1,3 @@
-// components/BlogArchive.tsx
 import { motion } from "framer-motion";
 import { BlogPost } from "@/types/blog";
 import { useQuery } from "@tanstack/react-query";
@@ -119,24 +118,14 @@ const BlogCard = ({ post, viewMode = "grid", onClick }: BlogCard) => {
                   Read more
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="p-0 hover:bg-transparent hover:text-primary-teal"
-                  onClick={() => setIsShareOpen(true)}
-                >
-                  <Share className="h-4 w-4" />
-                </Button>
+                <ShareDialog
+                  url={`${window.location.origin}/blog/${post.slug || slugify(post.title)}`}
+                  title={post.title}
+                />
               </div>
             </div>
           </div>
         </Card>
-        <ShareDialog
-          open={isShareOpen}
-          onClose={() => setIsShareOpen(false)}
-          title={post.title}
-          url={window.location.href}
-        />
       </motion.div>
     );
   }
@@ -215,24 +204,14 @@ const BlogCard = ({ post, viewMode = "grid", onClick }: BlogCard) => {
                 Read more
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-0 hover:bg-transparent hover:text-primary-teal"
-                onClick={() => setIsShareOpen(true)}
-              >
-                <Share className="h-4 w-4" />
-              </Button>
+              <ShareDialog
+                url={`${window.location.origin}/blog/${post.slug || slugify(post.title)}`}
+                title={post.title}
+              />
             </div>
           </div>
         </div>
       </Card>
-      <ShareDialog
-        isOpen={isShareOpen}
-        onClose={() => setIsShareOpen(false)}
-        title={post.title}
-        url={window.location.href}
-      />
     </motion.div>
   );
 };
