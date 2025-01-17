@@ -1,17 +1,17 @@
 export interface Project {
   id: string;
   title: string;
-  description: string | null;
-  long_description?: string;
-  image_url: string | null;
+  description: string;
+  image_url: string;
   category: string;
-  tags: string[] | null;
+  tags: string[];
+  demo_link?: string;
+  github_link?: string;
+  live_link?: string;
+  created_at?: string;
+  updated_at?: string;
+  long_description?: string;
   technologies: string[];
-  type: string;
+  type: "all" | "web" | "android" | "data";
   features: string[];
-  demo_link: string | null;
-  github_link: string | null;
-  live_link: string | null;
-  created_at: string | null;
-  updated_at: string | null;
 }

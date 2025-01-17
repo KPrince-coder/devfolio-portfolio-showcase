@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState } from "react";
 import { Check, ChevronsUpDown, Tag, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,13 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface TagFilterInputProps {
+  allTags?: string[];
+  selectedTags?: string[];
+  onToggleTag: (tag: string) => void;
+  onClearTags: () => void;
+}
 
 export function TagFilterInput({
   allTags = [], // Provide default empty array
