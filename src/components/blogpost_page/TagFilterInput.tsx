@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useState } from "react";
 import { Check, ChevronsUpDown, Tag, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,12 +30,12 @@ export function TagFilterInput({
   onToggleTag,
   onClearTags,
 }: TagFilterInputProps) {
-  const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [open, setOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   // Filter out "All" from regular tags and handle search
   const regularTags = React.useMemo(() => {
-    if (!allTags) return [];
+    if (!Array.isArray(allTags)) return [];
     const tags = allTags.filter((tag) => tag !== "All");
     if (!searchQuery) return tags;
     return tags.filter((tag) =>
@@ -44,7 +43,10 @@ export function TagFilterInput({
     );
   }, [allTags, searchQuery]);
 
-  const isAllSelected = selectedTags.length === (allTags?.length ?? 0) - 1; // -1 for "All" tag
+  const isAllSelected = React.useMemo(() => {
+    if (!Array.isArray(allTags) || !Array.isArray(selectedTags)) return false;
+    return selectedTags.length === allTags.filter(tag => tag !== "All").length;
+  }, [allTags, selectedTags]);
 
   const handleSelect = React.useCallback(
     (value: string) => {
@@ -52,7 +54,9 @@ export function TagFilterInput({
         if (isAllSelected) {
           onClearTags();
         } else {
-          const tagsToSelect = allTags?.filter((tag) => tag !== "All") ?? [];
+          const tagsToSelect = Array.isArray(allTags) 
+            ? allTags.filter((tag) => tag !== "All")
+            : [];
           tagsToSelect.forEach((tag) => onToggleTag(tag));
         }
       } else {
