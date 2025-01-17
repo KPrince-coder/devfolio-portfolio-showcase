@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "./ui/button";
 import { Menu, X, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
