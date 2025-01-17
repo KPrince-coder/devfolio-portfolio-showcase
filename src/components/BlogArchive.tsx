@@ -20,11 +20,13 @@ import {
   User,
   Share,
 } from "lucide-react";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { ViewToggle } from "./blogpost_page/ViewToggle";
 import { AnimatePresence } from "framer-motion";
 import { BlogArchiveHeader } from "./blogpost_page/BlogArchiveHeader";
 import { ShareDialog } from "@/components/ui/share-dialog";
+import { TagFilterInput } from "./blogpost_page/TagFilterInput";
+import { useScroll } from "@/hooks/useScroll";
 
 interface BlogCard {
   post: BlogPost;
@@ -221,17 +223,8 @@ export const BlogArchive = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrolled = window.scrollY > 50;
-      setIsScrolled(scrolled);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const { scrollY } = useScroll();
+  const showHeaderControls = scrollY > 200;
 
   const { data: blogPosts, isLoading } = useQuery({
     queryKey: ["blog-posts"],
@@ -259,36 +252,42 @@ export const BlogArchive = () => {
   });
 
   const allTags = useMemo(() => {
-    if (!blogPosts) return [];
-    const tags = new Set<string>();
-    blogPosts.forEach((post) => post.tags.forEach((tag) => tags.add(tag)));
-    return Array.from(tags).sort();
+    if (!blogPosts || !Array.isArray(blogPosts)) return [];
+    const tagSet = new Set<string>();
+
+    blogPosts.forEach((post) => {
+      if (post.tags && Array.isArray(post.tags)) {
+        post.tags.forEach((tag) => {
+          if (tag) tagSet.add(tag);
+        });
+      }
+    });
+
+    return Array.from(tagSet).sort();
   }, [blogPosts]);
 
-  const toggleTag = (tag: string) => {
-    if (tag === "All") {
-      setSelectedTags(
-        selectedTags.length === allTags.length ? [] : [...allTags]
-      );
-      return;
-    }
+  const toggleTag = useCallback((tag: string) => {
+    if (!tag) return;
+
     setSelectedTags((prev) => {
-      if (prev.includes(tag)) {
-        return prev.filter((t) => t !== tag);
+      const currentTags = prev || [];
+      if (currentTags.includes(tag)) {
+        return currentTags.filter((t) => t !== tag);
       }
-      return [...prev, tag];
+      return [...currentTags, tag];
     });
-  };
+  }, []);
 
   const filteredPosts = useMemo(() => {
-    if (!blogPosts) return [];
+    if (!blogPosts || !Array.isArray(blogPosts)) return [];
     return blogPosts.filter((post) => {
       const matchesSearch =
         post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesTags =
         selectedTags.length === 0 ||
-        selectedTags.every((tag) => post.tags.includes(tag));
+        (Array.isArray(post.tags) &&
+          selectedTags.every((tag) => post.tags.includes(tag)));
       return matchesSearch && matchesTags;
     });
   }, [blogPosts, searchQuery, selectedTags]);
@@ -347,7 +346,7 @@ export const BlogArchive = () => {
         onClearTags={() => setSelectedTags([])}
         allTags={allTags}
         onToggleTag={toggleTag}
-        isScrolled={isScrolled}
+        showControls={showHeaderControls}
       />
       <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
         <div className="container mx-auto px-8 py-20 max-w-[1400px]">
@@ -368,9 +367,16 @@ export const BlogArchive = () => {
               and more.
             </p>
 
-            {!isScrolled && (
-              <div className="max-w-4xl mx-auto space-y-6">
-                <div className="flex gap-4 flex-col sm:flex-row">
+            <motion.div
+              animate={{
+                opacity: showHeaderControls ? 0 : 1,
+                scale: showHeaderControls ? 0.8 : 1,
+              }}
+              transition={{ duration: 0.2 }}
+              className="max-w-4xl mx-auto space-y-6"
+            >
+              <div className="flex gap-4 flex-col sm:flex-row items-center justify-between">
+                <div className="flex items-center gap-4 flex-1">
                   <div className="relative flex-grow">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -381,72 +387,46 @@ export const BlogArchive = () => {
                       className="pl-10"
                     />
                   </div>
-                  <div className="flex gap-3">
-                    <ViewToggle viewMode={viewMode} onChange={setViewMode} />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setSelectedTags([])}
-                      disabled={selectedTags.length === 0}
-                      className="relative h-9 w-9"
-                    >
-                      <Filter className="h-4 w-4 translate-y-[2px]" />
-                      {selectedTags.length > 0 && (
-                        <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-primary-teal text-[9px] text-primary-foreground flex items-center justify-center shadow-sm">
-                          {selectedTags.length}
-                        </span>
-                      )}
-                    </Button>
-                  </div>
                 </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4" />
+                    <span className="text-sm text-muted-foreground">
+                      {selectedTags.length} / {allTags.length} tags
+                    </span>
+                  </div>
+                  <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+                </div>
+              </div>
 
-                {allTags.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="flex flex-wrap gap-2"
-                  >
+              {allTags.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="flex flex-wrap gap-2"
+                >
+                  {allTags.map((tag) => (
                     <Badge
-                      variant={
-                        selectedTags.length === allTags.length
-                          ? "default"
-                          : "secondary"
-                      }
+                      key={tag}
+                      variant={selectedTags.includes(tag) ? "default" : "secondary"}
                       className={`cursor-pointer group/tag transition-colors ${
-                        selectedTags.length === allTags.length
+                        selectedTags.includes(tag)
                           ? "bg-primary-teal hover:bg-primary-teal/90"
                           : "hover:bg-primary-teal/20"
                       }`}
-                      onClick={() => toggleTag("All")}
+                      onClick={() => toggleTag(tag)}
                     >
                       <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
-                      All
+                      {tag}
+                      {selectedTags.includes(tag) && (
+                        <X className="h-3 w-3 ml-1 transition-transform group-hover/tag:rotate-90" />
+                      )}
                     </Badge>
-                    {allTags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant={
-                          selectedTags.includes(tag) ? "default" : "secondary"
-                        }
-                        className={`cursor-pointer group/tag transition-colors ${
-                          selectedTags.includes(tag)
-                            ? "bg-primary-teal hover:bg-primary-teal/90"
-                            : "hover:bg-primary-teal/20"
-                        }`}
-                        onClick={() => toggleTag(tag)}
-                      >
-                        <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
-                        {tag}
-                        {selectedTags.includes(tag) && (
-                          <X className="h-3 w-3 ml-1 transition-transform group-hover/tag:rotate-90" />
-                        )}
-                      </Badge>
-                    ))}
-                  </motion.div>
-                )}
-              </div>
-            )}
+                  ))}
+                </motion.div>
+              )}
+            </motion.div>
           </motion.div>
 
           <motion.div

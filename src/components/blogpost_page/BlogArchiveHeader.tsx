@@ -1,11 +1,17 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { Home, Search, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { Home, Search, Filter } from "lucide-react";
 import { ViewToggle } from "./ViewToggle";
 import { TagFilterInput } from "./TagFilterInput";
+import { Input } from "@/components/ui/input";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface BlogArchiveHeaderProps {
   searchQuery: string;
@@ -16,7 +22,7 @@ interface BlogArchiveHeaderProps {
   onClearTags: () => void;
   allTags: string[];
   onToggleTag: (tag: string) => void;
-  isScrolled: boolean;
+  showControls: boolean;
 }
 
 export const BlogArchiveHeader = ({
@@ -28,102 +34,92 @@ export const BlogArchiveHeader = ({
   onClearTags,
   allTags,
   onToggleTag,
-  isScrolled,
+  showControls,
 }: BlogArchiveHeaderProps) => {
   return (
-    <header 
-      className={`sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${
-        isScrolled ? "h-[4.5rem]" : "h-16"
-      } transition-all duration-200`}
+    <motion.header 
+      className="sticky top-0 z-50 w-full backdrop-blur-sm border-b border-border/40 bg-background/80"
     >
-      <div className="container h-full flex items-center justify-between gap-4 transition-all duration-200">
-        <div className="flex items-center gap-4 flex-1">
-          <Link to="/" className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="shrink-0 hover:text-primary-teal"
-              aria-label="Go to home page"
-            >
-              <Home className="h-5 w-5" />
-              <span className="ml-2 text-sm font-medium">Home</span>
-            </Button>
-          </Link>
-          
-          {isScrolled && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="flex items-center gap-4 flex-1 max-w-3xl"
-            >
-              <div className="relative flex-grow">
-                <Button
-                  variant="outline"
-                  size="default"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    "h-10 px-3 py-2",
-                    "focus-visible:ring-offset-2",
-                    "relative pl-10",
-                    "border-primary-teal/50 focus-visible:ring-primary-teal/50"
-                  )}
-                  asChild
-                >
-                  <div role="searchbox">
-                    <Search 
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" 
-                      aria-hidden="true"
-                    />
-                    <Input
-                      type="text"
-                      placeholder="Search posts..."
-                      value={searchQuery}
-                      onChange={(e) => onSearchChange(e.target.value)}
-                      className="border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0 w-full bg-transparent"
-                      aria-label="Search posts"
-                    />
-                  </div>
-                </Button>
-              </div>
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <Button variant="ghost" size="sm" asChild className="group">
+            <Link to="/" className="flex items-center gap-2">
+              <Home className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              Home
+            </Link>
+          </Button>
 
-              <div className="flex items-center gap-2">
+          {/* Desktop Controls */}
+          {showControls && (
+            <div className="hidden md:flex items-center gap-4">
+              <div className="h-6 border-l border-border/40" />
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="relative flex-grow max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search posts..."
+                    value={searchQuery}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
                 <TagFilterInput
-                  allTags={["All", ...allTags]}
+                  allTags={allTags}
                   selectedTags={selectedTags}
                   onToggleTag={onToggleTag}
                   onClearTags={onClearTags}
                 />
-
-                {selectedTags.length > 0 && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={onClearTags}
-                    className="relative h-9 w-9"
-                  >
-                    <Filter className="h-4 w-4 translate-y-[2px]" />
-                    <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-primary-teal text-[9px] text-primary-foreground flex items-center justify-center shadow-sm">
-                      {selectedTags.length}
-                    </span>
-                  </Button>
-                )}
+                <ViewToggle viewMode={viewMode} onChange={onViewModeChange} />
               </div>
-            </motion.div>
+            </div>
           )}
-        </div>
 
-        {isScrolled && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex items-center"
-          >
-            <ViewToggle viewMode={viewMode} onChange={onViewModeChange} />
-          </motion.div>
-        )}
+          {/* Mobile Menu */}
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Search</label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Search posts..."
+                        value={searchQuery}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Filter by Tags</label>
+                    <TagFilterInput
+                      allTags={allTags}
+                      selectedTags={selectedTags}
+                      onToggleTag={onToggleTag}
+                      onClearTags={onClearTags}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">View Mode</label>
+                    <ViewToggle viewMode={viewMode} onChange={onViewModeChange} />
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
       </div>
-    </header>
+    </motion.header>
   );
 };

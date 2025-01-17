@@ -1,25 +1,21 @@
 import * as React from "react";
-import { Check, ChevronsUpDown, Tag, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import { Tag, X, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 interface TagFilterInputProps {
-  allTags?: string[];
-  selectedTags?: string[];
+  allTags: string[];
+  selectedTags: string[];
   onToggleTag: (tag: string) => void;
   onClearTags: () => void;
 }
@@ -30,132 +26,188 @@ export function TagFilterInput({
   onToggleTag,
   onClearTags,
 }: TagFilterInputProps) {
-  const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [isOpen, setIsOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
 
-  // Filter out "All" from regular tags and handle search
-  const regularTags = React.useMemo(() => {
-    if (!Array.isArray(allTags)) return [];
-    const tags = allTags.filter((tag) => tag !== "All");
-    if (!searchQuery) return tags;
-    return tags.filter((tag) =>
+  const filteredTags = React.useMemo(() => {
+    if (!searchQuery) return allTags;
+    return allTags.filter((tag) =>
       tag.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [allTags, searchQuery]);
 
-  const isAllSelected = React.useMemo(() => {
-    if (!Array.isArray(allTags) || !Array.isArray(selectedTags)) return false;
-    return selectedTags.length === allTags.filter(tag => tag !== "All").length;
-  }, [allTags, selectedTags]);
+  const isAllSelected = selectedTags.length === allTags.length && allTags.length > 0;
 
-  const handleSelect = React.useCallback(
-    (value: string) => {
-      if (value === "all") {
-        if (isAllSelected) {
-          onClearTags();
-        } else {
-          const tagsToSelect = Array.isArray(allTags) 
-            ? allTags.filter((tag) => tag !== "All")
-            : [];
-          tagsToSelect.forEach((tag) => onToggleTag(tag));
+  const handleSelectAll = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isAllSelected) {
+      onClearTags();
+    } else {
+      allTags.forEach((tag) => {
+        if (!selectedTags.includes(tag)) {
+          onToggleTag(tag);
         }
-      } else {
-        onToggleTag(value);
-      }
-    },
-    [isAllSelected, allTags, onToggleTag, onClearTags]
-  );
+      });
+    }
+  };
+
+  // Calculate dropdown position
+  React.useEffect(() => {
+    if (!isOpen || !dropdownRef.current) return;
+
+    const rect = dropdownRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const content = dropdownRef.current.querySelector('[role="menu"]');
+    
+    if (!content) return;
+
+    if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+      content.classList.add("bottom-full", "mb-2");
+      content.classList.remove("top-full", "mt-2");
+    } else {
+      content.classList.add("top-full", "mt-2");
+      content.classList.remove("bottom-full", "mb-2");
+    }
+  }, [isOpen]);
 
   return (
-    <div className="flex items-center gap-2">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+    <div className="relative" ref={dropdownRef}>
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            aria-label="Select tags"
-            className="w-[200px] justify-between text-left font-normal"
+            className={cn(
+              "flex items-center gap-2 min-w-[140px] transition-all duration-200",
+              isOpen && "border-primary-teal ring-2 ring-primary-teal/20"
+            )}
           >
-            <span className="flex items-center gap-2 truncate">
-              <Tag className="h-4 w-4" />
-              <span className="truncate">
-                {selectedTags.length === 0
-                  ? "Select tags..."
-                  : `${selectedTags.length} selected`}
-              </span>
+            <Tag className="h-4 w-4" />
+            <span className="truncate">
+              {selectedTags.length === 0
+                ? "Filter by tags"
+                : `${selectedTags.length} selected`}
             </span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronDown className={cn(
+              "h-4 w-4 opacity-50 transition-transform duration-200",
+              isOpen && "transform rotate-180"
+            )} />
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-0" align="start">
-          <Command shouldFilter={false}>
-            <CommandInput
-              placeholder="Search tags..."
-              value={searchQuery}
-              onValueChange={setSearchQuery}
-            />
-            <CommandEmpty>No tags found.</CommandEmpty>
-            <CommandGroup>
-              <ScrollArea className="h-[200px]">
-                <CommandItem
-                  value="all"
-                  onSelect={() => handleSelect("all")}
-                  className="font-medium"
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      isAllSelected ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <Tag className="mr-2 h-3 w-3" />
-                  All Tags
-                </CommandItem>
-
-                <div className="px-2 py-1.5">
-                  <div className="h-px bg-muted" />
-                </div>
-
-                {regularTags.map((tag) => (
-                  <CommandItem
-                    key={tag}
-                    value={tag}
-                    onSelect={() => handleSelect(tag)}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedTags.includes(tag) ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <Tag className="mr-2 h-3 w-3" />
-                    {tag}
-                  </CommandItem>
-                ))}
-              </ScrollArea>
-            </CommandGroup>
-          </Command>
-        </PopoverContent>
-      </Popover>
-
-      {selectedTags.length > 0 && (
-        <ScrollArea className="max-w-[300px] flex-shrink">
-          <div className="flex gap-1 px-1">
-            {selectedTags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="default"
-                className="bg-primary-teal hover:bg-primary-teal/90 cursor-pointer whitespace-nowrap"
-                onClick={() => onToggleTag(tag)}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="w-[280px] max-h-[400px] p-2 overflow-hidden"
+          align="start"
+          side="bottom"
+          sideOffset={4}
+        >
+          <div className="space-y-2">
+            <div className="sticky top-0 bg-background pb-2">
+              <Input
+                placeholder="Search tags..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="mb-2"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+                onClick={handleSelectAll}
               >
-                {tag}
-                <X className="ml-1 h-3 w-3 transition-transform hover:rotate-90" />
-              </Badge>
-            ))}
+                <div className="flex items-center gap-2">
+                  {isAllSelected ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <Tag className="h-4 w-4" />
+                  )}
+                  Select All Tags
+                </div>
+              </Button>
+            </div>
+
+            <DropdownMenuSeparator />
+
+            <div className="overflow-y-auto max-h-[280px] -mx-1 px-1">
+              <div className="space-y-1">
+                {filteredTags.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No tags found
+                  </div>
+                ) : (
+                  filteredTags.map((tag) => (
+                    <DropdownMenuItem
+                      key={tag}
+                      className="cursor-pointer"
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        onToggleTag(tag);
+                      }}
+                    >
+                      <div className="flex items-center gap-2 w-full">
+                        {selectedTags.includes(tag) ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Tag className="h-4 w-4" />
+                        )}
+                        {tag}
+                      </div>
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
-        </ScrollArea>
-      )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AnimatePresence>
+        {selectedTags.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute left-0 top-full mt-2 flex flex-wrap gap-1 bg-background/80 backdrop-blur-sm p-2 rounded-lg border shadow-lg z-50"
+          >
+            {selectedTags.map((tag) => (
+              <motion.div
+                key={tag}
+                layout
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Badge
+                  variant="default"
+                  className="bg-primary-teal hover:bg-primary-teal/90 cursor-pointer group whitespace-nowrap"
+                  onClick={() => onToggleTag(tag)}
+                >
+                  <span className="truncate">{tag}</span>
+                  <X className="ml-1 h-3 w-3 transition-transform group-hover:rotate-90" />
+                </Badge>
+              </motion.div>
+            ))}
+
+            {selectedTags.length > 1 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs hover:bg-destructive/10 hover:text-destructive"
+                  onClick={onClearTags}
+                >
+                  Clear all
+                </Button>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
