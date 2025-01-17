@@ -163,7 +163,17 @@ export const Projects = () => {
         <AnimatePresence>
           {selectedProject && (
             <ProjectDetailsModal
-              project={selectedProject}
+              project={{
+                title: selectedProject.title,
+                description: selectedProject.description || "",
+                image: selectedProject.image_url || "",
+                tech: selectedProject.technologies || [],
+                github: selectedProject.github_url || "",
+                demo: selectedProject.demo_url || "",
+                longDescription: selectedProject.long_description,
+                features: selectedProject.features
+              }}
+              isOpen={!!selectedProject}
               onClose={() => setSelectedProject(null)}
             />
           )}
