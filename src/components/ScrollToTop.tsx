@@ -1,19 +1,14 @@
-import { motion, useScroll, useSpring } from "framer-motion";
-import { ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowUp, ChevronUp } from "lucide-react";
 
 export const ScrollToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
+      if (window.scrollY > 300) {
         setIsVisible(true);
       } else {
         setIsVisible(false);
@@ -32,23 +27,76 @@ export const ScrollToTop = () => {
   };
 
   return (
-    <>
-      <motion.div
-        className="fixed left-0 right-0 top-0 h-1 origin-left bg-primary"
-        style={{ scaleX }}
-      />
+    <AnimatePresence>
       {isVisible && (
         <motion.button
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.5 }}
+          whileHover={{ scale: 1.1 }}
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-50 rounded-full bg-primary p-3 text-primary-foreground shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-          aria-label="Scroll to top"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className="fixed bottom-8 right-8 z-50"
         >
-          <ArrowUp className="h-6 w-6" />
+          <div className="relative">
+            {/* Ripple effect */}
+            <motion.div
+              className="absolute inset-0 rounded-full bg-gradient-to-r from-primary-teal to-secondary-blue"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.5, 0, 0.5],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+
+            {/* Main button */}
+            <motion.div
+              className="relative p-3 rounded-full bg-gradient-to-r from-primary-teal to-secondary-blue hover:from-secondary-blue hover:to-primary-teal shadow-lg backdrop-blur-sm"
+              transition={{ duration: 0.3 }}
+            >
+              <div className="relative">
+                {/* Arrow animation */}
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center"
+                  initial={{ y: 0, opacity: 1 }}
+                  animate={isHovered ? { y: -20, opacity: 0 } : { y: 0, opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ArrowUp className="w-6 h-6 text-background" />
+                </motion.div>
+                <motion.div
+                  className="flex items-center justify-center"
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={isHovered ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronUp className="w-6 h-6 text-background" />
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Glow effect */}
+            <motion.div
+              className="absolute inset-0 rounded-full bg-gradient-to-r from-primary-teal/20 to-secondary-blue/20 blur-md"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.1, 0.3],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+                repeatType: "reverse",
+              }}
+            />
+          </div>
         </motion.button>
       )}
-    </>
+    </AnimatePresence>
   );
 };
