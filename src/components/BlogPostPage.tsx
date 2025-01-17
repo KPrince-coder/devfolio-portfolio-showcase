@@ -16,6 +16,7 @@ import {
   Share,
   Calendar,
   Eye,
+  Menu,
 } from "lucide-react";
 import { BlogPost, BlogPostResponse } from "@/types/blog";
 import { useQuery } from "@tanstack/react-query";
@@ -30,6 +31,7 @@ import { generateTableOfContents, injectHeadingIds } from "@/utils/toc";
 import { TableOfContents } from "@/components/ui/table-of-contents";
 import { Badge } from "@/components/ui/badge";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 
 interface BlogPostPageProps {
   postId: string;
@@ -206,7 +208,7 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
 
   if (isPostLoading) {
     return (
-      <div className="container mx-auto px-4 py-20">
+      <div className="px-4 py-20">
         <div className="space-y-8 max-w-4xl mx-auto">
           <div className="space-y-4">
             <Skeleton className="h-12 w-3/4" />
@@ -228,7 +230,7 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
 
   if (!post) {
     return (
-      <div className="container mx-auto px-4 py-20">
+      <div className="px-4 py-20">
         <motion.div
           className="max-w-4xl mx-auto text-center space-y-8"
           initial={{ opacity: 0, y: 20 }}
@@ -275,101 +277,152 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
     <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
       {/* Sticky Header */}
       <motion.header
-        style={{ opacity: headerOpacity, y: headerTranslateY }}
-        className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg shadow-lg border-b border-border/40"
+        style={{
+          opacity: headerOpacity,
+          y: headerTranslateY,
+        }}
+        className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <motion.div
-                style={{ opacity: navButtonsOpacity }}
-                className="flex items-center"
-              >
+        <div className="flex h-14 items-center justify-between gap-4 px-4">
+          {/* Left Section: Navigation Buttons */}
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/blog")}
+              className="hidden md:flex items-center"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Blog Archive
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="hidden md:flex items-center"
+            >
+              <Home className="h-4 w-4 mr-2" />
+              Home
+            </Button>
+          </div>
+
+          {/* Center Section: Title */}
+          <h1 className="flex-1 text-xl font-semibold line-clamp-1 text-left">
+            {post?.title}
+          </h1>
+
+          {/* Right Section: Actions */}
+          <div className="flex items-center gap-4">
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-4">
+              <ShareDialog
+                url={`${window.location.origin}/blog/${post?.slug || slugify(post?.title || "")}`}
+                title={post?.title || ""}
+              />
+
+              {adjacentPosts?.prev && (
                 <Button
                   variant="ghost"
-                  size="sm"
-                  asChild
-                  className="group px-4"
+                  size="icon"
+                  onClick={() =>
+                    navigate(
+                      `/blog/${adjacentPosts.prev.slug || adjacentPosts.prev.id}`
+                    )
+                  }
                 >
-                  <Link to="/">
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      className="flex items-center gap-2"
-                    >
-                      <Home className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                      <span className="font-medium">Home</span>
-                    </motion.div>
-                  </Link>
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
-                <div className="h-4 w-px bg-border/40 mx-2" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="group px-4"
-                >
-                  <Link to="/archive">
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      className="flex items-center gap-2"
-                    >
-                      <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                      <span className="font-medium">Blog Archive</span>
-                    </motion.div>
-                  </Link>
-                </Button>
-              </motion.div>
-              <div className="h-4 w-px bg-border/40" />
-              {post && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="relative group cursor-pointer flex-1 max-w-2xl px-4"
-                >
-                  <h2 className="font-medium truncate text-base sm:text-lg py-1">
-                    {post.title}
-                  </h2>
-                  <motion.div
-                    className="absolute -bottom-2 left-4 right-4 h-px bg-gradient-to-r from-primary-teal to-secondary-blue opacity-0 group-hover:opacity-100"
-                    layoutId="titleUnderline"
-                    transition={{ type: "spring", bounce: 0.3 }}
-                  />
-                </motion.div>
               )}
-            </div>
-            <div className="flex items-center divide-x divide-border/40">
-              <div className="pr-4">
-                <ShareDialog
-                  url={`${window.location.origin}/blog/${post.slug || slugify(post.title)}`}
-                  title={post.title}
-                />
-              </div>
+
               {adjacentPosts?.next && (
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={() =>
                     navigate(
                       `/blog/${adjacentPosts.next.slug || adjacentPosts.next.id}`
                     )
                   }
-                  className="group pl-4 hidden sm:flex items-center gap-2"
                 >
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="flex items-center gap-2"
-                  >
-                    <span className="font-medium">Next Post</span>
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </motion.div>
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               )}
+            </div>
+
+            {/* Mobile Menu */}
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <nav className="flex flex-col gap-4">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => navigate("/blog")}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Blog Archive
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => navigate("/")}
+                    >
+                      <Home className="h-4 w-4 mr-2" />
+                      Home
+                    </Button>
+
+                    <ShareDialog
+                      url={`${window.location.origin}/blog/${post?.slug || slugify(post?.title || "")}`}
+                      title={post?.title || ""}
+                    />
+
+                    <div className="flex gap-2 mt-4">
+                      {adjacentPosts?.prev && (
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() =>
+                            navigate(
+                              `/blog/${adjacentPosts.prev.slug || adjacentPosts.prev.id}`
+                            )
+                          }
+                        >
+                          <ArrowLeft className="h-4 w-4 mr-2" />
+                          Previous
+                        </Button>
+                      )}
+
+                      {adjacentPosts?.next && (
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() =>
+                            navigate(
+                              `/blog/${adjacentPosts.next.slug || adjacentPosts.next.id}`
+                            )
+                          }
+                        >
+                          Next
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                      )}
+                    </div>
+                  </nav>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
       </motion.header>
 
-      <div className="container mx-auto px-4 py-20">
+      <div className="px-4 py-20">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -438,7 +491,7 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
                     className="group pl-4 hidden sm:flex items-center gap-2"
                   >
                     <motion.div
-                      whileHover={{ scale: 0.05 }}
+                      whileHover={{ scale: 1.05 }}
                       className="flex items-center gap-2"
                     >
                       <span className="font-medium">Next Post</span>
