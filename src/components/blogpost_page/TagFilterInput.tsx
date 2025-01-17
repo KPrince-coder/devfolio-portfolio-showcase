@@ -26,7 +26,7 @@ interface TagFilterInputProps {
 }
 
 export function TagFilterInput({
-  allTags = [], // Provide default empty array
+  allTags = [],
   selectedTags = [],
   onToggleTag,
   onClearTags,
@@ -36,14 +36,15 @@ export function TagFilterInput({
 
   // Filter out "All" from regular tags and handle search
   const regularTags = React.useMemo(() => {
-    const tags = (allTags || []).filter((tag) => tag !== "All");
+    if (!allTags) return [];
+    const tags = allTags.filter((tag) => tag !== "All");
     if (!searchQuery) return tags;
     return tags.filter((tag) =>
       tag.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [allTags, searchQuery]);
 
-  const isAllSelected = selectedTags.length === allTags.length - 1; // -1 for "All" tag
+  const isAllSelected = selectedTags.length === (allTags?.length ?? 0) - 1; // -1 for "All" tag
 
   const handleSelect = React.useCallback(
     (value: string) => {
@@ -51,7 +52,7 @@ export function TagFilterInput({
         if (isAllSelected) {
           onClearTags();
         } else {
-          const tagsToSelect = allTags.filter((tag) => tag !== "All");
+          const tagsToSelect = allTags?.filter((tag) => tag !== "All") ?? [];
           tagsToSelect.forEach((tag) => onToggleTag(tag));
         }
       } else {
