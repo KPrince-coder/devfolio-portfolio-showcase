@@ -1,6 +1,7 @@
-import { motion } from "framer-motion";
+import React from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowDown, FileText } from "lucide-react";
+import { ArrowDown, FileText, Code, Sparkles, Terminal } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,25 +13,84 @@ import {
 } from "@/components/ui/tooltip";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 import * as Icons from "lucide-react";
+import { useEffect, useState } from "react";
+
+const TechBadge = ({
+  text,
+  icon: Icon,
+  delay = 0,
+}: {
+  text: string;
+  icon: any;
+  delay?: number;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.5 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay, duration: 0.5 }}
+    className="flex items-center gap-1 rounded-full bg-primary-teal/10 px-3 py-1 text-sm text-primary-teal hover:bg-primary-teal/20 transition-colors duration-300"
+  >
+    <Icon className="h-4 w-4" />
+    <span>{text}</span>
+  </motion.div>
+);
+
+const FloatingIcon = ({ icon: Icon, className = "", delay = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{
+      delay,
+      duration: 1,
+      repeat: Infinity,
+      repeatType: "reverse",
+    }}
+    className={`absolute ${className}`}
+  >
+    <Icon className="h-6 w-6 text-primary-teal/30" />
+  </motion.div>
+);
+
+interface ProfileData {
+  about_text: string;
+  id: string;
+  profile_image_url: string;
+  resume_url: string;
+  updated_at: string;
+  name: string;
+}
 
 export const Hero = () => {
   const { toast } = useToast();
-  const { data: profileData } = useQuery({
+  const { scrollYProgress } = useScroll();
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const [typedText, setTypedText] = useState("");
+  const fullText = "Building digital experiences that matter";
+
+  useEffect(() => {
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      if (currentIndex <= fullText.length) {
+        setTypedText(fullText.slice(0, currentIndex));
+        currentIndex++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  const { data: profileData } = useQuery<ProfileData, Error>({
     queryKey: ["profile-data"],
     queryFn: async () => {
-      console.log("Fetching profile data...");
       const { data, error } = await supabase
         .from("profile_data")
         .select("*")
         .limit(1)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching profile data:", error);
-        throw error;
-      }
-      console.log("Profile data fetched:", data);
-      return data;
+      if (error) throw error;
+      return data as ProfileData;
     },
   });
 
@@ -39,221 +99,299 @@ export const Hero = () => {
   const handleDownloadCV = async () => {
     if (!profileData?.resume_url) {
       toast({
-        title: "No CV available",
-        description: "CV has not been uploaded yet.",
+        variant: "default",
+        title: "CV Not Available",
+        description: (
+          <div className="flex flex-col gap-2">
+            <p>No CV has been uploaded yet.</p>
+            <p className="text-sm text-muted-foreground">
+              Please check back later or contact me directly.
+            </p>
+          </div>
+        ),
       });
       return;
     }
 
     try {
+      // Initial toast to show download is starting
       toast({
-        title: "Downloading CV",
-        description: "Your download will begin shortly...",
+        title: "Starting Download",
+        description: (
+          <div className="flex items-center gap-2">
+            <Icons.FileDown className="h-4 w-4 animate-bounce" />
+            <span>Preparing your download...</span>
+          </div>
+        ),
       });
 
       const response = await fetch(profileData.resume_url);
+      if (!response.ok) throw new Error("Failed to fetch CV");
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "YourName_CV.pdf";
-      document.body.appendChild(a);
+      // Extract filename from URL or use a default
+      const fileName =
+        profileData.resume_url.split("/").pop() ||
+        `${profileData.name.replace(/\s+/g, "_")}_CV.pdf`;
+      a.download = fileName;
       a.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
 
+      // Success toast with animation
       toast({
-        title: "Download complete",
-        description: "CV has been downloaded successfully.",
+        title: "Download Complete! 🎉",
+        description: (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Icons.CheckCircle className="h-4 w-4 text-green-500" />
+              <span>Your CV has been downloaded successfully</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Thank you for your interest!
+            </p>
+          </div>
+        ),
       });
     } catch (error) {
       console.error("Download error:", error);
       toast({
         variant: "destructive",
-        title: "Download failed",
-        description: "Failed to download CV. Please try again.",
+        title: "Download Failed",
+        description: (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Icons.XCircle className="h-4 w-4" />
+              <span>Unable to download the CV</span>
+            </div>
+            <p className="text-sm">
+              Please try again later or contact me directly.
+            </p>
+          </div>
+        ),
       });
     }
   };
 
-  const renderSocialIcon = (iconKey: string) => {
-    const IconComponent = (Icons as any)[
-      iconKey.charAt(0).toUpperCase() + iconKey.slice(1)
-    ];
-    return IconComponent ? <IconComponent className="h-5 w-5" /> : null;
-  };
-
   return (
-    <section className="flex h-screen items-center justify-center overflow-hidden">
-      {/* Animated Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent animate-pulse" />
+    <section className="relative min-h-screen flex items-center justify-center py-20 overflow-hidden">
+      {/* Decorative Elements */}
+      <FloatingIcon icon={Code} className="left-[10%] top-[20%]" delay={0.2} />
+      <FloatingIcon
+        icon={Terminal}
+        className="right-[15%] top-[30%]"
+        delay={0.4}
+      />
+      <FloatingIcon
+        icon={Sparkles}
+        className="left-[20%] bottom-[30%]"
+        delay={0.6}
+      />
 
+      {/* Gradient Backgrounds */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-teal/10 via-transparent to-secondary-blue/10 animate-gradient-x" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_50%_-30%,rgba(45,212,191,0.15),transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_80%_60%,rgba(59,130,246,0.15),transparent)]" />
+      </div>
+
+      {/* Main Content */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-        className="z-10 space-y-8 text-center"
+        style={{ y }}
+        className="relative z-10 max-w-5xl mx-auto px-4 text-center"
       >
-        {/* Profile Image with Animation */}
-        {profileData?.profile_image_url && (
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{
-              type: "spring",
-              stiffness: 260,
-              damping: 20,
-            }}
-            className="relative mx-auto"
-          >
-            <div className="relative w-32 h-32">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="space-y-8"
+        >
+          {/* Profile Image */}
+          {/* {profileData?.profile_image_url && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              className="relative mx-auto w-40 h-40"
+            >
               <motion.div
-                className="absolute inset-0 rounded-full bg-primary/30"
+                className="absolute inset-0 rounded-full bg-gradient-to-r from-primary-teal via-accent-coral to-primary-mint"
                 animate={{
-                  scale: [1, 1.2, 1],
+                  rotate: [0, 360],
                 }}
                 transition={{
-                  duration: 3,
+                  duration: 8,
                   repeat: Infinity,
-                  repeatType: "reverse",
+                  ease: "linear",
                 }}
-              />
-              <img
-                src={profileData.profile_image_url}
-                alt="Profile"
-                className="relative w-32 h-32 rounded-full border-4 border-primary object-cover"
-              />
-            </div>
+                style={{ padding: "3px" }}
+              >
+                <img
+                  src={profileData.profile_image_url}
+                  alt="Profile"
+                  className="w-full h-full rounded-full border-4 border-background object-cover"
+                />
+              </motion.div>
+            </motion.div>
+          )} */}
+
+          {/* Tech Badges */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="flex flex-wrap justify-center gap-2"
+          >
+            <TechBadge text="React" icon={Icons.Atom} delay={0.6} />
+            <TechBadge text="TypeScript" icon={Icons.FileCode} delay={0.7} />
+            <TechBadge text="Node.js" icon={Icons.Server} delay={0.8} />
+            <TechBadge text="Android" icon={Icons.Smartphone} delay={0.9} />
           </motion.div>
-        )}
 
-        {/* Name with Animated Highlight */}
-        <motion.h1
-          className="text-4xl font-bold sm:text-6xl"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.8 }}
-        >
-          Hi, I'm{" "}
-          <span className="relative inline-block text-primary">
-            {profileData?.about_text || "Prince Kyeremeh"}
-            <motion.span
-              className="absolute -inset-1 -z-10 rounded-lg bg-primary/20"
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.5, 0.8, 0.5],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatType: "reverse",
-              }}
-            />
-          </span>
-        </motion.h1>
+          {/* Name and Title */}
+          <div className="space-y-4">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-5xl md:text-7xl font-bold"
+            >
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary-teal via-secondary-blue to-primary-teal">
+                {profileData?.name || "Prince Kyeremeh"}
+              </span>
+            </motion.h1>
 
-        {/* Role Description with Typing Effect */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.8 }}
-          className="mx-auto max-w-2xl text-xl text-muted-foreground sm:text-2xl"
-        >
-          Data Engineer & Full Stack Developer
-          <span className="block text-primary opacity-80">
-            specializing in Android Development with Jetpack Compose
-          </span>
-        </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="relative h-8"
+            >
+              <p className="text-xl text-muted-foreground">
+                {typedText}
+                <motion.span
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ duration: 0.5, repeat: Infinity }}
+                  className="inline-block w-0.5 h-5 bg-primary-teal ml-1"
+                />
+              </p>
+            </motion.div>
+          </div>
 
-        {/* Social Links */}
-        <TooltipProvider>
+          {/* Social Links */}
+          <TooltipProvider>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex justify-center gap-4"
+            >
+              {socialLinks?.map((link, index) => (
+                <Tooltip key={link.id}>
+                  <TooltipTrigger asChild>
+                    <motion.a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      whileHover={{
+                        scale: 1.1,
+                        backgroundColor: "rgba(45,212,191,0.2)",
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                      className="relative p-3 rounded-xl bg-primary-teal/10 text-primary-teal transition-colors group"
+                    >
+                      {link.icon_key &&
+                        (Icons[
+                          link.icon_key as keyof typeof Icons
+                        ] as React.ComponentType) &&
+                        React.createElement(
+                          Icons[
+                            link.icon_key as keyof typeof Icons
+                          ] as React.ComponentType<
+                            React.SVGProps<SVGSVGElement>
+                          >,
+                          {
+                            className: "w-5 h-5",
+                          }
+                        )}
+                      <motion.span
+                        className="absolute inset-0 rounded-xl bg-primary-teal/10 -z-10"
+                        initial={false}
+                        whileHover={{
+                          scale: 1.3,
+                          opacity: 0,
+                        }}
+                      />
+                    </motion.a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{link.platform}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </motion.div>
+          </TooltipProvider>
+
+          {/* Action Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 }}
-            className="flex justify-center gap-4 pt-4 pb-8"
+            transition={{ delay: 0.8 }}
+            className="flex flex-wrap justify-center gap-4"
           >
-            {socialLinks?.map((link) => (
-              <Tooltip key={link.id}>
-                <TooltipTrigger asChild>
-                  <motion.a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="rounded-full bg-primary/10 p-3 text-primary transition-colors hover:bg-primary/20"
-                  >
-                    {renderSocialIcon(link.icon_key)}
-                  </motion.a>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" sideOffset={5}>
-                  <p>Connect on {link.platform}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </motion.div>
-        </TooltipProvider>
+            <Button
+              onClick={handleDownloadCV}
+              size="lg"
+              variant="default"
+              className="bg-gradient-to-r from-primary-teal to-secondary-blue hover:from-secondary-blue hover:to-primary-teal transition-all duration-500"
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Download CV
+              </span>
+            </Button>
 
-        {/* Action Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.8 }}
-          className="flex flex-col gap-4 sm:flex-row sm:justify-center"
-        >
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               onClick={() => {
-                document
-                  .getElementById("projects")
-                  ?.scrollIntoView({ behavior: "smooth" });
+                const contactSection = document.querySelector("#contact");
+                contactSection?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="group relative overflow-hidden bg-primary px-6 py-2"
-            >
-              <span className="relative z-10">View My Work</span>
-              <motion.div
-                className="absolute inset-0 bg-primary-foreground"
-                initial={{ x: "-100%" }}
-                whileHover={{ x: "100%" }}
-                transition={{ duration: 0.3 }}
-              />
-              <ArrowDown className="ml-2 h-4 w-4" />
-            </Button>
-          </motion.div>
-
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
               variant="outline"
-              onClick={handleDownloadCV}
-              className="group relative overflow-hidden"
+              size="lg"
+              hasArrow
+              className="border-primary-teal hover:bg-primary-teal/10 hover:text-primary-teal hover:border-primary-teal transition-colors duration-300"
             >
-              <span className="relative z-10">Download CV</span>
-              <motion.div
-                className="absolute inset-0 bg-primary/10"
-                initial={{ x: "-100%" }}
-                whileHover={{ x: "100%" }}
-                transition={{ duration: 0.3 }}
-              />
-              <FileText className="ml-2 h-4 w-4" />
+              <span className="relative z-10 flex items-center gap-2">
+                <ArrowDown className="w-5 h-5" />
+                Contact Me
+              </span>
             </Button>
           </motion.div>
         </motion.div>
+      </motion.div>
 
-        {/* Scroll Indicator */}
+      {/* Scroll Indicator */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+      >
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="flex flex-col items-center gap-2"
         >
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="text-primary"
-          >
-            <ArrowDown className="h-6 w-6" />
-          </motion.div>
+          <div className="h-10 w-6 rounded-full border-2 border-primary-teal/30 p-1">
+            <motion.div
+              animate={{ y: [0, 14, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="h-2 w-2 rounded-full bg-primary-teal"
+            />
+          </div>
+          <span className="text-sm text-muted-foreground">Scroll Down</span>
         </motion.div>
       </motion.div>
     </section>
