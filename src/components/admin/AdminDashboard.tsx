@@ -32,6 +32,7 @@ import { ProjectManager } from "./managers/ProjectManager";
 import { BlogManager } from "./managers/BlogManager";
 import { ProfileManager } from "./managers/ProfileManager";
 import { TimelineManager } from "./managers/TimelineManager";
+import { DashboardManager } from "./managers/DashboardManager";
 
 // Types
 import { Tab } from "@/types/dashboard";
@@ -159,6 +160,7 @@ export const AdminDashboard: React.FC = () => {
     console.log("Active subtab:", activeSubTab);
 
     const contentMap: { [key: string]: React.ReactNode } = {
+      dashboard: <DashboardManager />,
       analytics: <AnalyticsDashboard />,
       messages: <MessagesManager />,
       projects: <ProjectManager />,
