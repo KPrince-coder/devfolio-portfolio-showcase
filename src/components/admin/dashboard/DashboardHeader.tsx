@@ -18,7 +18,6 @@ interface DashboardHeaderProps {
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
-  user,
   isDarkMode,
   toggleTheme,
   onLogout,
@@ -41,17 +40,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
         <div className="hidden md:flex items-center space-x-3">
           <User className="h-6 w-6 text-foreground/80" />
-          <h1 className="text-lg font-semibold">
-            Welcome, {user?.name || "User"}
-          </h1>
+          <h1 className="text-lg font-semibold">Welcome, Admin</h1>
         </div>
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
         {/* Mobile user name */}
-        <span className="md:hidden text-sm font-medium">
-          {user?.name || "User"}
-        </span>
+        <span className="md:hidden text-sm font-medium">Admin</span>
 
         <Tooltip>
           <TooltipTrigger asChild>
