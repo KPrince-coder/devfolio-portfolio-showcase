@@ -21,11 +21,11 @@ import {
   Share,
 } from "lucide-react";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { ViewToggle } from "./blogpost_page/ViewToggle";
+import { ViewToggle } from "./blog_archive/ViewToggle";
 import { AnimatePresence } from "framer-motion";
-import { BlogArchiveHeader } from "./blogpost_page/BlogArchiveHeader";
+import { BlogArchiveHeader } from "./blog_archive/BlogArchiveHeader";
 import { ShareDialog } from "@/components/ui/share-dialog";
-import { TagFilterInput } from "./blogpost_page/TagFilterInput";
+import { TagFilterInput } from "./blog_archive/TagFilterInput";
 import { useScroll } from "@/hooks/useScroll";
 import { cn } from "@/lib/utils";
 
@@ -188,6 +188,13 @@ export const BlogArchive = () => {
   const toggleTag = useCallback((tag: string) => {
     if (!tag) return;
 
+    if (tag === "All") {
+      setSelectedTags(
+        selectedTags.length === allTags.length ? [] : [...allTags]
+      );
+      return;
+    }
+
     setSelectedTags((prev) => {
       const currentTags = prev || [];
       if (currentTags.includes(tag)) {
@@ -308,23 +315,74 @@ export const BlogArchive = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <TagFilterInput
-                    allTags={allTags}
-                    selectedTags={selectedTags}
-                    onToggleTag={toggleTag}
-                    onClearTags={() => setSelectedTags([])}
-                  />
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/50">
-                    <Tag className="h-4 w-4 text-primary-teal" />
-                    <span className="text-sm font-medium">
-                      {selectedTags.length} / {allTags.length}
-                    </span>
-                  </div>
                   <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setSelectedTags([])}
+                    disabled={selectedTags.length === 0}
+                    className="relative h-9 w-9"
+                  >
+                    <Filter className="h-4 w-4 translate-y-[2px]" />
+                    {selectedTags.length > 0 && (
+                      <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-primary-teal text-[9px] text-primary-foreground flex items-center justify-center shadow-sm">
+                        {selectedTags.length}
+                      </span>
+                    )}
+                  </Button>
                 </div>
               </div>
 
-              {allTags.length > 0 && selectedTags.length > 0 && (
+              {allTags.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="flex flex-wrap gap-2"
+                >
+                  <Badge
+                    variant={
+                      selectedTags.length === allTags.length
+                        ? "default"
+                        : "secondary"
+                    }
+                    className={`cursor-pointer group/tag transition-colors ${
+                      selectedTags.length === allTags.length
+                        ? "bg-primary-teal hover:bg-primary-teal/90"
+                        : "hover:bg-primary-teal/20"
+                    }`}
+                    onClick={() => toggleTag("All")}
+                  >
+                    <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
+                    All
+                  </Badge>
+                  {allTags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant={
+                        selectedTags.includes(tag) ? "default" : "secondary"
+                      }
+                      className={`cursor-pointer group/tag transition-colors ${
+                        selectedTags.includes(tag)
+                          ? "bg-primary-teal hover:bg-primary-teal/90"
+                          : "hover:bg-primary-teal/20"
+                      }`}
+                      onClick={() => toggleTag(tag)}
+                    >
+                      <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
+                      {tag}
+                      {selectedTags.includes(tag) && (
+                        <X className="h-3 w-3 ml-1 transition-transform group-hover/tag:rotate-90" />
+                      )}
+                    </Badge>
+                  ))}
+                </motion.div>
+              )}
+              {/* </div> */}
+              {/* } */}
+              {/* </motion.div> */}
+
+              {/* {allTags.length > 0 && selectedTags.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -364,7 +422,7 @@ export const BlogArchive = () => {
                     </Button>
                   </motion.div>
                 </motion.div>
-              )}
+              )} */}
             </motion.div>
           </motion.div>
 
