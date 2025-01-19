@@ -2,7 +2,8 @@
 .ProseMirror {
   min-height: 100%;
   height: 100%;
-  padding: 0.5rem;
+  padding: 1rem;
+  cursor: text;
 }
 
 .ProseMirror:focus {
@@ -35,6 +36,7 @@
 .code-block-wrapper {
   @apply relative rounded-md bg-[#272822] p-4 my-4;
   font-family: 'Fira Code', monospace;
+  cursor: text;
 }
 
 .code-block-wrapper::before {
@@ -48,11 +50,17 @@
 .code-block-wrapper pre {
   @apply m-0 p-0;
   background: none !important;
+  outline: none;
+  tab-size: 2;
 }
 
 .code-block-wrapper code {
   @apply text-sm text-[#F8F8F2];
   counter-reset: line;
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-all;
+  tab-size: 2;
 }
 
 .code-block-wrapper code[data-line-numbers] > .line::before {

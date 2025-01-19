@@ -2,23 +2,24 @@ import React, { useState } from "react";
 import { Editor } from "@tiptap/react";
 import { Table } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Toggle } from "@/components/ui/toggle";
-import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Toggle } from "@/components/ui/toggle";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TableMenuProps {
   editor: Editor;
@@ -29,120 +30,131 @@ export const TableMenu: React.FC<TableMenuProps> = ({ editor }) => {
   const [rows, setRows] = useState("3");
   const [cols, setCols] = useState("3");
 
-  const insertTable = () => {
-    const numRows = parseInt(rows);
-    const numCols = parseInt(cols);
+  const isTableActive = editor.isActive("table");
+
+  const createTable = () => {
+    const numRows = parseInt(rows, 10);
+    const numCols = parseInt(cols, 10);
+    
     if (numRows > 0 && numCols > 0) {
+      // Create header row
+      const headerRow = {
+        type: "tableRow",
+        content: Array.from({ length: numCols }, () => ({
+          type: "tableHeader",
+          content: [{ type: "paragraph", content: [{ type: "text", text: "" }] }],
+        })),
+      };
+
+      // Create regular rows
+      const bodyRows = Array.from({ length: numRows - 1 }, () => ({
+        type: "tableRow",
+        content: Array.from({ length: numCols }, () => ({
+          type: "tableCell",
+          content: [{ type: "paragraph", content: [{ type: "text", text: "" }] }],
+        })),
+      }));
+
       editor
         .chain()
         .focus()
-        .insertTable({ rows: numRows, cols: numCols, withHeaderRow: true })
+        .insertContent({
+          type: "table",
+          content: [headerRow, ...bodyRows],
+        })
         .run();
+      
       setIsDialogOpen(false);
     }
   };
 
-  const isTableActive = editor.isActive("table");
-
   return (
-    <>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Toggle size="sm" className="h-8 w-8 p-0" pressed={isTableActive}>
-              <Table className="h-4 w-4" />
-            </Toggle>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DialogTrigger asChild>
-              <DropdownMenuItem>Insert Table</DropdownMenuItem>
-            </DialogTrigger>
-            {isTableActive && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => editor.chain().focus().addColumnBefore().run()}>
-                  Add Column Before
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => editor.chain().focus().addColumnAfter().run()}>
-                  Add Column After
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => editor.chain().focus().deleteColumn().run()}>
-                  Delete Column
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => editor.chain().focus().addRowBefore().run()}>
-                  Add Row Before
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => editor.chain().focus().addRowAfter().run()}>
-                  Add Row After
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => editor.chain().focus().deleteRow().run()}>
-                  Delete Row
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => editor.chain().focus().deleteTable().run()}>
-                  Delete Table
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => editor.chain().focus().mergeCells().run()}
-                  disabled={!editor.can().mergeCells()}
-                >
-                  Merge Cells
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => editor.chain().focus().splitCell().run()}
-                  disabled={!editor.can().splitCell()}
-                >
-                  Split Cell
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => editor.chain().focus().toggleHeaderRow().run()}
-                >
-                  Toggle Header Row
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Insert Table</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="rows">Rows</Label>
-                <Input
-                  id="rows"
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={rows}
-                  onChange={(e) => setRows(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="cols">Columns</Label>
-                <Input
-                  id="cols"
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={cols}
-                  onChange={(e) => setCols(e.target.value)}
-                />
-              </div>
-            </div>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DropdownMenu>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Toggle size="sm" className="h-8 w-8 p-0" pressed={isTableActive}>
+                  <Table className="h-4 w-4" />
+                </Toggle>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Insert Table</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <DropdownMenuContent align="start">
+          <DialogTrigger asChild>
+            <DropdownMenuItem>Insert Table</DropdownMenuItem>
+          </DialogTrigger>
+          {isTableActive && (
+            <>
+              <DropdownMenuItem onClick={() => editor.chain().focus().deleteTable().run()}>
+                Delete Table
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().addColumnBefore().run()}>
+                Add Column Before
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().addColumnAfter().run()}>
+                Add Column After
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().deleteColumn().run()}>
+                Delete Column
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().addRowBefore().run()}>
+                Add Row Before
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().addRowAfter().run()}>
+                Add Row After
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().deleteRow().run()}>
+                Delete Row
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Insert Table</DialogTitle>
+          <DialogDescription>
+            Enter the number of rows and columns for your table.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="rows" className="text-right">
+              Rows
+            </Label>
+            <Input
+              id="rows"
+              type="number"
+              min="1"
+              value={rows}
+              onChange={(e) => setRows(e.target.value)}
+              className="col-span-3"
+            />
           </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={insertTable}>Insert</Button>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="cols" className="text-right">
+              Columns
+            </Label>
+            <Input
+              id="cols"
+              type="number"
+              min="1"
+              value={cols}
+              onChange={(e) => setCols(e.target.value)}
+              className="col-span-3"
+            />
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+        <div className="flex justify-end">
+          <Button onClick={createTable}>Insert</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };

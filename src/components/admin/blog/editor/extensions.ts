@@ -29,12 +29,13 @@ import html from "highlight.js/lib/languages/xml";
 import css from "highlight.js/lib/languages/css";
 import python from "highlight.js/lib/languages/python";
 import { mergeAttributes } from "@tiptap/core";
+// import Container from "@/components/admin/blog/editor/extensions/Container";
 
 // Register languages for syntax highlighting
-lowlight.registerLanguage("js", javascript);
-lowlight.registerLanguage("ts", typescript);
 lowlight.registerLanguage("html", html);
 lowlight.registerLanguage("css", css);
+lowlight.registerLanguage("javascript", javascript);
+lowlight.registerLanguage("typescript", typescript);
 lowlight.registerLanguage("python", python);
 
 // Custom container for callouts, info boxes, etc.
@@ -68,26 +69,46 @@ const CustomContainer = Extension.create({
 });
 
 // Custom code block with syntax highlighting
-const CustomCodeBlock = CodeBlockLowlight
-  .extend({
-    addAttributes() {
-      return {
-        ...this.parent?.(),
-        language: {
-          default: 'plain',
-          parseHTML: element => element.getAttribute('data-language'),
-          renderHTML: attributes => ({
-            'data-language': attributes.language,
-            class: `language-${attributes.language}`,
-          }),
-        },
-      }
-    },
-  })
-  .configure({
-    lowlight,
-    defaultLanguage: 'plain',
-  });
+const CustomCodeBlock = CodeBlockLowlight.extend({
+  addKeyboardShortcuts() {
+    return {
+      ...this.parent?.(),
+      Tab: ({ editor }) => {
+        const { selection } = editor.state;
+        const { $from } = selection;
+        const node = $from.node();
+
+        // Only handle tab in code blocks
+        if (node.type.name !== this.name) {
+          return false;
+        }
+
+        // Insert 2 spaces for tab
+        editor.commands.insertContent("  ");
+        return true;
+      },
+    };
+  },
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      language: {
+        default: "plain",
+        parseHTML: (element) => element.getAttribute("data-language"),
+        renderHTML: (attributes) => ({
+          "data-language": attributes.language,
+          class: `language-${attributes.language}`,
+        }),
+      },
+    };
+  },
+}).configure({
+  lowlight,
+  defaultLanguage: "plain",
+  HTMLAttributes: {
+    class: "code-block-wrapper not-prose",
+  },
+});
 
 // Custom Heading with ID attributes for better SEO
 const CustomHeading = Node.create({
@@ -112,12 +133,23 @@ const CustomHeading = Node.create({
   },
 });
 
+// Configure table extension
+const CustomTable = Table.configure({
+  resizable: true,
+  HTMLAttributes: {
+    class: "tableWrapper",
+  },
+});
+
+const CustomTableRow = TableRow.configure();
+const CustomTableHeader = TableHeader.configure();
+const CustomTableCell = TableCell.configure();
+
 // Export all extensions
 export const extensions = [
   StarterKit.configure({
-    dropcursor: false, // Disable default dropcursor to prevent duplicate
-    heading: false, // We'll use our custom heading
-    codeBlock: false, // Disable the default codeBlock from StarterKit
+    codeBlock: false,
+    heading: false,
   }),
   CustomHeading.configure({
     levels: [1, 2, 3, 4, 5, 6],
@@ -150,6 +182,7 @@ export const extensions = [
   TextAlign.configure({
     types: ["heading", "paragraph"],
   }),
+  Underline,
   Placeholder.configure({
     placeholder: ({ node }) => {
       if (node.type.name === "heading") {
@@ -167,15 +200,10 @@ export const extensions = [
   TaskItem.configure({
     nested: true,
   }),
-  Table.configure({
-    resizable: true,
-    HTMLAttributes: {
-      class: "border-collapse table-auto w-full",
-    },
-  }),
-  TableRow,
-  TableHeader,
-  TableCell,
+  CustomTable,
+  CustomTableRow,
+  CustomTableHeader,
+  CustomTableCell,
   Youtube.configure({
     width: 840,
     height: 472.5,
@@ -190,7 +218,6 @@ export const extensions = [
   TextStyle,
   Subscript,
   Superscript,
-  Underline,
   FontFamily.configure({
     types: ["textStyle"],
   }),
@@ -203,7 +230,9 @@ export const extensions = [
     className: "has-focus",
     mode: "all",
   }),
-  CustomContainer,
+  CustomContainer.configure({
+    types: ["info", "warning", "success", "error"],
+  }),
 ];
 
 export interface EditorConfigType {

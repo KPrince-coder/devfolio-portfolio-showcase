@@ -64,9 +64,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <PopoverTrigger asChild>
-              {trigger}
-            </PopoverTrigger>
+            <PopoverTrigger asChild>{trigger}</PopoverTrigger>
           </TooltipTrigger>
           <TooltipContent>
             <p>{type === "text" ? "Text Color" : "Highlight Color"}</p>
@@ -77,7 +75,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
       <PopoverContent className="w-auto p-3" align="start">
         <div className="space-y-3">
           <HexColorPicker color={color} onChange={setColor} />
-          
+
           <div className="grid grid-cols-8 gap-1">
             {presetColors.map((presetColor) => (
               <TooltipProvider key={presetColor}>
@@ -88,7 +86,8 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                       className="h-6 w-6 p-0 rounded-sm"
                       style={{
                         backgroundColor: presetColor,
-                        border: color === presetColor ? "2px solid black" : "none",
+                        border:
+                          color === presetColor ? "2px solid black" : "none",
                       }}
                       onClick={() => setColor(presetColor)}
                     />

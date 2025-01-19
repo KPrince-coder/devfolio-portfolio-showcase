@@ -5,13 +5,19 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { Image as ImageIcon, Link, Upload, Video as VideoIcon } from "lucide-react";
+import {
+  Image as ImageIcon,
+  Link,
+  Upload,
+  Video as VideoIcon,
+} from "lucide-react";
 
 interface MediaUploaderProps {
   editor: Editor;
@@ -98,9 +104,10 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            Upload {type === "image" ? "Image" : "Video"}
-          </DialogTitle>
+          <DialogTitle>Upload {type === "image" ? "Image" : "Video"}</DialogTitle>
+          <DialogDescription>
+            Choose a {type} file to upload or enter a URL.
+          </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="url">
           <TabsList className="grid w-full grid-cols-2">
