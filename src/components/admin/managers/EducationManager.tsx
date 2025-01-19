@@ -7,6 +7,8 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogTitle,
+  DialogHeader,
 } from "@/components/ui/dialog";
 import { EducationForm } from "../forms/EducationForm";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,10 +34,7 @@ export const EducationManager = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("education")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("education").delete().eq("id", id);
 
       if (error) throw error;
 
@@ -67,6 +66,11 @@ export const EducationManager = () => {
             </Button>
           </DialogTrigger>
           <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {selectedEducation ? "Edit Education Entry" : "Add Education Entry"}
+              </DialogTitle>
+            </DialogHeader>
             <EducationForm
               initialData={selectedEducation}
               onClose={() => {
@@ -84,7 +88,9 @@ export const EducationManager = () => {
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-medium">{entry.degree}</h3>
-                <p className="text-sm text-muted-foreground">{entry.institution}</p>
+                <p className="text-sm text-muted-foreground">
+                  {entry.institution}
+                </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {entry.year_start} - {entry.year_end || "Present"}
                 </p>

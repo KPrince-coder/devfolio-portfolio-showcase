@@ -7,6 +7,8 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogTitle,
+  DialogHeader,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -67,6 +69,11 @@ export const SocialLinksManager = () => {
             </Button>
           </DialogTrigger>
           <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {selectedLink ? "Edit Social Link" : "Add New Social Link"}
+              </DialogTitle>
+            </DialogHeader>
             <SocialLinksForm
               initialData={selectedLink}
               onClose={() => {
@@ -86,10 +93,14 @@ export const SocialLinksManager = () => {
                 <h3 className="font-medium">{link.platform}</h3>
                 <p className="text-sm text-muted-foreground">{link.url}</p>
                 <div className="mt-1">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-                    link.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {link.is_active ? 'Active' : 'Inactive'}
+                  <span
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                      link.is_active
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {link.is_active ? "Active" : "Inactive"}
                   </span>
                 </div>
               </div>

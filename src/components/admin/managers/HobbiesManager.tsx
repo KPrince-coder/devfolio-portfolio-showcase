@@ -3,11 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogHeader } from "@/components/ui/dialog";
 import { HobbiesForm } from "../forms/HobbiesForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -32,10 +28,7 @@ export const HobbiesManager = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("hobbies")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("hobbies").delete().eq("id", id);
 
       if (error) throw error;
 
@@ -67,6 +60,11 @@ export const HobbiesManager = () => {
             </Button>
           </DialogTrigger>
           <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {selectedHobby ? "Edit Hobby" : "Add New Hobby"}
+              </DialogTitle>
+            </DialogHeader>
             <HobbiesForm
               initialData={selectedHobby}
               onClose={() => {
@@ -84,7 +82,9 @@ export const HobbiesManager = () => {
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-medium">{hobby.name}</h3>
-                <p className="text-sm text-muted-foreground">{hobby.category}</p>
+                <p className="text-sm text-muted-foreground">
+                  {hobby.category}
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button

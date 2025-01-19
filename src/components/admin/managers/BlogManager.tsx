@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { BlogPost } from "@/types/blog";
-import { BlogForm } from "../BlogForm";
+import { BlogForm } from "../forms/BlogForm";
 import { BlogList } from "../BlogList";
 import { checkAuth, generateUniqueSlug, slugify } from "@/utils/blogUtils";
 
@@ -23,7 +23,7 @@ interface SupabaseBlogPost {
   author: string | null;
   tags: string[] | null;
   publishedat: string | null;
-  coverimage: string | null;
+  coverImage: string | null;
 }
 
 export const BlogManager = () => {
@@ -37,27 +37,32 @@ export const BlogManager = () => {
   const createMutation = useMutation({
     mutationFn: async (postData: Partial<BlogPost>) => {
       const { data: existingSlugs } = await supabase
-        .from('blogs')
-        .select('slug')
-        .not('id', 'eq', postData.id || '');
+        .from("blogs")
+        .select("slug")
+        .not("id", "eq", postData.id || "");
 
-      const baseSlug = slugify(postData.title || '');
-      const slug = generateUniqueSlug(baseSlug, (existingSlugs || []).map(p => p.slug || ''));
+      const baseSlug = slugify(postData.title || "");
+      const slug = generateUniqueSlug(
+        baseSlug,
+        (existingSlugs || []).map((p) => p.slug || "")
+      );
 
       const { data, error } = await supabase
-        .from('blogs')
-        .insert([{
-          title: postData.title,
-          content: postData.content,
-          excerpt: postData.excerpt,
-          image_url: postData.coverImage,
-          published: true,
-          author: postData.author,
-          tags: postData.tags,
-          coverimage: postData.coverImage,
-          publishedat: new Date().toISOString(),
-          slug: slug,
-        }])
+        .from("blogs")
+        .insert([
+          {
+            title: postData.title,
+            content: postData.content,
+            excerpt: postData.excerpt,
+            image_url: postData.coverImage,
+            published: true,
+            author: postData.author,
+            tags: postData.tags,
+            coverimage: postData.coverImage,
+            publishedat: new Date().toISOString(),
+            slug: slug,
+          },
+        ])
         .select()
         .single();
 
@@ -65,7 +70,7 @@ export const BlogManager = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['blog-posts-admin'] });
+      queryClient.invalidateQueries({ queryKey: ["blog-posts-admin"] });
       setIsCreating(false);
       toast({
         title: "Success",
@@ -85,15 +90,18 @@ export const BlogManager = () => {
   const updateMutation = useMutation({
     mutationFn: async (postData: Partial<BlogPost>) => {
       const { data: existingSlugs } = await supabase
-        .from('blogs')
-        .select('slug')
-        .not('id', 'eq', postData.id || '');
+        .from("blogs")
+        .select("slug")
+        .not("id", "eq", postData.id || "");
 
-      const baseSlug = slugify(postData.title || '');
-      const slug = generateUniqueSlug(baseSlug, (existingSlugs || []).map(p => p.slug || ''));
+      const baseSlug = slugify(postData.title || "");
+      const slug = generateUniqueSlug(
+        baseSlug,
+        (existingSlugs || []).map((p) => p.slug || "")
+      );
 
       const { data, error } = await supabase
-        .from('blogs')
+        .from("blogs")
         .update({
           title: postData.title,
           content: postData.content,
@@ -106,7 +114,7 @@ export const BlogManager = () => {
           updated_at: new Date().toISOString(),
           slug: slug,
         })
-        .eq('id', postData.id)
+        .eq("id", postData.id)
         .select()
         .single();
 
@@ -114,7 +122,7 @@ export const BlogManager = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['blog-posts-admin'] });
+      queryClient.invalidateQueries({ queryKey: ["blog-posts-admin"] });
       setIsEditing(null);
       setIsCreating(false);
       toast({
@@ -134,16 +142,13 @@ export const BlogManager = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (postId: string) => {
-      const { error } = await supabase
-        .from('blogs')
-        .delete()
-        .eq('id', postId);
+      const { error } = await supabase.from("blogs").delete().eq("id", postId);
 
       if (error) throw error;
       return postId;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['blog-posts-admin'] });
+      queryClient.invalidateQueries({ queryKey: ["blog-posts-admin"] });
       toast({
         title: "Success",
         description: "Blog post deleted successfully",
@@ -192,7 +197,7 @@ export const BlogManager = () => {
   };
 
   const { data: posts, isLoading } = useQuery({
-    queryKey: ['blog-posts-admin'],
+    queryKey: ["blog-posts-admin"],
     queryFn: async () => {
       console.log("Fetching blog posts...");
       const isAuthenticated = await checkAuth();
@@ -202,18 +207,18 @@ export const BlogManager = () => {
       }
 
       const { data, error } = await supabase
-        .from('blogs')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
+        .from("blogs")
+        .select("*")
+        .order("created_at", { ascending: false });
+
       if (error) {
         console.error("Error fetching blog posts:", error);
         throw error;
       }
-      
+
       console.log("Blog posts fetched successfully:", data);
-      
-      return (data as SupabaseBlogPost[]).map(post => ({
+
+      return (data as SupabaseBlogPost[]).map((post) => ({
         id: post.id,
         title: post.title,
         content: post.content,
@@ -223,7 +228,7 @@ export const BlogManager = () => {
         publishedAt: post.publishedat || post.created_at,
         modifiedAt: post.updated_at,
         tags: post.tags || [],
-        slug: slugify(post.title)
+        slug: slugify(post.title),
       }));
     },
     staleTime: 0,
@@ -233,9 +238,7 @@ export const BlogManager = () => {
   if (isLoading) {
     return (
       <Card className="p-6">
-        <div className="flex items-center justify-center h-40">
-          Loading...
-        </div>
+        <div className="flex items-center justify-center h-40">Loading...</div>
       </Card>
     );
   }
@@ -252,7 +255,9 @@ export const BlogManager = () => {
 
       {isCreating && (
         <BlogForm
-          initialData={isEditing ? posts?.find(p => p.id === isEditing) : undefined}
+          initialData={
+            isEditing ? posts?.find((p) => p.id === isEditing) : undefined
+          }
           onSubmit={isEditing ? handleUpdate : handleSubmit}
           onCancel={() => {
             setIsCreating(false);

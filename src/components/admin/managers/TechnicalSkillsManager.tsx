@@ -7,6 +7,8 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogTitle,
+  DialogHeader,
 } from "@/components/ui/dialog";
 import { TechnicalSkillsForm } from "../forms/TechnicalSkillsForm";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,6 +69,11 @@ export const TechnicalSkillsManager = () => {
             </Button>
           </DialogTrigger>
           <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {selectedSkill ? "Edit Technical Skill" : "Add New Technical Skill"}
+              </DialogTitle>
+            </DialogHeader>
             <TechnicalSkillsForm
               initialData={selectedSkill}
               onClose={() => {

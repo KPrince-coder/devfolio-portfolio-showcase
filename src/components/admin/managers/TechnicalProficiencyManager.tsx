@@ -7,6 +7,8 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogTitle,
+  DialogHeader,
 } from "@/components/ui/dialog";
 import { TechnicalProficiencyForm } from "../forms/TechnicalProficiencyForm";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +70,11 @@ export const TechnicalProficiencyManager = () => {
             </Button>
           </DialogTrigger>
           <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {selectedProficiency ? "Edit Technical Proficiency" : "Add Technical Proficiency"}
+              </DialogTitle>
+            </DialogHeader>
             <TechnicalProficiencyForm
               initialData={selectedProficiency}
               onClose={() => {
