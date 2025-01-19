@@ -1,163 +1,328 @@
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Plus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, X, Save, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-interface TechnicalSkillsFormProps {
-  initialData?: {
-    id: string;
-    category: string;
-    icon_key: string;
-    skills: string[];
-  };
-  onClose: () => void;
+interface TechnicalSkill {
+  name: string;
+  proficiency: number;
+  category: string;
 }
 
-export const TechnicalSkillsForm = ({ initialData, onClose }: TechnicalSkillsFormProps) => {
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    category: initialData?.category || "",
-    icon_key: initialData?.icon_key || "code",
-    skills: initialData?.skills || [""],
+interface TechnicalSkillsFormProps {
+  initialSkills?: TechnicalSkill[];
+  onSave?: (skills: TechnicalSkill[]) => Promise<void>;
+  className?: string;
+  isLoading?: boolean;
+}
+
+const skillCategories = [
+  "Programming Languages",
+  "Frameworks",
+  "Databases",
+  "Cloud Services",
+  "Tools",
+  "Other",
+];
+
+export const TechnicalSkillsForm = ({
+  initialSkills = [],
+  onSave,
+  className,
+  isLoading = false,
+}: TechnicalSkillsFormProps) => {
+  const [skills, setSkills] = useState<TechnicalSkill[]>(initialSkills);
+  const [newSkill, setNewSkill] = useState<TechnicalSkill>({
+    name: "",
+    proficiency: 50,
+    category: skillCategories[0],
   });
+  const [isSaving, setIsSaving] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  const handleSkillChange = (index: number, value: string) => {
-    const newSkills = [...formData.skills];
-    newSkills[index] = value;
-    setFormData({ ...formData, skills: newSkills });
-  };
-
-  const addSkill = () => {
-    setFormData({ ...formData, skills: [...formData.skills, ""] });
-  };
-
-  const removeSkill = (index: number) => {
-    const newSkills = formData.skills.filter((_, i) => i !== index);
-    setFormData({ ...formData, skills: newSkills });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      if (initialData?.id) {
-        const { error } = await supabase
-          .from("technical_skills")
-          .update(formData)
-          .eq("id", initialData.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "Technical skill updated successfully",
-        });
-      } else {
-        const { error } = await supabase
-          .from("technical_skills")
-          .insert([formData]);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "Technical skill added successfully",
-        });
-      }
-
-      onClose();
-    } catch (error) {
-      console.error("Error saving technical skill:", error);
+  const handleAddSkill = () => {
+    if (!newSkill.name.trim()) {
       toast({
-        variant: "destructive",
         title: "Error",
-        description: "Failed to save technical skill",
+        description: "Please enter a skill name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (skills.some((skill) => skill.name.toLowerCase() === newSkill.name.toLowerCase())) {
+      toast({
+        title: "Error",
+        description: "This skill already exists",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSkills([...skills, newSkill]);
+    setNewSkill({
+      name: "",
+      proficiency: 50,
+      category: newSkill.category,
+    });
+  };
+
+  const handleRemoveSkill = (index: number) => {
+    setSkills(skills.filter((_, i) => i !== index));
+  };
+
+  const handleSave = async () => {
+    if (!onSave) return;
+    
+    setIsSaving(true);
+    try {
+      await onSave(skills);
+      toast({
+        title: "Success",
+        description: "Technical skills saved successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save technical skills",
+        variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
 
+  if (isLoading) {
+    return (
+      <Card className={cn("p-6", className)}>
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-48" />
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-24" />
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-8 w-24" />
+            ))}
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  const filteredSkills = selectedCategory
+    ? skills.filter((skill) => skill.category === selectedCategory)
+    : skills;
+
   return (
-    <Card className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Category</label>
-          <Input
-            value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Icon</label>
-          <Select
-            value={formData.icon_key}
-            onValueChange={(value) => setFormData({ ...formData, icon_key: value })}
+    <Card className={cn("p-6", className)}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-6"
+      >
+        <div className="flex justify-between items-center">
+          <motion.h3
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-lg font-semibold"
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select icon" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="code">Code</SelectItem>
-              <SelectItem value="server">Server</SelectItem>
-              <SelectItem value="smartphone">Smartphone</SelectItem>
-              <SelectItem value="cloud">Cloud</SelectItem>
-              <SelectItem value="database">Database</SelectItem>
-              <SelectItem value="shield">Shield</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Skills</label>
-          {formData.skills.map((skill, index) => (
-            <div key={index} className="flex gap-2 mb-2">
-              <Input
-                value={skill}
-                onChange={(e) => handleSkillChange(index, e.target.value)}
-                placeholder={`Skill ${index + 1}`}
-                required
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => removeSkill(index)}
-                disabled={formData.skills.length === 1}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-              {index === formData.skills.length - 1 && (
+            Technical Skills
+          </motion.h3>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
-                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
                   variant="outline"
-                  size="icon"
-                  onClick={addSkill}
+                  size="sm"
                 >
-                  <Plus className="h-4 w-4" />
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Save Changes
                 </Button>
-              )}
-            </div>
-          ))}
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Save all technical skills</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : initialData ? "Update" : "Add"}
-          </Button>
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Badge
+              variant={selectedCategory === null ? "default" : "outline"}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => setSelectedCategory(null)}
+            >
+              All
+            </Badge>
+            {skillCategories.map((category) => (
+              <Badge
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setSelectedCategory(category)}
+              >
+                {category}
+              </Badge>
+            ))}
+          </div>
+
+          <div className="grid gap-4">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Label htmlFor="skillName">New Skill</Label>
+                <Input
+                  id="skillName"
+                  value={newSkill.name}
+                  onChange={(e) =>
+                    setNewSkill({ ...newSkill, name: e.target.value })
+                  }
+                  placeholder="Enter skill name..."
+                />
+              </div>
+              <div className="w-48">
+                <Label htmlFor="skillCategory">Category</Label>
+                <select
+                  id="skillCategory"
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  value={newSkill.category}
+                  onChange={(e) =>
+                    setNewSkill({ ...newSkill, category: e.target.value })
+                  }
+                >
+                  {skillCategories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Proficiency: {newSkill.proficiency}%</Label>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Slider
+                    value={[newSkill.proficiency]}
+                    onValueChange={(value) =>
+                      setNewSkill({ ...newSkill, proficiency: value[0] })
+                    }
+                    max={100}
+                    step={1}
+                  />
+                </div>
+                <Button onClick={handleAddSkill} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <AnimatePresence mode="popLayout">
+            {filteredSkills.map((skill, index) => (
+              <motion.div
+                key={skill.name}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="relative"
+              >
+                <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 group">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{skill.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {skill.category}
+                        </p>
+                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleRemoveSkill(index)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Remove skill</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <div className="relative pt-1">
+                      <div className="flex mb-2 items-center justify-between">
+                        <div>
+                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-primary text-primary-foreground">
+                            {skill.proficiency}%
+                          </span>
+                        </div>
+                      </div>
+                      <motion.div
+                        className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-primary/20"
+                        initial={{ width: 0 }}
+                        animate={{ width: "100%" }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                      >
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${skill.proficiency}%` }}
+                          transition={{ duration: 0.5, delay: 0.2 }}
+                          className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"
+                        />
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {filteredSkills.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-8 text-muted-foreground"
+            >
+              No skills found. Add your first skill above!
+            </motion.div>
+          )}
         </div>
-      </form>
+      </motion.div>
     </Card>
   );
 };
