@@ -15,6 +15,7 @@ export interface ContactSubmission {
   is_read: boolean;
   created_at: string;
   updated_at: string;
+  read_at: string | null;
   status: MessageStatus;
   tags?: string[];
 }
