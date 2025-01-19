@@ -29,7 +29,7 @@ import {
   CheckCircle2,
   XCircle,
   Palette,
-  Eraser,
+  Eye,
   Sparkles,
 } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
@@ -69,11 +69,20 @@ import { TableMenu } from "./components/TableMenu";
 import { MediaUploader } from "./components/MediaUploader";
 import { CodeBlock } from "./components/CodeBlock";
 
+// interface EditorToolbarProps {
+//   editor: Editor | null;
+//   className?: string;
+//   isPreview?: boolean;
+//   onPreviewToggle?: (value: boolean) => void;
+// }
+
 interface EditorToolbarProps {
   editor: Editor | null;
   className?: string;
-  isPreview?: boolean;
-  onPreviewToggle?: (value: boolean) => void;
+  isPreview: boolean;
+  isScrollLocked: boolean;
+  onPreviewToggle: (value: boolean) => void;
+  onScrollLockToggle: (value: boolean) => void;
 }
 
 const fontFamilies = [
@@ -137,6 +146,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const [textColor, setTextColor] = useState("");
   const [highlightColor, setHighlightColor] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
+  // const [isPreview, setIsPreview] = useState(false);
+  // const [isScrollLocked, setIsScrollLocked] = useState(false);
+
+  // const onScrollLockToggle = (value: boolean) => {
+  //   setIsScrollLocked(value);
+  //   document.body.style.overflow = value ? "hidden" : "auto";
+  // };
 
   if (!editor) return null;
 
@@ -389,6 +405,27 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     {
       type: "component",
       component: <CodeBlock editor={editor} />,
+    },
+    {
+      type: "separator",
+    },
+    {
+      type: "group",
+      label: "View Controls",
+      items: [
+        {
+          icon: Eye,
+          title: isPreview ? "Exit Preview" : "Preview Mode",
+          action: () => onPreviewToggle(!isPreview),
+          isActive: isPreview,
+        },
+        // {
+        //   icon: Lock,
+        //   title: isScrollLocked ? "Unlock Scroll" : "Lock Scroll",
+        //   action: () => onScrollLockToggle(!isScrollLocked),
+        //   isActive: isScrollLocked,
+        // },
+      ],
     },
     {
       type: "dropdown",

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -7,24 +7,30 @@ import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
 import TextStyle from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
-import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
-import Table from "@tiptap/extension-table";
-import TableRow from "@tiptap/extension-table-row";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Video from "tiptap-extension-video";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
+import javascript from "highlight.js/lib/languages/javascript";
+import typescript from "highlight.js/lib/languages/typescript";
+import html from "highlight.js/lib/languages/xml";
+import css from "highlight.js/lib/languages/css";
+import python from "highlight.js/lib/languages/python";
 import { EditorToolbar } from "./EditorToolbar";
 import { PreviewToggle } from "./components/PreviewToggle";
 import { cn } from "@/lib/utils";
 import "./styles.css";
+import { Eye, Lock } from "lucide-react";
 
 const lowlight = createLowlight(common);
+lowlight.register("javascript", javascript);
+lowlight.register("typescript", typescript);
+lowlight.register("html", html);
+lowlight.register("css", css);
+lowlight.register("python", python);
 
 interface RichTextEditorProps {
   content: string;
@@ -34,6 +40,7 @@ interface RichTextEditorProps {
   autofocus?: boolean;
   maxHeight?: string;
   onSave?: () => void;
+  onInit?: (editor: any) => void;
   className?: string;
 }
 
@@ -45,9 +52,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   autofocus = false,
   maxHeight,
   onSave,
+  onInit,
   className,
 }) => {
   const [isPreview, setIsPreview] = useState(false);
+  // const [isScrollLocked, setIsScrollLocked] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -55,6 +64,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         heading: {
           levels: [1, 2, 3, 4, 5, 6],
         },
+        codeBlock: false,
       }),
       Underline,
       TextAlign.configure({
@@ -64,9 +74,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       Subscript,
       TextStyle,
       Color,
-      Highlight.configure({
-        multicolor: true,
-      }),
       Link.configure({
         openOnClick: false,
       }),
@@ -74,18 +81,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         inline: true,
         allowBase64: true,
       }),
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
       TaskList,
       TaskItem.configure({
         nested: true,
       }),
       CodeBlockLowlight.configure({
         lowlight,
+        HTMLAttributes: {
+          class: "code-block-wrapper",
+        },
       }),
       Video,
     ],
@@ -96,6 +100,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     editable: !readOnly && !isPreview,
     autofocus,
   });
+
+  useEffect(() => {
+    if (onInit && editor) {
+      onInit(editor);
+    }
+  }, [editor, onInit]);
 
   const handlePreviewToggle = useCallback(
     (value: boolean) => {
@@ -259,34 +269,32 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   if (!editor) return null;
 
   return (
-    <div
-      className={cn(
-        "flex h-full min-h-[400px] flex-col overflow-hidden rounded-lg border bg-background",
-        className
-      )}
-    >
-      <div className="flex items-center justify-between border-b bg-muted/50 p-1">
-        {!readOnly && (
-          <EditorToolbar
-            editor={editor}
-            isPreview={isPreview}
-            onPreviewToggle={handlePreviewToggle}
-          />
-        )}
-        <PreviewToggle
-          isPreview={isPreview}
-          onToggle={handlePreviewToggle}
-        />
-      </div>
+    <div className="flex flex-col w-full h-full border rounded-lg">
+      <EditorToolbar
+        editor={editor}
+        isPreview={isPreview}
+        // isScrollLocked={isScrollLocked}
+        onPreviewToggle={setIsPreview}
+        isScrollLocked={false}
+        onScrollLockToggle={function (value: boolean): void {
+          throw new Error("Function not implemented.");
+        }} // onScrollLockToggle={setIsScrollLocked}
+      />
       <div
         className={cn(
-          "p-4 prose prose-sm max-w-none",
-          isPreview && "prose-preview",
-          className
+          "flex-1 cursor-text min-h-[400px]",
+          // isScrollLocked ? "overflow-hidden" : "overflow-auto",
+          isPreview && "preview-mode"
         )}
-        style={{ maxHeight }}
+        onClick={() => !isPreview && editor?.chain().focus().run()}
       >
-        <EditorContent editor={editor} />
+        <EditorContent
+          editor={editor}
+          className={cn(
+            "h-full",
+            isPreview && "pointer-events-none select-none"
+          )}
+        />
       </div>
     </div>
   );

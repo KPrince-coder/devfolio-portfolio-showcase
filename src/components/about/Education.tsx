@@ -97,7 +97,7 @@ export const Education = () => {
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className="text-xl font-semibold flex items-center gap-2 text-primary/80"
+                className="text-xl font-semibold flex items-center gap-2 text-primary-teal"
               >
                 <GraduationCap className="h-5 w-5" />
                 Academic Degrees
@@ -111,52 +111,56 @@ export const Education = () => {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card className="p-6 h-full hover:shadow-lg transition-all bg-gradient-to-br from-background to-accent/5 group">
-                      <div className="flex gap-4">
-                        <div className="shrink-0">
-                          <motion.div
-                            className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center"
-                            whileHover={{ scale: 1.1, rotate: 360 }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                          >
-                            <GraduationCap className="w-6 h-6 text-primary" />
-                          </motion.div>
-                        </div>
-                        <div className="space-y-2">
-                          <h4 className="text-lg font-semibold group-hover:text-primary transition-colors">
-                            {item.degree}
-                          </h4>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Building2 className="w-4 h-4" />
-                            <span>{item.institution}</span>
-                          </div>
-                          {item.location && (
-                            <p className="text-sm text-muted-foreground">
-                              📍 {item.location}
-                            </p>
-                          )}
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Calendar className="w-4 h-4 mr-2" />
-                            <span>
-                              {item.year_start} - {item.year_end || "Present"}
-                            </span>
-                          </div>
-                          {item.description && (
-                            <p className="text-sm text-muted-foreground">
-                              {item.description}
-                            </p>
-                          )}
-                          {item.url && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="gap-2 mt-2 group-hover:bg-primary/10 transition-colors"
-                              onClick={() => window.open(item.url, "_blank")}
+                    <Card className="group relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary-teal/5 to-secondary-blue/5 group-hover:from-primary-teal/10 group-hover:to-secondary-blue/10 transition-all duration-500" />
+                      <div className="relative p-6">
+                        <div className="flex gap-4">
+                          <div className="shrink-0">
+                            <motion.div
+                              className="w-12 h-12 rounded-lg bg-primary-teal/10 flex items-center justify-center"
+                              whileHover={{ scale: 1.1, rotate: 360 }}
+                              transition={{ type: "spring", stiffness: 300 }}
                             >
-                              <ExternalLink className="w-4 h-4" />
-                              View Details
-                            </Button>
-                          )}
+                              <GraduationCap className="w-6 h-6 text-primary-teal" />
+                            </motion.div>
+                          </div>
+                          <div className="space-y-2">
+                            <h4 className="text-lg font-semibold group-hover:text-primary-teal transition-colors">
+                              {item.degree}
+                            </h4>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Building2 className="w-4 h-4" />
+                              <span>{item.institution}</span>
+                            </div>
+                            {item.location && (
+                              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                                <span className="w-4 h-4 flex items-center justify-center">📍</span>
+                                {item.location}
+                              </p>
+                            )}
+                            <div className="flex items-center text-sm text-muted-foreground">
+                              <Calendar className="w-4 h-4 mr-2" />
+                              <span>
+                                {item.year_start} - {item.year_end || "Present"}
+                              </span>
+                            </div>
+                            {item.description && (
+                              <p className="text-sm text-muted-foreground">
+                                {item.description}
+                              </p>
+                            )}
+                            {item.url && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 mt-2 group-hover:bg-primary-teal/10 group-hover:text-primary-teal group-hover:border-primary-teal transition-colors"
+                                onClick={() => window.open(item.url, "_blank")}
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                View Details
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </Card>
@@ -173,7 +177,7 @@ export const Education = () => {
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className="text-xl font-semibold flex items-center gap-2 text-primary/80"
+                className="text-xl font-semibold flex items-center gap-2 text-primary-teal"
               >
                 <Award className="h-5 w-5" />
                 Professional Certifications
@@ -187,52 +191,56 @@ export const Education = () => {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card className="p-6 h-full hover:shadow-lg transition-all bg-gradient-to-br from-background to-accent/5 group">
-                      <div className="flex gap-4">
-                        <div className="shrink-0">
-                          <motion.div
-                            className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center"
-                            whileHover={{ scale: 1.1, rotate: 360 }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                          >
-                            <Award className="w-6 h-6 text-primary" />
-                          </motion.div>
-                        </div>
-                        <div className="space-y-2">
-                          <h4 className="text-lg font-semibold group-hover:text-primary transition-colors">
-                            {item.degree}
-                          </h4>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Building2 className="w-4 h-4" />
-                            <span>{item.institution}</span>
-                          </div>
-                          {item.location && (
-                            <p className="text-sm text-muted-foreground">
-                              📍 {item.location}
-                            </p>
-                          )}
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Calendar className="w-4 h-4 mr-2" />
-                            <span>
-                              {item.year_start} - {item.year_end || "Present"}
-                            </span>
-                          </div>
-                          {item.description && (
-                            <p className="text-sm text-muted-foreground">
-                              {item.description}
-                            </p>
-                          )}
-                          {item.url && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="gap-2 mt-2 group-hover:bg-primary/10 transition-colors"
-                              onClick={() => window.open(item.url, "_blank")}
+                    <Card className="group relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary-teal/5 to-secondary-blue/5 group-hover:from-primary-teal/10 group-hover:to-secondary-blue/10 transition-all duration-500" />
+                      <div className="relative p-6">
+                        <div className="flex gap-4">
+                          <div className="shrink-0">
+                            <motion.div
+                              className="w-12 h-12 rounded-lg bg-primary-teal/10 flex items-center justify-center"
+                              whileHover={{ scale: 1.1, rotate: 360 }}
+                              transition={{ type: "spring", stiffness: 300 }}
                             >
-                              <ExternalLink className="w-4 h-4" />
-                              View Certificate
-                            </Button>
-                          )}
+                              <Award className="w-6 h-6 text-primary-teal" />
+                            </motion.div>
+                          </div>
+                          <div className="space-y-2">
+                            <h4 className="text-lg font-semibold group-hover:text-primary-teal transition-colors">
+                              {item.degree}
+                            </h4>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Building2 className="w-4 h-4" />
+                              <span>{item.institution}</span>
+                            </div>
+                            {item.location && (
+                              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                                <span className="w-4 h-4 flex items-center justify-center">📍</span>
+                                {item.location}
+                              </p>
+                            )}
+                            <div className="flex items-center text-sm text-muted-foreground">
+                              <Calendar className="w-4 h-4 mr-2" />
+                              <span>
+                                {item.year_start} - {item.year_end || "Present"}
+                              </span>
+                            </div>
+                            {item.description && (
+                              <p className="text-sm text-muted-foreground">
+                                {item.description}
+                              </p>
+                            )}
+                            {item.url && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 mt-2 group-hover:bg-primary-teal/10 group-hover:text-primary-teal group-hover:border-primary-teal transition-colors"
+                                onClick={() => window.open(item.url, "_blank")}
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                View Details
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </Card>

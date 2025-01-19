@@ -215,7 +215,7 @@ export const Footer = () => {
               <p className="text-center text-sm leading-5 text-muted-foreground">
                 &copy; {new Date().getFullYear()} DevFolio. All rights reserved.
               </p>
-              <motion.p
+              {/* <motion.p
                 className="flex items-center text-sm leading-5 text-muted-foreground"
                 whileHover={{ scale: 1.05 }}
               >
@@ -235,7 +235,7 @@ export const Footer = () => {
                   <Heart className="h-4 w-4 fill-current" />
                 </motion.span>{" "}
                 using React and Tailwind CSS
-              </motion.p>
+              </motion.p> */}
             </div>
           </motion.div>
         </div>

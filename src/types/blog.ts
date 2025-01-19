@@ -1,14 +1,47 @@
+// export interface BlogPost {
+//   id: string;
+//   slug: string;
+//   title: string;
+//   excerpt: string;
+//   content: string;
+//   coverImage: string;
+//   author: string;
+//   publishedAt: string;
+//   tags: string[];
+//   modifiedAt?: string;
+// }
+
 export interface BlogPost {
   id: string;
-  slug: string;
   title: string;
+
+  slug: string;
+
   excerpt: string;
+
   content: string;
+
   coverImage: string;
-  author: string;
-  publishedAt: string;
+
   tags: string[];
+
+  status: "draft" | "published";
+
+  is_featured: boolean;
+
+  meta_title?: string;
+
+  meta_description?: string;
+
+  meta_keywords?: string;
+
+  created_at: string;
+
   modifiedAt?: string;
+  publishedAt: string;
+
+  comment_count: number;
+  author: string;
 }
 
 export interface BlogPostResponse {

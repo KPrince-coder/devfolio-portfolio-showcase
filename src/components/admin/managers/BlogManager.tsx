@@ -8,7 +8,8 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { BlogPost } from "@/types/blog";
 import { BlogForm } from "../forms/BlogForm";
-import { BlogList } from "../BlogList";
+import { BlogList } from "../blog/editor/BlogList";
+import { BlogListSkeleton } from "../skeletons/BlogSkeleton";
 import { checkAuth, generateUniqueSlug, slugify } from "@/utils/blogUtils";
 
 interface SupabaseBlogPost {
@@ -23,7 +24,7 @@ interface SupabaseBlogPost {
   author: string | null;
   tags: string[] | null;
   publishedat: string | null;
-  coverImage: string | null;
+  coverimage: string | null;
 }
 
 export const BlogManager = () => {
@@ -189,10 +190,6 @@ export const BlogManager = () => {
       return;
     }
 
-    if (!window.confirm("Are you sure you want to delete this blog post?")) {
-      return;
-    }
-
     deleteMutation.mutate(postId);
   };
 
@@ -223,25 +220,21 @@ export const BlogManager = () => {
         title: post.title,
         content: post.content,
         excerpt: post.excerpt || "",
-        coverImage: post.coverimage || post.image_url || "",
+        coverImage: post.coverimage || "",
         author: post.author || "",
         publishedAt: post.publishedat || post.created_at,
         modifiedAt: post.updated_at,
         tags: post.tags || [],
         slug: slugify(post.title),
+        status: post.published ? ("published" as const) : ("draft" as const),
+        is_featured: false,
+        created_at: post.created_at,
+        comment_count: 0,
       }));
     },
     staleTime: 0,
     gcTime: 0,
   });
-
-  if (isLoading) {
-    return (
-      <Card className="p-6">
-        <div className="flex items-center justify-center h-40">Loading...</div>
-      </Card>
-    );
-  }
 
   return (
     <Card className="p-6">
@@ -253,28 +246,33 @@ export const BlogManager = () => {
         </Button>
       </div>
 
-      {isCreating && (
-        <BlogForm
-          initialData={
-            isEditing ? posts?.find((p) => p.id === isEditing) : undefined
-          }
-          onSubmit={isEditing ? handleUpdate : handleSubmit}
-          onCancel={() => {
-            setIsCreating(false);
-            setIsEditing(null);
-          }}
-          loading={loading}
-        />
-      )}
+      {isLoading ? (
+        <BlogListSkeleton />
+      ) : (
+        <div>
+          {isCreating && (
+            <BlogForm
+              initialData={
+                isEditing ? posts?.find((p) => p.id === isEditing) : undefined
+              }
+              onSubmit={isEditing ? handleUpdate : handleSubmit}
+              onCancel={() => {
+                setIsCreating(false);
+                setIsEditing(null);
+              }}
+            />
+          )}
 
-      <BlogList
-        posts={posts || []}
-        onEdit={(post) => {
-          setIsEditing(post.id);
-          setIsCreating(true);
-        }}
-        onDelete={handleDelete}
-      />
+          <BlogList
+            posts={posts || []}
+            onEdit={(post) => {
+              setIsEditing(post.id);
+              setIsCreating(true);
+            }}
+            onDelete={handleDelete}
+          />
+        </div>
+      )}
     </Card>
   );
 };

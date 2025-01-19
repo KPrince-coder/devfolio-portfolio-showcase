@@ -51,34 +51,34 @@ const ICON_MAP = {
 
 const CATEGORY_COLORS = {
   "Arts & Creativity": {
-    gradient: "from-primary/5 to-accent/5",
-    hover: "group-hover:from-primary/10 group-hover:to-accent/10",
-    text: "text-primary",
+    gradient: "from-primary-teal/5 to-secondary-blue/5",
+    hover: "group-hover:from-primary-teal/10 group-hover:to-secondary-blue/10",
+    text: "text-primary-teal",
   },
   "Sports & Fitness": {
-    gradient: "from-primary/5 to-accent/5",
-    hover: "group-hover:from-primary/10 group-hover:to-accent/10",
-    text: "text-primary",
+    gradient: "from-secondary-blue/5 to-primary-teal/5",
+    hover: "group-hover:from-secondary-blue/10 group-hover:to-primary-teal/10",
+    text: "text-secondary-blue",
   },
   Technology: {
-    gradient: "from-primary/5 to-accent/5",
-    hover: "group-hover:from-primary/10 group-hover:to-accent/10",
-    text: "text-primary",
+    gradient: "from-primary-teal/5 to-accent-coral/5",
+    hover: "group-hover:from-primary-teal/10 group-hover:to-accent-coral/10",
+    text: "text-primary-teal",
   },
   Entertainment: {
-    gradient: "from-primary/5 to-accent/5",
-    hover: "group-hover:from-primary/10 group-hover:to-accent/10",
-    text: "text-primary",
+    gradient: "from-accent-coral/5 to-primary-mint/5",
+    hover: "group-hover:from-accent-coral/10 group-hover:to-primary-mint/10",
+    text: "text-accent-coral",
   },
   Lifestyle: {
-    gradient: "from-primary/5 to-accent/5",
-    hover: "group-hover:from-primary/10 group-hover:to-accent/10",
-    text: "text-primary",
+    gradient: "from-primary-mint/5 to-secondary-blue/5",
+    hover: "group-hover:from-primary-mint/10 group-hover:to-secondary-blue/10",
+    text: "text-primary-mint",
   },
   Learning: {
-    gradient: "from-primary/5 to-accent/5",
-    hover: "group-hover:from-primary/10 group-hover:to-accent/10",
-    text: "text-primary",
+    gradient: "from-secondary-blue/5 to-primary-teal/5",
+    hover: "group-hover:from-secondary-blue/10 group-hover:to-primary-teal/10",
+    text: "text-secondary-blue",
   },
 } as const;
 
@@ -159,7 +159,7 @@ export const Hobbies = () => {
           viewport={{ once: true }}
           className="text-2xl font-bold mb-8 flex items-center gap-2"
         >
-          <Heart className="h-6 w-6 text-primary" />
+          <Heart className="h-6 w-6 text-primary-teal" />
           Interests & Hobbies
         </motion.h2>
 
@@ -172,7 +172,10 @@ export const Hobbies = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: categoryIndex * 0.1 }}
-                  className="text-xl font-semibold text-primary/80"
+                  className={cn(
+                    "text-xl font-semibold",
+                    CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]?.text || "text-primary-teal"
+                  )}
                 >
                   {category}
                 </motion.h3>
@@ -195,36 +198,38 @@ export const Hobbies = () => {
                       >
                         <Card
                           className={cn(
-                            "p-6 group relative overflow-hidden hover:shadow-lg transition-all duration-300",
-                            "before:absolute before:inset-0 before:bg-gradient-to-br",
-                            colors?.gradient,
-                            colors?.hover
+                            "group relative overflow-hidden hover:shadow-lg transition-all duration-300",
                           )}
                         >
-                          <div className="relative flex items-start gap-4">
+                          <div
+                            className={cn(
+                              "absolute inset-0 bg-gradient-to-br transition-all duration-500",
+                              colors?.gradient,
+                              colors?.hover
+                            )}
+                          />
+                          <div className="relative p-6">
                             <motion.div
-                              className="p-3 rounded-xl bg-background/50 backdrop-blur-sm shrink-0"
-                              whileHover={{
-                                scale: 1.1,
-                                rotate: [0, -10, 10, -10, 0],
-                              }}
-                              transition={{ duration: 0.5 }}
+                              className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center mb-4"
+                              whileHover={{ scale: 1.1, rotate: 360 }}
+                              transition={{ type: "spring", stiffness: 300 }}
                             >
-                              <IconComponent
-                                className={cn("w-6 h-6 text-primary")}
-                              />
+                              <IconComponent className={cn(
+                                "w-6 h-6",
+                                colors?.text || "text-primary-teal"
+                              )} />
                             </motion.div>
-
-                            <div className="space-y-1">
-                              <h4 className="font-semibold group-hover:text-primary transition-colors">
-                                {hobby.name}
-                              </h4>
-                              {hobby.description && (
-                                <p className="text-sm text-muted-foreground">
-                                  {hobby.description}
-                                </p>
-                              )}
-                            </div>
+                            <h4 className={cn(
+                              "text-lg font-semibold mb-2 transition-colors",
+                              "group-hover:" + (colors?.text || "text-primary-teal")
+                            )}>
+                              {hobby.name}
+                            </h4>
+                            {hobby.description && (
+                              <p className="text-sm text-muted-foreground">
+                                {hobby.description}
+                              </p>
+                            )}
                           </div>
                         </Card>
                       </motion.div>

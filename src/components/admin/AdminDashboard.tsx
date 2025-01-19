@@ -24,7 +24,7 @@ import { DashboardHeader } from "./dashboard/DashboardHeader";
 import { DashboardSidebar } from "./dashboard/DashboardSidebar";
 import { DashboardContent } from "./dashboard/DashboardContent";
 
-import { AnalyticsDashboard } from "./Analytics/AnalyticsDashboard";
+import { AnalyticsDashboardManager } from "./managers/AnalyticsDashboardManager";
 
 // Managers
 import { MessagesManager } from "./managers/MessagesManager";
@@ -161,7 +161,7 @@ export const AdminDashboard: React.FC = () => {
 
     const contentMap: { [key: string]: React.ReactNode } = {
       dashboard: <DashboardManager />,
-      analytics: <AnalyticsDashboard />,
+      analytics: <AnalyticsDashboardManager />,
       messages: <MessagesManager />,
       projects: <ProjectManager />,
       blog: <BlogManager />,
