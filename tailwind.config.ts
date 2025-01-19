@@ -29,6 +29,7 @@ export default {
           foreground: "hsl(var(--primary-foreground))",
           teal: "#2DD4BF",
           mint: "#A7F3D0",
+          'primary-teal': '#14b8a6',
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -138,7 +139,8 @@ export default {
           "100%": { opacity: "1", transform: "translate(-50%,-40%) scale(1)" }
         },
         shimmer: {
-          "100%": { transform: "translateX(100%)" }
+          "0%": { backgroundPosition: '-200% 0' },
+          "100%": { backgroundPosition: '200% 0' },
         },
         "meteor-effect": {
           "0%": { transform: "rotate(215deg) translateX(0)", opacity: "1" },
@@ -147,7 +149,23 @@ export default {
             transform: "rotate(215deg) translateX(-500px)",
             opacity: "0"
           }
-        }
+        },
+        "slow-spin": {
+          "0%": { transform: 'rotate(0deg)' },
+          "100%": { transform: 'rotate(360deg)' },
+        },
+        "reverse-slow-spin": {
+          "0%": { transform: 'rotate(360deg)' },
+          "100%": { transform: 'rotate(0deg)' },
+        },
+        "accordion-down": {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
+        },
+        "accordion-up": {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out",
@@ -159,8 +177,21 @@ export default {
         "text-gradient": "text-gradient 5s linear infinite",
         float: "float 3s ease-in-out infinite",
         spotlight: "spotlight 2s ease .75s 1 forwards",
-        shimmer: "shimmer 2s linear infinite",
+        shimmer: "shimmer 8s ease-in-out infinite",
         "meteor-effect": "meteor 5s linear infinite",
+        "slow-spin": "slow-spin 25s linear infinite",
+        "reverse-slow-spin": "reverse-slow-spin 30s linear infinite",
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      backgroundImage: {
+        'grid-pattern': `
+          linear-gradient(to right, currentColor 1px, transparent 1px),
+          linear-gradient(to bottom, currentColor 1px, transparent 1px)
+        `,
+      },
+      backgroundSize: {
+        'grid-pattern': '24px 24px',
       },
     },
   },
