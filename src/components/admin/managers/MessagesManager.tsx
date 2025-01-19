@@ -1,6 +1,6 @@
 import { useMessageManager } from "@/hooks/useMessageManager";
 import { useState } from "react";
-import { ContactSubmission, MessageFilterStatus } from '@/types/messages';
+import { ContactSubmission, MessageFilterStatus } from "@/types/messages";
 import { MessageSearchFilter } from "../messages/MessageSearchFilter";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,15 +11,15 @@ import { Button } from "@/components/ui/button";
 import { MessageReplyDialog } from "../messages/MessageReplyDialog";
 import { MessageDetailsDialog } from "../messages/MessageDetailsDialog";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from '@/components/ui/use-toast';
+import { toast } from "@/components/ui/use-toast";
 
 // Utility function for deleting messages
 const deleteMessages = async (messageIds: number[]) => {
   try {
     const { error } = await supabase
-      .from('contact_submissions')
+      .from("contact_submissions")
       .delete()
-      .in('id', messageIds);
+      .in("id", messageIds);
 
     if (error) throw error;
 
@@ -28,25 +28,21 @@ const deleteMessages = async (messageIds: number[]) => {
       description: `${messageIds.length} message(s) deleted successfully`,
     });
   } catch (error) {
-    console.error('Error deleting messages:', error);
+    console.error("Error deleting messages:", error);
     toast({
       title: "Error",
       description: "Failed to delete messages",
-      variant: "destructive"
+      variant: "destructive",
     });
   }
 };
 
 export const MessagesManager: React.FC = () => {
-  const { 
-    messages, 
-    filters, 
-    pagination, 
-    updateFilters 
-  } = useMessageManager();
-  
+  const { messages, filters, pagination, updateFilters } = useMessageManager();
+
   const [selectedMessages, setSelectedMessages] = useState<number[]>([]);
-  const [selectedMessage, setSelectedMessage] = useState<ContactSubmission | null>(null);
+  const [selectedMessage, setSelectedMessage] =
+    useState<ContactSubmission | null>(null);
   const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
 
   const handleSearchChange = (term: string) => {
@@ -58,8 +54,8 @@ export const MessagesManager: React.FC = () => {
   };
 
   const handleSortToggle = () => {
-    updateFilters({ 
-      sortOrder: filters.sortOrder === 'asc' ? 'desc' : 'asc' 
+    updateFilters({
+      sortOrder: filters.sortOrder === "asc" ? "desc" : "asc",
     });
   };
 
@@ -70,9 +66,9 @@ export const MessagesManager: React.FC = () => {
   const markMessagesAsRead = async (messageIds: number[]) => {
     try {
       const { error } = await supabase
-        .from('contact_submissions')
-        .update({ status: 'read' as const })
-        .in('id', messageIds);
+        .from("contact_submissions")
+        .update({ status: "read" as const })
+        .in("id", messageIds);
 
       if (error) throw error;
 
@@ -81,18 +77,18 @@ export const MessagesManager: React.FC = () => {
         description: `${messageIds.length} message(s) marked as read`,
       });
     } catch (error) {
-      console.error('Error marking messages as read:', error);
+      console.error("Error marking messages as read:", error);
       toast({
         title: "Error",
         description: "Failed to mark messages as read",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
 
   return (
     <div className="space-y-6">
-      <MessageSearchFilter 
+      <MessageSearchFilter
         searchTerm={filters.searchTerm}
         filterStatus={filters.status}
         sortOrder={filters.sortOrder}
@@ -105,13 +101,13 @@ export const MessagesManager: React.FC = () => {
 
       <Card className="p-6">
         <div className="flex items-center mb-4 space-x-2">
-          <Checkbox 
+          <Checkbox
             checked={selectedMessages.length === messages.length}
             onCheckedChange={() => {
               setSelectedMessages(
-                selectedMessages.length === messages.length 
-                  ? [] 
-                  : messages.map(m => m.id)
+                selectedMessages.length === messages.length
+                  ? []
+                  : messages.map((m) => m.id)
               );
             }}
           />
@@ -119,18 +115,20 @@ export const MessagesManager: React.FC = () => {
             Contact Messages ({pagination.totalMessages})
           </h2>
         </div>
-        
+
         {messages.length > 0 ? (
           <ScrollArea className="h-[600px]">
             <div className="space-y-4">
               {messages.map((message) => (
-                <MessageListItem 
+                <MessageListItem
                   key={message.id}
                   message={message}
                   isSelected={selectedMessages.includes(message.id)}
                   onSelect={() => {
-                    const newSelectedMessages = selectedMessages.includes(message.id)
-                      ? selectedMessages.filter(id => id !== message.id)
+                    const newSelectedMessages = selectedMessages.includes(
+                      message.id
+                    )
+                      ? selectedMessages.filter((id) => id !== message.id)
                       : [...selectedMessages, message.id];
                     setSelectedMessages(newSelectedMessages);
                   }}
@@ -142,6 +140,10 @@ export const MessagesManager: React.FC = () => {
                   }}
                   onDelete={() => {
                     deleteMessages([message.id]);
+                  }}
+                  onReply={() => {
+                    setSelectedMessage(message);
+                    setIsReplyDialogOpen(true);
                   }}
                 />
               ))}
@@ -157,16 +159,17 @@ export const MessagesManager: React.FC = () => {
       {/* Bulk Actions */}
       {selectedMessages.length > 0 && (
         <div className="flex items-center space-x-2">
-          <Button 
-            variant="destructive" 
+          <Button
+            variant="destructive"
             onClick={() => {
               deleteMessages(selectedMessages);
               setSelectedMessages([]);
             }}
           >
-            <Trash2 className="mr-2" /> Delete Selected ({selectedMessages.length})
+            <Trash2 className="mr-2" /> Delete Selected (
+            {selectedMessages.length})
           </Button>
-          <Button 
+          <Button
             variant="outline"
             onClick={() => {
               markMessagesAsRead(selectedMessages);
@@ -179,7 +182,7 @@ export const MessagesManager: React.FC = () => {
       )}
 
       {/* Message Details Dialog */}
-      <MessageDetailsDialog 
+      <MessageDetailsDialog
         message={selectedMessage}
         onClose={() => setSelectedMessage(null)}
         onReply={() => {
@@ -189,7 +192,7 @@ export const MessagesManager: React.FC = () => {
 
       {/* Message Reply Dialog */}
       {isReplyDialogOpen && (
-        <MessageReplyDialog 
+        <MessageReplyDialog
           message={selectedMessage}
           onClose={() => setIsReplyDialogOpen(false)}
         />
