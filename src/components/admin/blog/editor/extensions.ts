@@ -6,7 +6,7 @@ import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
-import CodeBlock from "@tiptap/extension-code-block";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import Table from "@tiptap/extension-table";
@@ -68,19 +68,26 @@ const CustomContainer = Extension.create({
 });
 
 // Custom code block with syntax highlighting
-const CustomCodeBlock = CodeBlock.extend({
-  addOptions() {
-    return {
-      ...this.parent?.(),
-      lowlight,
-      HTMLAttributes: {
-        class: "code-block-wrapper not-prose",
-      },
-      languageClassPrefix: "language-",
-      defaultLanguage: null,
-    };
-  },
-});
+const CustomCodeBlock = CodeBlockLowlight
+  .extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        language: {
+          default: 'plain',
+          parseHTML: element => element.getAttribute('data-language'),
+          renderHTML: attributes => ({
+            'data-language': attributes.language,
+            class: `language-${attributes.language}`,
+          }),
+        },
+      }
+    },
+  })
+  .configure({
+    lowlight,
+    defaultLanguage: 'plain',
+  });
 
 // Custom Heading with ID attributes for better SEO
 const CustomHeading = Node.create({
