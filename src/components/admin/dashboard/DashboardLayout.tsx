@@ -38,9 +38,9 @@ import { TechnicalSkillsManager } from "@/components/admin/managers/TechnicalSki
 import { TechnicalProficiencyManager } from "@/components/admin/managers/TechnicalProficiencyManager";
 import { AnalyticsDashboardManager } from "@/components/admin/managers/AnalyticsDashboardManager";
 
-interface DashboardLayoutProps {
-  user: any;
-}
+// interface DashboardLayoutProps {
+//   user: any;
+// }
 
 const defaultTabs: Tab[] = [
   {
@@ -138,7 +138,7 @@ const profileSubTabs: Tab[] = [
   },
 ];
 
-export const DashboardLayout: React.FC<DashboardLayoutProps> = () => {
+export const DashboardLayout: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>(defaultTabs[0].value);
   const [activeSubTab, setActiveSubTab] = useState<string>(
     profileSubTabs[0].value

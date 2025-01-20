@@ -1,7 +1,7 @@
-import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import { DashboardLayout } from "@/components/admin/dashboard/DashboardLayout";
 
 const Admin = () => {
-  return <AdminDashboard />;
+  return <DashboardLayout />;
 };
 
 export default Admin;

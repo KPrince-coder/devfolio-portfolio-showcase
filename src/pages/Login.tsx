@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ export default function Login() {
   const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const passwordRef = useRef(null);
 
   // Handle hydration mismatch
   useEffect(() => {
@@ -29,16 +30,13 @@ export default function Login() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
-      }
+      if (session) navigate("/admin");
     };
     checkSession();
   }, [navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-
     if (!email || !password) {
       toast({
         title: "Error",
@@ -54,11 +52,9 @@ export default function Login() {
         email,
         password,
       });
-
       if (error) throw error;
-
-      navigate("/dashboard");
-    } catch (error: any) {
+      navigate("/admin");
+    } catch (error) {
       toast({
         title: "Error",
         description: error.message || "Failed to sign in",
@@ -69,131 +65,149 @@ export default function Login() {
     }
   };
 
+  const handleKeyPress = (e, field) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (field === "email") {
+        passwordRef.current?.focus();
+      } else if (field === "password") {
+        handleLogin(e);
+      }
+    }
+  };
+
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-background via-background/95 to-background relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
-          transition={{ duration: 2 }}
-          className="absolute top-0 left-0 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl"
-          style={{ top: "-10%", left: "-5%" }}
-        />
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.4 }}
-          transition={{ duration: 2, delay: 0.5 }}
-          className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-secondary/5 rounded-full blur-3xl"
-          style={{ bottom: "-10%", right: "-5%" }}
-        />
+    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Animated geometric background patterns */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute w-full h-full">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute bg-white/5 rounded-full"
+              style={{
+                width: Math.random() * 300 + 50,
+                height: Math.random() * 300 + 50,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{
+                opacity: [0.1, 0.3, 0.1],
+                scale: [1, 1.2, 1],
+                x: [0, Math.random() * 100 - 50, 0],
+                y: [0, Math.random() * 100 - 50, 0],
+              }}
+              transition={{
+                duration: 10 + Math.random() * 10,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </div>
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
-        <Card className="p-6 backdrop-blur-sm bg-background/80 border-border/50">
-          <div className="space-y-6">
-            <div className="space-y-2 text-center">
-              <motion.h1
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-2xl font-bold tracking-tight"
-              >
-                Welcome Back
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-sm text-muted-foreground"
-              >
+        <Card className="p-8 bg-white/10 backdrop-blur-lg border-white/20 shadow-2xl relative overflow-hidden">
+          {/* Subtle gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.15] to-transparent opacity-50" />
+
+          <div className="relative space-y-6">
+            <motion.div
+              className="space-y-2 text-center"
+              initial={{ y: -20 }}
+              animate={{ y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-teal-400 to-teal-600 bg-clip-text text-transparent drop-shadow-sm">
+                Welcome, Admin
+              </h1>
+              <p className="text-sm text-gray-300 font-medium">
                 Sign in to manage your portfolio
-              </motion.p>
-            </div>
+              </p>
+            </motion.div>
 
             <form onSubmit={handleLogin} className="space-y-4">
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
                 className="space-y-2"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
               >
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-gray-200">
+                  Email
+                </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onKeyPress={(e) => handleKeyPress(e, "email")}
                   required
-                  autoComplete="email"
-                  autoFocus
-                  className="bg-background/50"
-                  aria-label="Email address"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                  placeholder="Enter your email"
                 />
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
                 className="space-y-2"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
               >
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-gray-200">
+                  Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
+                    ref={passwordRef}
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onKeyPress={(e) => handleKeyPress(e, "password")}
                     required
-                    autoComplete="current-password"
-                    className="bg-background/50 pr-10"
-                    aria-label="Password"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                    placeholder="Enter your password"
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-4 w-4" />
                     )}
-                  </Button>
+                  </button>
                 </div>
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
               >
                 <Button
                   type="submit"
-                  className="w-full"
+                  fullWidth
                   disabled={loading}
                   aria-label={loading ? "Signing in..." : "Sign in"}
                 >
                   {loading ? (
-                    <>
+                    <div className="flex items-center justify-center">
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
-                    </>
+                      <span>Signing in...</span>
+                    </div>
                   ) : (
                     "Sign in"
                   )}
@@ -201,15 +215,10 @@ export default function Login() {
               </motion.div>
             </form>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-              className="text-center"
-            >
+            <div className="text-center">
               <a
                 href="#"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="text-sm text-gray-400 hover:text-teal-400 transition-colors"
                 onClick={(e) => {
                   e.preventDefault();
                   // Handle password reset
@@ -217,7 +226,7 @@ export default function Login() {
               >
                 Forgot your password?
               </a>
-            </motion.div>
+            </div>
           </div>
         </Card>
       </motion.div>
