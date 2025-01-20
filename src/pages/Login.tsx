@@ -35,6 +35,21 @@ export default function Login() {
     checkSession();
   }, [navigate]);
 
+  // Check for timeout message
+  useEffect(() => {
+    const timeoutReason = localStorage.getItem('sessionTimeoutReason');
+    if (timeoutReason) {
+      toast({
+        title: "Session Ended",
+        description: timeoutReason,
+        variant: "destructive",
+        duration: 4000,
+      });
+      // Clear the message
+      localStorage.removeItem('sessionTimeoutReason');
+    }
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) {
@@ -46,13 +61,26 @@ export default function Login() {
       return;
     }
 
-    setLoading(true);
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
+
+      // Show success toast
+      toast({
+        title: "Welcome back! 👋",
+        description: "Successfully logged in to your dashboard",
+        duration: 2000,
+        variant: "default",
+        className: "bg-green-500 text-white border-none",
+      });
+
+      // Slight delay for better UX
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      
       navigate("/admin");
     } catch (error) {
       toast({

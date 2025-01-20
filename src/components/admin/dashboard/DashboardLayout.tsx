@@ -26,6 +26,7 @@ import {
   LineChart,
   User,
 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 // Import managers
 import { DashboardManager } from "@/components/admin/managers/DashboardManager";
@@ -186,8 +187,23 @@ export const DashboardLayout: React.FC = () => {
     document.documentElement.classList.toggle("dark");
   };
 
-  // Auth context for loging out
+  // Auth context for logging out
   const { user, handleLogout } = useAuth();
+
+  const handleLogoutClick = async () => {
+    // Show loading toast
+    toast({
+      title: "Logging out...",
+      description: "See you next time! 👋",
+      duration: 1500,
+    });
+
+    // Slight delay for better UX
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Call the actual logout function
+    await handleLogout();
+  };
 
   const renderManager = () => {
     switch (activeTab) {
@@ -283,7 +299,7 @@ export const DashboardLayout: React.FC = () => {
                   user={user}
                   isDarkMode={isDarkMode}
                   onThemeToggle={toggleTheme}
-                  onLogout={handleLogout}
+                  onLogout={handleLogoutClick}
                   onMenuClick={() => setIsSidebarOpen(true)}
                   isMobile={isMobile}
                 />

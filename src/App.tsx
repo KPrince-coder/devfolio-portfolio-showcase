@@ -1,122 +1,98 @@
-import React, { useEffect, useState } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import Index from "./pages/Index";
+import Archive from "./pages/Archive";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
-import Archive from "./pages/Archive";
 import { useParams } from "react-router-dom";
 import BlogPage from "./pages/BlogPage";
 import { HelmetProvider } from 'react-helmet-async';
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const BlogPageWrapper = () => {
   const { postId } = useParams();
   return <BlogPage postId={postId} />;
 };
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
+});
 
 // Protected Route Component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Check current session
-    const checkSession = async () => {
+    const checkAuth = async () => {
       try {
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Session check error:", error);
-          toast({
-            variant: "destructive",
-            title: "Authentication Error",
-            description: "Please try logging in again.",
-          });
-          setSession(false);
-        } else {
-          console.log("Session check:", currentSession ? "Authenticated" : "Not authenticated");
-          setSession(!!currentSession);
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsChecking(false);
+        if (!session) {
+          window.location.href = '/login';
         }
-      } catch (err) {
-        console.error("Unexpected error during session check:", err);
-        setSession(false);
-      } finally {
-        setIsLoading(false);
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        window.location.href = '/login';
       }
     };
 
-    checkSession();
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log("Auth state changed:", session ? "Authenticated" : "Not authenticated");
-      
-      if (_event === 'TOKEN_REFRESHED') {
-        console.log('Token successfully refreshed');
-      }
-      
-      if (_event === 'SIGNED_OUT') {
-        // Clear any cached data
-        queryClient.clear();
-      }
-
-      setSession(!!session);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    checkAuth();
   }, []);
 
   // Show loading state while checking authentication
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (loading || isChecking) {
+    return <div>Loading...</div>;
   }
 
-  // Redirect to login if not authenticated
-  if (!session) {
+  // If not authenticated, redirect to login
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
+  // If authenticated, render children
   return <>{children}</>;
 };
 
-const App = () => (
-  <React.StrictMode>
+function App() {
+  return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/archive" element={<Archive />} />
-              <Route path="/blog/:postId" element={<BlogPageWrapper />} />
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute>
-                    <Admin />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
+            <AuthProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/archive" element={<Archive />} />
+                <Route path="/blog/:postId" element={<BlogPageWrapper />} />
+                <Route path="/login" element={<Login />} />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <ProtectedRoute>
+                      <Admin />
+                    </ProtectedRoute>
+                  } 
+                />
+              </Routes>
+            </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
     </HelmetProvider>
-  </React.StrictMode>
-);
+  );
+}
 
 export default App;
