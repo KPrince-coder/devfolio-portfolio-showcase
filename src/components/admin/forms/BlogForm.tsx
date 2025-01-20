@@ -85,7 +85,7 @@ const checkPDFWorker = async (): Promise<boolean> => {
 
 const blogFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  slug: z.string().min(1, "Slug is required"),
+  slug: z.string().optional(),
   excerpt: z
     .string()
     .min(1, "Excerpt is required")
@@ -215,11 +215,14 @@ export const BlogForm: React.FC<BlogFormProps> = ({
       tags: initialData?.tags || [],
       status: (initialData?.status as "draft" | "published") || "draft",
       is_featured: initialData?.is_featured || false,
-      meta_title: initialData?.meta_title || "",
-      meta_description: initialData?.meta_description || "",
+      // Initialize SEO fields with existing data in edit mode
+      meta_title: initialData?.meta_title || initialData?.title || "",
+      meta_description:
+        initialData?.meta_description || initialData?.excerpt || "",
       meta_keywords: initialData?.meta_keywords || "",
       author: initialData?.author || "",
-      canonical_url: initialData?.slug || "",
+      canonical_url:
+        initialData?.canonical_url || `blog/${initialData?.slug || ""}`,
     },
   });
 
@@ -235,10 +238,18 @@ export const BlogForm: React.FC<BlogFormProps> = ({
 
   const handleSubmit = async (values: BlogFormValues) => {
     try {
-      // If we have initialData with an ID, include it in the update
-      const postData = initialData?.id
-        ? { ...values, id: initialData.id }
-        : values;
+      const postData = {
+        ...values,
+        id: initialData?.id,
+        // Use existing slug from database
+        slug: initialData?.slug || values.slug,
+        // Generate canonical URL from blog path if not provided
+        canonical_url:
+          values.canonical_url || `blog/${initialData?.slug || values.slug}`,
+        // Ensure SEO fields are properly set
+        meta_title: values.meta_title || values.title,
+        meta_description: values.meta_description || values.excerpt,
+      };
 
       await onSubmit(postData);
       toast({
@@ -600,6 +611,21 @@ export const BlogForm: React.FC<BlogFormProps> = ({
       }
     }
   };
+
+  useEffect(() => {
+    if (!initialData) {
+      const title = form.getValues("title");
+      const excerpt = form.getValues("excerpt");
+
+      // Only update if fields are empty (not manually set)
+      if (!form.getValues("meta_title")) {
+        form.setValue("meta_title", title);
+      }
+      if (!form.getValues("meta_description")) {
+        form.setValue("meta_description", excerpt);
+      }
+    }
+  }, [form.watch("title"), form.watch("excerpt"), initialData, form]);
 
   return (
     <Form {...form}>
@@ -1087,22 +1113,15 @@ export const BlogForm: React.FC<BlogFormProps> = ({
                         <FormItem>
                           <FormLabel>URL Slug</FormLabel>
                           <FormControl>
-                            <div className="relative">
-                              <Input
-                                placeholder="your-post-url"
-                                {...field}
-                                onChange={(e) => {
-                                  const value = e.target.value
-                                    .toLowerCase()
-                                    .replace(/[^a-z0-9]+/g, "-")
-                                    .replace(/(^-|-$)+/g, "");
-                                  field.onChange(value);
-                                }}
-                              />
-                            </div>
+                            <Input
+                              placeholder="URL slug from database"
+                              {...field}
+                              disabled={!!initialData?.slug} // Disable if we have an existing slug
+                            />
                           </FormControl>
                           <FormDescription>
-                            The URL-friendly version of your post title
+                            The URL slug is automatically generated and cannot
+                            be changed
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -1117,13 +1136,12 @@ export const BlogForm: React.FC<BlogFormProps> = ({
                           <FormLabel>Canonical URL</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="https://yourblog.com/original-post"
+                              placeholder="https://example.com/blog/post-slug"
                               {...field}
                             />
                           </FormControl>
                           <FormDescription>
-                            Use this if this content appears elsewhere to avoid
-                            duplicate content issues
+                            Leave empty to use blog/[slug] as the canonical URL
                           </FormDescription>
                           <FormMessage />
                         </FormItem>

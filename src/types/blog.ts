@@ -42,6 +42,7 @@ export interface BlogPost {
 
   comment_count: number;
   author: string;
+  canonical_url?: string;
 }
 
 export interface BlogPostResponse {
