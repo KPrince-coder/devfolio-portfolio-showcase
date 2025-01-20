@@ -297,17 +297,6 @@ export const BlogForm: React.FC<BlogFormProps> = ({
     }
   };
 
-  // const handleContentChange = (content: string) => {
-  //   if (editorRef) {
-  //     (editorRef as any).setContent(content);
-  //   }
-  //   form.setValue("content", content);
-  //   setAutoSaveStatus("saving");
-  //   setTimeout(() => {
-  //     setAutoSaveStatus("saved");
-  //   }, 1000);
-  // };
-
   const handleContentChange = (content: string) => {
     if (editorRef) {
       // Use the editor's commands to set content
@@ -361,20 +350,6 @@ export const BlogForm: React.FC<BlogFormProps> = ({
     });
   };
 
-  // const handleTextImport = async (file: File): Promise<string> => {
-  //   try {
-  //     const content = await readFileAsText(file);
-  //     // Convert plain text to HTML preserving line breaks and paragraphs
-  //     return content
-  //       .split("\n\n")
-  //       .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br/>")}</p>`)
-  //       .join("\n");
-  //   } catch (error) {
-  //     console.error("Error reading text file:", error);
-  //     throw new Error("Failed to read text file");
-  //   }
-  // };
-
   // Modify the handleTextImport function to better preserve spacing
   const handleTextImport = async (file: File): Promise<string> => {
     try {
@@ -399,32 +374,6 @@ export const BlogForm: React.FC<BlogFormProps> = ({
       throw new Error("Failed to read text file");
     }
   };
-
-  // const handleWordImport = async (file: File): Promise<string> => {
-  //   try {
-  //     const arrayBuffer = await readFileAsArrayBuffer(file);
-  //     // Use mammoth's convertToHtml instead of extractRawText to preserve formatting
-  //     const result = await mammoth.convertToHtml(
-  //       { arrayBuffer },
-  //       {
-  //         styleMap: [
-  //           "p[style-name='Heading 1'] => h1:fresh",
-  //           "p[style-name='Heading 2'] => h2:fresh",
-  //           "p[style-name='Heading 3'] => h3:fresh",
-  //           "b => strong",
-  //           "i => em",
-  //           "u => u",
-  //           "strike => s",
-  //           "p => p:fresh",
-  //         ],
-  //       }
-  //     );
-  //     return result.value;
-  //   } catch (error) {
-  //     console.error("Error reading Word file:", error);
-  //     throw new Error("Failed to read Word document");
-  //   }
-  // };
 
   // Update the handleWordImport function to preserve formatting
   const handleWordImport = async (file: File): Promise<string> => {
@@ -462,91 +411,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({
     }
   };
 
-  // const handlePDFImport = async (file: File): Promise<string> => {
-  //   try {
-  //     // Check if worker is available
-  //     const isWorkerAvailable = await isPDFWorkerAvailable();
-  //     if (!isWorkerAvailable) {
-  //       throw new Error(
-  //         "PDF reader is not properly initialized. Please try again in a few moments."
-  //       );
-  //     }
-
-  //     const arrayBuffer = await readFileAsArrayBuffer(file);
-
-  //     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  //     const totalPages = pdf.numPages;
-  //     let htmlContent = '<div class="pdf-content">';
-
-  //     for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-  //       try {
-  //         const page = await pdf.getPage(pageNum);
-  //         const textContent = await page.getTextContent();
-
-  //         // Group text items by their y-coordinate to maintain line structure
-  //         const lines: { [key: number]: any[] } = {};
-  //         textContent.items.forEach((item: any) => {
-  //           const y = Math.round(item.transform[5]); // y-coordinate
-  //           if (!lines[y]) {
-  //             lines[y] = [];
-  //           }
-  //           lines[y].push(item);
-  //         });
-
-  //         // Sort lines by y-coordinate (top to bottom)
-  //         const sortedYs = Object.keys(lines)
-  //           .map(Number)
-  //           .sort((a, b) => b - a);
-
-  //         htmlContent += `<div class="pdf-page"><h3>Page ${pageNum}</h3>`;
-
-  //         let currentParagraph = "";
-  //         let lastY = null;
-
-  //         sortedYs.forEach((y) => {
-  //           const lineItems = lines[y].sort(
-  //             (a: any, b: any) => a.transform[4] - b.transform[4]
-  //           );
-  //           const lineText = lineItems.map((item: any) => item.str).join(" ");
-
-  //           if (lastY !== null && lastY - y > 15) {
-  //             if (currentParagraph) {
-  //               htmlContent += `<p>${currentParagraph}</p>`;
-  //               currentParagraph = "";
-  //             }
-  //           }
-
-  //           currentParagraph += (currentParagraph ? " " : "") + lineText;
-  //           lastY = y;
-  //         });
-
-  //         if (currentParagraph) {
-  //           htmlContent += `<p>${currentParagraph}</p>`;
-  //         }
-
-  //         htmlContent += "</div>";
-
-  //         const progress = Math.floor((pageNum / totalPages) * 100);
-  //         setUploadProgress(Math.min(90, progress));
-  //       } catch (pageError) {
-  //         console.error(`Error processing page ${pageNum}:`, pageError);
-  //         htmlContent += `<div class="pdf-page"><p>Error loading page ${pageNum}</p></div>`;
-  //       }
-  //     }
-
-  //     htmlContent += "</div>";
-  //     return htmlContent;
-  //   } catch (error) {
-  //     console.error("Error reading PDF file:", error);
-  //     if (error instanceof Error) {
-  //       throw new Error(`Failed to read PDF file: ${error.message}`);
-  //     }
-  //     throw new Error("Failed to read PDF file");
-  //   }
-  // };
-
   // Modify the handlePDFImport function to better handle PDF content
-  // Modify the handlePDFImport function
   const handlePDFImport = async (file: File): Promise<string> => {
     try {
       const arrayBuffer = await readFileAsArrayBuffer(file);
@@ -631,146 +496,6 @@ export const BlogForm: React.FC<BlogFormProps> = ({
       );
     }
   };
-
-  // // Update the handleFileImport function to better handle different file types
-  // const handleFileImport = async (file: File) => {
-  //   try {
-  //     setUploadProgress(10);
-  //     let content = "";
-
-  //     // Validate file size
-  //     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-  //     if (file.size > MAX_FILE_SIZE) {
-  //       throw new Error("File size exceeds 10MB limit");
-  //     }
-
-  //     // Process different file types
-  //     switch (file.type) {
-  //       case "text/plain":
-  //         content = await handleTextImport(file);
-  //         break;
-  //       case "application/pdf":
-  //         content = await handlePDFImport(file);
-  //         break;
-  //       case "application/msword":
-  //       case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-  //         content = await handleWordImport(file);
-  //         break;
-  //       default:
-  //         throw new Error(`Unsupported file type: ${file.type}`);
-  //     }
-
-  //     if (content) {
-  //       // Clean and normalize content
-  //       content = content.replace(/\n{3,}/g, "\n\n").trim();
-
-  //       // Update editor content
-  //       if (editorRef) {
-  //         editorRef.commands.setContent(content, false);
-  //       }
-  //       form.setValue("content", content);
-
-  //       // Update UI state
-  //       setUploadedFile({
-  //         name: file.name,
-  //         type: file.type,
-  //         size: file.size,
-  //         timestamp: new Date(),
-  //       });
-
-  //       setUploadProgress(100);
-  //       toast({
-  //         title: "Success",
-  //         description: "Content imported successfully",
-  //       });
-
-  //       // Reset progress after a delay
-  //       setTimeout(() => setUploadProgress(0), 1000);
-  //     }
-  //   } catch (error) {
-  //     console.error("Import failed:", error);
-  //     toast({
-  //       title: "Error",
-  //       description:
-  //         error instanceof Error ? error.message : "Failed to import content",
-  //       variant: "destructive",
-  //     });
-  //     setUploadProgress(0);
-  //   }
-  // };
-
-  // Update the handleFileImport function's error handling
-  // const handleFileImport = async (file: File) => {
-  //   try {
-  //     setUploadProgress(10);
-  //     let content = "";
-
-  //     // Validate file size
-  //     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-  //     if (file.size > MAX_FILE_SIZE) {
-  //       throw new Error("File size exceeds 10MB limit");
-  //     }
-
-  //     // Process different file types
-  //     switch (file.type) {
-  //       case "text/plain":
-  //         content = await handleTextImport(file);
-  //         setUploadProgress(50);
-  //         break;
-
-  //       case "application/pdf":
-  //         content = await handlePDFImport(file);
-  //         break;
-
-  //       case "application/msword":
-  //       case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-  //         content = await handleWordImport(file);
-  //         setUploadProgress(70);
-  //         break;
-
-  //       default:
-  //         throw new Error(`Unsupported file type: ${file.type}`);
-  //     }
-
-  //     if (content) {
-  //       // Clean and normalize content
-  //       content = content.replace(/\n{3,}/g, "\n\n").trim();
-
-  //       // Update editor content using commands
-  //       if (editorRef) {
-  //         editorRef.commands.setContent(content, false);
-  //       }
-
-  //       // Update form value
-  //       form.setValue("content", content);
-
-  //       // Update UI state
-  //       setUploadedFile({
-  //         name: file.name,
-  //         type: file.type,
-  //         size: file.size,
-  //         timestamp: new Date(),
-  //       });
-
-  //       setUploadProgress(100);
-  //       toast({
-  //         title: "Success",
-  //         description: "Content imported successfully",
-  //       });
-
-  //       setTimeout(() => setUploadProgress(0), 1000);
-  //     }
-  //   } catch (error) {
-  //     console.error("Import failed:", error);
-  //     toast({
-  //       title: "Error",
-  //       description:
-  //         error instanceof Error ? error.message : "Failed to import content",
-  //       variant: "destructive",
-  //     });
-  //     setUploadProgress(0);
-  //   }
-  // };
 
   // Update the handleFileImport function to maintain formatting
   const handleFileImport = async (file: File) => {

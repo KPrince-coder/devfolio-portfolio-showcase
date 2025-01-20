@@ -50,6 +50,84 @@ npm run dev
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
+## Rich Text Editor
+
+The blog editor comes with a powerful rich text editing experience, featuring various formatting options and block types.
+
+### Block Types
+
+#### 1. Blockquotes vs Callout Blocks
+
+The editor provides two distinct types of blocks for different purposes:
+
+##### Regular Blockquotes
+- **Purpose**: Used for quoting external content or citations
+- **Style**: Simple, traditional quote style with a subtle left border
+- **Appearance**: 
+  - Gray left border
+  - Italic text
+  - No background color
+  - Simple indentation
+- **Usage**: 
+  - Use the Quote button in the toolbar
+  - Type `/quote` in the editor
+- **Best for**: Citations, external quotes, or referenced content
+
+##### Callout Blocks
+- **Purpose**: Highlight important information with visual emphasis
+- **Types**:
+  1. **Note Block** (Blue)
+     - Purpose: Highlight important information
+     - Command: `/note`
+     - Use for: Key points, important reminders
+  
+  2. **Warning Block** (Yellow/Orange)
+     - Purpose: Draw attention to cautionary information
+     - Command: `/warning`
+     - Use for: Warnings, cautions, important prerequisites
+  
+  3. **Info Block** (Gray)
+     - Purpose: Provide additional context
+     - Command: `/info`
+     - Use for: Extra details, context, or explanations
+  
+  4. **Success Block** (Green)
+     - Purpose: Highlight positive outcomes or completions
+     - Command: `/success`
+     - Use for: Completion messages, successful outcomes
+  
+  5. **Error Block** (Red)
+     - Purpose: Highlight critical information or errors
+     - Command: `/error`
+     - Use for: Error messages, critical warnings, common mistakes
+
+- **Features**:
+  - Distinctive colored backgrounds and borders
+  - Rounded corners on the right side
+  - More prominent visual appearance
+  - Regular text weight (not italic)
+  - Dark mode support
+
+### Usage Tips
+
+1. **Choosing Between Block Types**:
+   - Use **Blockquotes** when quoting external sources or adding citations
+   - Use **Callout Blocks** when you want to draw attention to specific information
+
+2. **Quick Access**:
+   - Use slash commands (type `/` in the editor) to access all block types
+   - Use the toolbar buttons for quick access to common blocks
+
+3. **Keyboard Shortcuts**:
+   - `⌘+⌥+Q` - Toggle blockquote
+   - Use arrow keys to navigate slash command menu
+   - Press Enter to select a block type
+
+4. **Styling**:
+   - All blocks support both light and dark mode
+   - Blocks maintain consistent spacing and padding
+   - Text inside blocks can be further formatted with bold, italic, etc.
+
 ## What technologies are used for this project?
 
 This project is built with .

@@ -30,7 +30,14 @@ import {
   XCircle,
   Palette,
   Eye,
-  Sparkles,
+  EyeOff,
+  Lock,
+  LockOpen,
+  Box,
+  Image as ImageIcon,
+  Video as VideoIcon,
+  HelpCircle,
+  BookOpen,
 } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Separator } from "@/components/ui/separator";
@@ -69,13 +76,6 @@ import { TableMenu } from "./components/TableMenu";
 import { MediaUploader } from "./components/MediaUploader";
 import { CodeBlock } from "./components/CodeBlock";
 
-// interface EditorToolbarProps {
-//   editor: Editor | null;
-//   className?: string;
-//   isPreview?: boolean;
-//   onPreviewToggle?: (value: boolean) => void;
-// }
-
 interface EditorToolbarProps {
   editor: Editor | null;
   className?: string;
@@ -83,6 +83,7 @@ interface EditorToolbarProps {
   isScrollLocked: boolean;
   onPreviewToggle: (value: boolean) => void;
   onScrollLockToggle: (value: boolean) => void;
+  onShowInstructions: () => void;
 }
 
 const fontFamilies = [
@@ -101,6 +102,13 @@ const containerTypes = [
   { value: "success", label: "Success", icon: CheckCircle2 },
   { value: "error", label: "Error", icon: XCircle },
 ];
+
+const ShortcutTooltip = ({ shortcut, children }: { shortcut: string; children: React.ReactNode }) => (
+  <div className="shortcut-tooltip">
+    <span>{children}</span>
+    <kbd>{shortcut}</kbd>
+  </div>
+);
 
 const ToolbarButton = ({
   icon: Icon,
@@ -130,7 +138,7 @@ const ToolbarButton = ({
           </Toggle>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{title}</p>
+          <ShortcutTooltip shortcut={title}>{title}</ShortcutTooltip>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -141,23 +149,31 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   editor,
   className,
   isPreview,
+  isScrollLocked,
   onPreviewToggle,
+  onScrollLockToggle,
+  onShowInstructions,
 }) => {
   const [textColor, setTextColor] = useState("");
   const [highlightColor, setHighlightColor] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
-  // const [isPreview, setIsPreview] = useState(false);
-  // const [isScrollLocked, setIsScrollLocked] = useState(false);
-
-  // const onScrollLockToggle = (value: boolean) => {
-  //   setIsScrollLocked(value);
-  //   document.body.style.overflow = value ? "hidden" : "auto";
-  // };
 
   if (!editor) return null;
 
   const addContainer = (type: string) => {
     editor.chain().focus().setNode("container", { type }).run();
+  };
+
+  const addNoteBlock = () => {
+    editor
+      .chain()
+      .focus()
+      .setNode("paragraph")
+      .toggleBlockquote()
+      .updateAttributes('blockquote', {
+        class: 'note-block'
+      })
+      .run();
   };
 
   const toolbarItems = [
@@ -300,6 +316,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           action: () => editor.chain().focus().toggleSuperscript().run(),
           isActive: editor.isActive("superscript"),
         },
+        {
+          icon: BookOpen,
+          title: "Add Note Block",
+          action: addNoteBlock,
+        },
       ],
     },
     { type: "separator" },
@@ -419,23 +440,28 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           action: () => onPreviewToggle(!isPreview),
           isActive: isPreview,
         },
-        // {
-        //   icon: Lock,
-        //   title: isScrollLocked ? "Unlock Scroll" : "Lock Scroll",
-        //   action: () => onScrollLockToggle(!isScrollLocked),
-        //   isActive: isScrollLocked,
-        // },
+        {
+          icon: Lock,
+          title: isScrollLocked ? "Unlock Scroll" : "Lock Scroll",
+          action: () => onScrollLockToggle(!isScrollLocked),
+          isActive: isScrollLocked,
+        },
+        {
+          icon: HelpCircle,
+          title: "Editor Instructions",
+          action: onShowInstructions,
+        },
       ],
     },
     {
       type: "dropdown",
-      icon: Sparkles,
+      icon: Box,
       title: "Special Blocks",
       content: (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm">
-              <Sparkles className="h-4 w-4" />
+              <Box className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -466,6 +492,74 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         className
       )}
     >
+      <div className="flex items-center space-x-1">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                pressed={isPreview}
+                onPressedChange={onPreviewToggle}
+                className={cn(
+                  "hover:bg-muted transition-colors",
+                  isPreview && "bg-muted"
+                )}
+                aria-label="Toggle preview mode"
+              >
+                {isPreview ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <ShortcutTooltip shortcut="Ctrl+P">{isPreview ? 'Exit Preview' : 'Preview'}</ShortcutTooltip>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                pressed={isScrollLocked}
+                onPressedChange={onScrollLockToggle}
+                className={cn(
+                  "hover:bg-muted transition-colors",
+                  isScrollLocked && "bg-muted"
+                )}
+                aria-label="Toggle scroll lock"
+              >
+                {isScrollLocked ? (
+                  <Lock className="h-4 w-4" />
+                ) : (
+                  <LockOpen className="h-4 w-4" />
+                )}
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <ShortcutTooltip shortcut="Ctrl+L">{isScrollLocked ? 'Unlock Scroll' : 'Lock Scroll'}</ShortcutTooltip>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                onPressedChange={onShowInstructions}
+                className="hover:bg-muted transition-colors"
+                aria-label="Show Instructions"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>Editor Instructions</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
       {toolbarItems.map((item, index) => {
         if (item.type === "separator") {
           return (
