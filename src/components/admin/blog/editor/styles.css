@@ -67,36 +67,78 @@
   pointer-events: none;
 }
 
-/* Table Styles */
-.ProseMirror table {
-  @apply w-full border-collapse my-4;
+/* Table Styles - Applied globally for consistency */
+.ProseMirror table,
+.preview-content table,
+.blog-content table {
+  @apply w-full border-collapse my-4 bg-white dark:bg-gray-900 rounded-lg overflow-hidden;
+  border: 1px solid hsl(var(--border));
 }
 
 .ProseMirror table td,
-.ProseMirror table th {
-  @apply border border-gray-200 dark:border-gray-700 p-2 relative;
+.ProseMirror table th,
+.preview-content table td,
+.preview-content table th,
+.blog-content table td,
+.blog-content table th {
+  @apply border p-2 relative;
+  border: 1px solid hsl(var(--border));
   min-width: 100px;
+  vertical-align: top;
 }
 
-.ProseMirror table th {
-  @apply bg-gray-50 dark:bg-gray-800 font-semibold;
+.ProseMirror table th,
+.preview-content table th,
+.blog-content table th {
+  @apply bg-muted font-semibold text-left;
 }
 
-.ProseMirror table tr:nth-child(even) {
-  @apply bg-gray-50/50 dark:bg-gray-800/50;
+.ProseMirror table tr,
+.preview-content table tr,
+.blog-content table tr {
+  @apply border-b transition-colors;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
-.ProseMirror table tr:hover {
-  @apply bg-gray-100 dark:bg-gray-700/50 transition-colors;
+.ProseMirror table tr:nth-child(even),
+.preview-content table tr:nth-child(even),
+.blog-content table tr:nth-child(even) {
+  @apply bg-muted/50;
 }
 
+.ProseMirror table tr:hover,
+.preview-content table tr:hover,
+.blog-content table tr:hover {
+  @apply bg-muted/80;
+}
+
+/* Selected cell styles - only in editor */
 .ProseMirror .selectedCell {
   @apply relative;
 }
 
 .ProseMirror .selectedCell::after {
-  @apply absolute inset-0 pointer-events-none border-2 border-blue-500 dark:border-blue-400;
+  @apply absolute inset-0 pointer-events-none;
   content: '';
+  border: 2px solid hsl(var(--primary));
+}
+
+/* Responsive table styles */
+@media (max-width: 768px) {
+  .ProseMirror table,
+  .preview-content table,
+  .blog-content table {
+    @apply block w-full overflow-x-auto;
+  }
+
+  .ProseMirror table td,
+  .ProseMirror table th,
+  .preview-content table td,
+  .preview-content table th,
+  .blog-content table td,
+  .blog-content table th {
+    @apply whitespace-nowrap;
+  }
 }
 
 /* Code Block Styles */
