@@ -235,7 +235,12 @@ export const BlogForm: React.FC<BlogFormProps> = ({
 
   const handleSubmit = async (values: BlogFormValues) => {
     try {
-      await onSubmit(values);
+      // If we have initialData with an ID, include it in the update
+      const postData = initialData?.id
+        ? { ...values, id: initialData.id }
+        : values;
+
+      await onSubmit(postData);
       toast({
         title: "Success",
         description: `Post ${initialData ? "updated" : "created"} successfully`,

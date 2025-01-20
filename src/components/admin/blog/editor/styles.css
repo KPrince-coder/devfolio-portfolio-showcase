@@ -68,17 +68,35 @@
 }
 
 /* Table Styles */
-.tableWrapper {
-  padding: 1rem 0;
-  overflow-x: auto;
+.ProseMirror table {
+  @apply w-full border-collapse my-4;
 }
 
-.resize-cursor {
-  cursor: col-resize;
+.ProseMirror table td,
+.ProseMirror table th {
+  @apply border border-gray-200 dark:border-gray-700 p-2 relative;
+  min-width: 100px;
 }
 
-.selectedCell {
-  background-color: #b4d5fe;
+.ProseMirror table th {
+  @apply bg-gray-50 dark:bg-gray-800 font-semibold;
+}
+
+.ProseMirror table tr:nth-child(even) {
+  @apply bg-gray-50/50 dark:bg-gray-800/50;
+}
+
+.ProseMirror table tr:hover {
+  @apply bg-gray-100 dark:bg-gray-700/50 transition-colors;
+}
+
+.ProseMirror .selectedCell {
+  @apply relative;
+}
+
+.ProseMirror .selectedCell::after {
+  @apply absolute inset-0 pointer-events-none border-2 border-blue-500 dark:border-blue-400;
+  content: '';
 }
 
 /* Code Block Styles */
@@ -651,7 +669,7 @@ ul[data-type="taskList"] {
 
 .ProseMirror table td,
 .ProseMirror table th {
-  @apply border border-gray-300 dark:border-gray-700 p-2;
+  @apply border border-gray-200 dark:border-gray-700 p-2;
 }
 
 .ProseMirror table th {

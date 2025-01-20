@@ -83,6 +83,10 @@ import {
 import { EditorToolbar } from "./EditorToolbar";
 import { cn } from "@/lib/utils";
 import "./styles.css";
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableHeader from '@tiptap/extension-table-header'
+import TableCell from '@tiptap/extension-table-cell'
 
 const lowlight = createLowlight(common);
 
@@ -901,20 +905,28 @@ const CustomSlashCommandsExtension = SlashCommandsExtension.configure({
     render: () => {
       let component: ReactRendererType | null = null;
       let popup: any | null = null;
+      let destroyed = false;
 
       return {
         onStart: (props: SuggestionProps) => {
-          const renderer = new ReactRenderer(SlashCommandsList, {
-            props,
-            editor: props.editor,
-          });
+          if (destroyed) return;
 
-          component = {
-            element: renderer.element as HTMLElement,
-            ref: renderer.ref as ReactRendererRef | null,
-            updateProps: renderer.updateProps.bind(renderer),
-            destroy: renderer.destroy.bind(renderer),
-          };
+          component = (() => {
+            const renderer = new ReactRenderer(SlashCommandsList, {
+              props,
+              editor: props.editor,
+            });
+
+            return {
+              element: renderer.element as HTMLElement,
+              ref: renderer.ref as ReactRendererRef | null,
+              updateProps: renderer.updateProps.bind(renderer),
+              destroy: () => {
+                renderer.destroy();
+                destroyed = true;
+              },
+            };
+          })();
 
           popup = tippy("body", {
             getReferenceClientRect: props.clientRect,
@@ -927,22 +939,36 @@ const CustomSlashCommandsExtension = SlashCommandsExtension.configure({
           });
         },
         onUpdate: (props: SuggestionProps) => {
-          component?.updateProps(props);
+          if (!component || !popup || destroyed) return;
 
-          popup?.[0].setProps({
+          component.updateProps(props);
+          popup[0].setProps({
             getReferenceClientRect: props.clientRect,
           });
         },
         onKeyDown: (props: { event: KeyboardEvent }) => {
+          if (!component || !popup || destroyed) return false;
+
           if (props.event.key === "Escape") {
-            popup?.[0].hide();
+            popup[0].hide();
             return true;
           }
-          return component?.ref?.onKeyDown(props) || false;
+          return component.ref?.onKeyDown(props) || false;
         },
         onExit: () => {
-          popup?.[0].destroy();
-          component?.destroy();
+          if (destroyed) return;
+
+          if (popup?.[0]?.state?.isDestroyed === false) {
+            popup[0].destroy();
+          }
+          
+          if (component) {
+            component.destroy();
+          }
+
+          popup = null;
+          component = null;
+          destroyed = true;
         },
       };
     },
@@ -973,6 +999,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         codeBlock: false,
         bold: false, // Disable default bold from StarterKit
       }),
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: 'border-collapse table-auto w-full',
+        },
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
       BoldExtension.configure({
         HTMLAttributes: {
           class: "font-bold",
