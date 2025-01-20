@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Archive from "./pages/Archive";
 import { useParams } from "react-router-dom";
 import BlogPage from "./pages/BlogPage";
+import { HelmetProvider } from 'react-helmet-async';
 
 const BlogPageWrapper = () => {
   const { postId } = useParams();
@@ -91,28 +92,30 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => (
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/archive" element={<Archive />} />
-            <Route path="/blog/:postId" element={<BlogPageWrapper />} />
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
-                  <Admin />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/archive" element={<Archive />} />
+              <Route path="/blog/:postId" element={<BlogPageWrapper />} />
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <Admin />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
   </React.StrictMode>
 );
 

@@ -131,3 +131,65 @@
 .animation-delay-4000 {
   animation-delay: 4s;
 }
+
+/* Blog Content Table Styles */
+.blog-content table {
+  width: 100%;
+  margin: 2rem 0;
+  border-collapse: collapse;
+  border: 1px solid hsl(var(--border));
+  font-size: 0.9rem;
+}
+
+.blog-content th {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border: 1px solid hsl(var(--border));
+}
+
+.blog-content td {
+  padding: 0.75rem 1rem;
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+.blog-content tr:nth-child(even) {
+  background-color: hsl(var(--muted) / 0.3);
+}
+
+/* Responsive table styles */
+@media (max-width: 768px) {
+  .blog-content table {
+    @apply block w-full overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .blog-content table td,
+  .blog-content table th {
+    @apply whitespace-nowrap;
+  }
+}
+
+/* Prose Overrides for Tables */
+.prose table {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+.prose td,
+.prose th {
+  padding: 0.75em 1em;
+}
+
+.prose thead {
+  border-bottom-width: 1px;
+  border-bottom-color: hsl(var(--border));
+}
+
+.prose thead th {
+  font-weight: 600;
+  vertical-align: bottom;
+}

@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       admin_users: {
@@ -185,78 +185,80 @@ export type Database = {
       }
       blogs: {
         Row: {
-          author: string | null
-          author_avatar: string | null
-          category: string | null
-          comment_count: number | null
-          content: string
-          coverimage: string | null
-          created_at: string | null
-          excerpt: string | null
-          hasliked: boolean | null
           id: string
-          image_url: string | null
-          like_count: number | null
-          likes: number | null
-          published: boolean | null
-          publishedat: string | null
-          reading_time: string | null
-          slug: string | null
-          tags: string[] | null
           title: string
-          updated_at: string | null
-          view_count: number | null
-          viewcount: number | null
+          content: string
+          excerpt: string
+          image_url: string
+          published: boolean
+          created_at: string
+          updated_at: string
+          author: string
+          tags: string[]
+          slug: string
+          viewcount: number
+          hasliked: boolean
+          like_count: number
+          comment_count: number
+          reading_time: number
+          category: string
+          status: string
+          meta_title: string
+          meta_description: string
+          meta_keywords: string
+          canonical_url: string
+          coverimage: string
         }
         Insert: {
-          author?: string | null
-          author_avatar?: string | null
-          category?: string | null
-          comment_count?: number | null
-          content: string
-          coverimage?: string | null
-          created_at?: string | null
-          excerpt?: string | null
-          hasliked?: boolean | null
           id?: string
-          image_url?: string | null
-          like_count?: number | null
-          likes?: number | null
-          published?: boolean | null
-          publishedat?: string | null
-          reading_time?: string | null
-          slug?: string | null
-          tags?: string[] | null
           title: string
-          updated_at?: string | null
-          view_count?: number | null
-          viewcount?: number | null
+          content: string
+          excerpt?: string
+          image_url?: string
+          published?: boolean
+          created_at?: string
+          updated_at?: string
+          author?: string
+          tags?: string[]
+          slug?: string
+          viewcount?: number
+          hasliked?: boolean
+          like_count?: number
+          comment_count?: number
+          reading_time?: number
+          category?: string
+          status?: string
+          meta_title?: string
+          meta_description?: string
+          meta_keywords?: string
+          canonical_url?: string
+          coverimage?: string
         }
         Update: {
-          author?: string | null
-          author_avatar?: string | null
-          category?: string | null
-          comment_count?: number | null
-          content?: string
-          coverimage?: string | null
-          created_at?: string | null
-          excerpt?: string | null
-          hasliked?: boolean | null
           id?: string
-          image_url?: string | null
-          like_count?: number | null
-          likes?: number | null
-          published?: boolean | null
-          publishedat?: string | null
-          reading_time?: string | null
-          slug?: string | null
-          tags?: string[] | null
           title?: string
-          updated_at?: string | null
-          view_count?: number | null
-          viewcount?: number | null
+          content?: string
+          excerpt?: string
+          image_url?: string
+          published?: boolean
+          created_at?: string
+          updated_at?: string
+          author?: string
+          tags?: string[]
+          slug?: string
+          viewcount?: number
+          hasliked?: boolean
+          like_count?: number
+          comment_count?: number
+          reading_time?: number
+          category?: string
+          status?: string
+          meta_title?: string
+          meta_description?: string
+          meta_keywords?: string
+          canonical_url?: string
+          coverimage?: string
         }
-        Relationships: []
       }
       comment_likes: {
         Row: {

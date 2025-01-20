@@ -20,12 +20,18 @@ import {
   User,
   Share,
 } from "lucide-react";
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  useRef,
+  forwardRef,
+} from "react";
 import { ViewToggle } from "./blog_archive/ViewToggle";
 import { AnimatePresence } from "framer-motion";
 import { BlogArchiveHeader } from "./blog_archive/BlogArchiveHeader";
 import { ShareDialog } from "@/components/ui/share-dialog";
-import { TagFilterInput } from "./blog_archive/TagFilterInput";
 import { useScroll } from "@/hooks/useScroll";
 import { cn } from "@/lib/utils";
 
@@ -35,98 +41,105 @@ interface BlogCard {
   onClick?: () => void;
 }
 
-const BlogCard = ({ post, viewMode, onClick }: BlogCard) => {
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="h-full"
-    >
-      <Card
-        className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl dark:hover:shadow-primary-teal/5 h-full flex flex-col bg-gradient-to-b from-card to-card/50"
-        onClick={onClick}
+const BlogCard = forwardRef<HTMLDivElement, BlogCard>(
+  ({ post, viewMode, onClick }, ref) => {
+    const navigate = useNavigate();
+
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="h-full"
       >
-        <div className="aspect-video overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent z-10" />
-          <img
-            src={
-              post.coverImage ||
-              "https://images.unsplash.com/photo-1587620962725-abab7fe55159"
-            }
-            alt={post.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-          />
-          <div className="absolute bottom-4 left-4 z-20">
-            <Badge
-              variant="secondary"
-              className="bg-background/50 backdrop-blur-sm"
-            >
-              {calculateReadingTime(post.content)}
-            </Badge>
-          </div>
-        </div>
-
-        <div className="p-6 flex-grow flex flex-col">
-          <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              {new Date(post.publishedAt).toLocaleDateString()}
-            </span>
-            <span className="flex items-center gap-1">
-              <User className="h-4 w-4" />
-              {post.author}
-            </span>
-          </div>
-          <h3 className="mb-2 text-xl font-semibold transition-colors group-hover:text-primary-teal line-clamp-2">
-            {post.title}
-          </h3>
-          <p className="mb-4 text-muted-foreground line-clamp-3 flex-grow">
-            {post.excerpt}
-          </p>
-          <div className="mt-auto space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {post.tags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="group/tag transition-colors hover:bg-primary-teal/20 cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Add tag toggle functionality here
-                  }}
-                >
-                  <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-            <div
-              className="flex items-center justify-between"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-0 hover:bg-transparent hover:text-primary-teal group/btn"
+        <Card
+          ref={ref}
+          className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl dark:hover:shadow-primary-teal/5 h-full flex flex-col bg-gradient-to-b from-card to-card/50"
+          onClick={onClick}
+        >
+          <div className="aspect-video overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent z-10" />
+            <img
+              src={
+                post.coverImage ||
+                "https://images.unsplash.com/photo-1587620962725-abab7fe55159"
+              }
+              alt={post.title}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+            <div className="absolute bottom-4 left-4 z-20">
+              <Badge
+                variant="secondary"
+                className="bg-background/50 backdrop-blur-sm"
               >
-                Read more
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
-              </Button>
-
-              <ShareDialog
-                url={`${window.location.origin}/blog/${post.slug || slugify(post.title)}`}
-                title={post.title}
-              />
+                {calculateReadingTime(post.content)}
+              </Badge>
             </div>
           </div>
-        </div>
-      </Card>
-    </motion.div>
-  );
-};
+
+          <div className="p-6 flex-grow flex flex-col">
+            <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                {new Date(post.createdAt).toLocaleDateString()}
+              </span>
+              <span className="flex items-center gap-1">
+                <User className="h-4 w-4" />
+                {post.author}
+              </span>
+            </div>
+            <h3 className="mb-2 text-xl font-semibold transition-colors group-hover:text-primary-teal line-clamp-2">
+              {post.title}
+            </h3>
+            <p className="mb-4 text-muted-foreground line-clamp-3 flex-grow">
+              {post.excerpt}
+            </p>
+            <div className="mt-auto space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {post.tags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    className="group/tag transition-colors hover:bg-primary-teal/20 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Add tag toggle functionality here
+                    }}
+                  >
+                    <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+              <div
+                className="flex items-center justify-between"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-0 hover:bg-transparent hover:text-primary-teal group/btn"
+                >
+                  Read more
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+                </Button>
+
+                <ShareDialog
+                  url={`${window.location.origin}/blog/${post.slug || slugify(post.title)}`}
+                  title={post.title}
+                />
+              </div>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
+);
+
+BlogCard.displayName = "BlogCard";
 
 const calculateReadingTime = (content: string) => {
   const wordsPerMinute = 200;
@@ -378,51 +391,6 @@ export const BlogArchive = () => {
                   ))}
                 </motion.div>
               )}
-              {/* </div> */}
-              {/* } */}
-              {/* </motion.div> */}
-
-              {/* {allTags.length > 0 && selectedTags.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="flex flex-wrap gap-2 mb-6"
-                >
-                  {selectedTags.map((tag) => (
-                    <motion.div
-                      key={tag}
-                      layout
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Badge
-                        variant="default"
-                        className="bg-primary-teal hover:bg-primary-teal/90 cursor-pointer group"
-                        onClick={() => toggleTag(tag)}
-                      >
-                        <span className="truncate">{tag}</span>
-                        <X className="ml-1 h-3 w-3 transition-transform group-hover:rotate-90" />
-                      </Badge>
-                    </motion.div>
-                  ))}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedTags([])}
-                      className="h-6 px-2 text-xs hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      Clear all
-                    </Button>
-                  </motion.div>
-                </motion.div>
-              )} */}
             </motion.div>
           </motion.div>
 

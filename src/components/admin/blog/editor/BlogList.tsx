@@ -42,13 +42,13 @@ interface BlogListProps {
   onDelete: (postId: string) => void;
 }
 
-type SortField = "title" | "publishedAt" | "modifiedAt";
+type SortField = "title" | "createdAt" | "updatedAt";
 type SortOrder = "asc" | "desc";
 
 export const BlogList = ({ posts, onEdit, onDelete }: BlogListProps) => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState<SortField>("publishedAt");
+  const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showPublished, setShowPublished] = useState<boolean | null>(null);
@@ -91,15 +91,14 @@ export const BlogList = ({ posts, onEdit, onDelete }: BlogListProps) => {
           case "title":
             comparison = a.title.localeCompare(b.title);
             break;
-          case "publishedAt":
+          case "createdAt":
             comparison =
-              new Date(a.publishedAt).getTime() -
-              new Date(b.publishedAt).getTime();
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
             break;
-          case "modifiedAt":
+          case "updatedAt":
             comparison =
-              new Date(a.modifiedAt || 0).getTime() -
-              new Date(b.modifiedAt || 0).getTime();
+              new Date(a.updatedAt || 0).getTime() -
+              new Date(b.updatedAt || 0).getTime();
             break;
         }
         return sortOrder === "asc" ? comparison : -comparison;
@@ -148,8 +147,8 @@ export const BlogList = ({ posts, onEdit, onDelete }: BlogListProps) => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="title">Title</SelectItem>
-              <SelectItem value="publishedAt">Published Date</SelectItem>
-              <SelectItem value="modifiedAt">Modified Date</SelectItem>
+              <SelectItem value="createdAt">Published Date</SelectItem>
+              <SelectItem value="updatedAt">Modified Date</SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -277,14 +276,14 @@ export const BlogList = ({ posts, onEdit, onDelete }: BlogListProps) => {
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   <span>
-                    Published: {new Date(post.publishedAt).toLocaleString()}
+                    Published: {new Date(post.createdAt).toLocaleString()}
                   </span>
                 </div>
-                {post.modifiedAt && (
+                {post.updatedAt && (
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      Modified: {new Date(post.modifiedAt).toLocaleString()}
+                      Modified: {new Date(post.updatedAt).toLocaleString()}
                     </span>
                   </div>
                 )}

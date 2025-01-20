@@ -4,34 +4,43 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
-import { Card } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { BlogPost, BlogPostResponse, TocItem } from "@/types/blog";
+import { formatDate } from "@/utils/blogUtils";
+import { Calendar, User } from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Clock,
   Tag,
-  User,
   ArrowLeft,
   ArrowRight,
   Home,
   Share,
-  Calendar,
   Eye,
   Menu,
 } from "lucide-react";
-import { BlogPost, BlogPostResponse } from "@/types/blog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { slugify } from "@/utils/slugify";
 import { ShareDialog } from "@/components/ui/share-dialog";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { generateTableOfContents, injectHeadingIds } from "@/utils/toc";
 import { TableOfContents } from "@/components/ui/table-of-contents";
 import { Badge } from "@/components/ui/badge";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
+import { Helmet } from "react-helmet-async";
+import { RelatedPosts } from "@/components/blog/RelatedPosts";
 
 interface BlogPostPageProps {
   postId: string;
@@ -41,6 +50,7 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
   const [activeHeading, setActiveHeading] = useState<string>();
   const navigate = useNavigate();
   const { scrollY } = useScroll();
+  const [readingTime, setReadingTime] = useState<string>("");
 
   // Move all transforms outside the render method
   const headerOpacity = useTransform(scrollY, [0, 100], [0, 1]);
@@ -56,7 +66,7 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
     queryKey: ["blog-post", postId],
     queryFn: async () => {
       // First try to find by slug
-      let { data, error } = await supabase
+      let { data: dbPost, error } = await supabase
         .from("blogs")
         .select("*")
         .eq("published", true)
@@ -64,8 +74,8 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
         .maybeSingle();
 
       // If not found by slug, try by ID
-      if (!data) {
-        ({ data, error } = await supabase
+      if (!dbPost) {
+        ({ data: dbPost, error } = await supabase
           .from("blogs")
           .select("*")
           .eq("published", true)
@@ -74,18 +84,33 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
       }
 
       if (error) throw error;
-      if (!data) throw new Error("Post not found");
+      if (!dbPost) throw new Error("Post not found");
 
+      // Transform database post to application post
       return {
-        id: data.id,
-        slug: data.slug || slugify(data.title),
-        title: data.title,
-        excerpt: data.excerpt || "",
-        content: data.content,
-        coverImage: data.coverimage || data.image_url || "",
-        author: data.author || "Anonymous",
-        publishedAt: data.publishedat || data.created_at,
-        tags: data.tags || [],
+        id: dbPost.id,
+        title: dbPost.title,
+        content: dbPost.content,
+        excerpt: dbPost.excerpt || "",
+        imageUrl: dbPost.image_url || "",
+        published: dbPost.published,
+        createdAt: dbPost.created_at,
+        updatedAt: dbPost.updated_at,
+        author: dbPost.author || "Anonymous",
+        tags: dbPost.tags || [],
+        slug: dbPost.slug,
+        viewCount: dbPost.viewcount || 0,
+        hasLiked: dbPost.hasliked || false,
+        likeCount: dbPost.like_count || 0,
+        commentCount: dbPost.comment_count || 0,
+        readingTime: dbPost.reading_time || 0,
+        category: dbPost.category || "",
+        status: dbPost.status || "draft",
+        metaTitle: dbPost.meta_title || "",
+        metaDescription: dbPost.meta_description || "",
+        metaKeywords: dbPost.meta_keywords || "",
+        canonicalUrl: dbPost.canonical_url || "",
+        coverImage: dbPost.coverimage || dbPost.image_url || "",
       };
     },
   });
@@ -116,35 +141,52 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
     enabled: !!post,
   });
 
-  // Fetch related posts based on tags
-  const { data: relatedPosts } = useQuery<BlogPost[]>({
+  // Get related posts based on tags
+  const {
+    data: relatedPosts,
+    isLoading: isRelatedLoading,
+    error: relatedError,
+  } = useQuery<BlogPost[]>({
     queryKey: ["related-posts", post?.tags],
+    enabled: !!post?.tags && !!post?.id,
     queryFn: async () => {
-      if (!post?.tags?.length) return [];
-
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("blogs")
         .select("*")
         .eq("published", true)
-        .neq("id", post.id)
-        .contains("tags", post.tags)
-        .order("publishedat", { ascending: false })
-        .limit(3)
-        .returns<BlogPostResponse[]>();
+        .neq("id", post?.id)
+        .overlaps("tags", post?.tags || [])
+        .limit(3);
 
-      return (data || []).map((post) => ({
-        id: post.id,
-        slug: post.slug || slugify(post.title),
-        title: post.title,
-        excerpt: post.excerpt || "",
-        content: post.content,
-        coverImage: post.coverimage || post.image_url || "",
-        author: post.author || "Anonymous",
-        publishedAt: post.publishedat || post.created_at,
-        tags: post.tags || [],
+      if (error) throw error;
+      if (!data) return [];
+
+      return data.map((dbPost) => ({
+        id: dbPost.id,
+        title: dbPost.title,
+        content: dbPost.content,
+        excerpt: dbPost.excerpt || "",
+        imageUrl: dbPost.image_url || "",
+        published: dbPost.published,
+        createdAt: dbPost.created_at,
+        updatedAt: dbPost.updated_at,
+        author: dbPost.author || "Anonymous",
+        tags: dbPost.tags || [],
+        slug: dbPost.slug || slugify(dbPost.title),
+        viewCount: dbPost.viewcount || 0,
+        hasLiked: dbPost.hasliked || false,
+        likeCount: dbPost.like_count || 0,
+        commentCount: dbPost.comment_count || 0,
+        readingTime: dbPost.reading_time || 0,
+        category: dbPost.category || "",
+        status: dbPost.status || "draft",
+        metaTitle: dbPost.meta_title || "",
+        metaDescription: dbPost.meta_description || "",
+        metaKeywords: dbPost.meta_keywords || "",
+        canonicalUrl: dbPost.canonical_url || "",
+        coverImage: dbPost.coverimage || dbPost.image_url || "",
       }));
     },
-    enabled: !!post?.tags?.length,
   });
 
   // Function to format date
@@ -185,6 +227,47 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
     };
   }, [post]);
 
+  useEffect(() => {
+    if (post?.content) {
+      const wordsPerMinute = 200;
+      const words = post.content.trim().split(/\s+/).length;
+      const time = Math.ceil(words / wordsPerMinute);
+      setReadingTime(`${time} min read`);
+    }
+  }, [post?.content]);
+
+  const generateStructuredData = (post: BlogPost) => {
+    return {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: post.metaTitle || post.title,
+      description: post.metaDescription || post.excerpt,
+      image: post.coverImage,
+      author: {
+        "@type": "Person",
+        name: post.author,
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "Your Blog Name",
+        logo: {
+          "@type": "ImageObject",
+          url: "your-logo-url",
+        },
+      },
+      datePublished: new Date(post.createdAt).toISOString(),
+      dateModified: post.updatedAt
+        ? new Date(post.updatedAt).toISOString()
+        : new Date(post.createdAt).toISOString(),
+      keywords: post.metaKeywords || post.tags.join(", "),
+      articleBody: post.content.replace(/<[^>]*>/g, ""), // Strip HTML tags
+      mainEntityOfPage: {
+        "@type": "WebPage",
+        "@id": `${window.location.origin}/blog/${post.slug}`,
+      },
+    };
+  };
+
   const scrollToHeading = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -200,11 +283,14 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
   };
 
   // Process content and generate TOC
-  const processContent = (content: string) => {
-    const processedContent = injectHeadingIds(content);
-    const tocItems = generateTableOfContents(content);
-    return { processedContent, tocItems };
-  };
+  const processedContent = useMemo(
+    () => injectHeadingIds(post?.content || ""),
+    [post?.content]
+  );
+  const tocItems = useMemo(
+    () => generateTableOfContents(post?.content || ""),
+    [post?.content]
+  );
 
   if (isPostLoading) {
     return (
@@ -260,436 +346,443 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
           <Button
             variant="outline"
             size="lg"
-            onClick={() => navigate("/blog")}
+            onClick={() => navigate("/archive")}
             className="group"
           >
             <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            Back to Blog
+            Back to Blog Archive
           </Button>
         </motion.div>
       </div>
     );
   }
 
-  const { processedContent, tocItems } = processContent(post.content);
+  const canonicalUrl =
+    post.canonicalUrl || `${window.location.origin}/blog/${post.slug}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
-      {/* Sticky Header */}
-      <motion.header
-        style={{
-          opacity: headerOpacity,
-          y: headerTranslateY,
-        }}
-        className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-      >
-        <div className="flex h-14 items-center justify-between gap-4 px-4">
-          {/* Left Section: Navigation Buttons */}
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/blog")}
-              className="hidden md:flex items-center"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Blog Archive
-            </Button>
+    <>
+      <Helmet>
+        {/* Basic Meta Tags */}
+        <title>{post.metaTitle || post.title}</title>
+        <meta
+          name="description"
+          content={post.metaDescription || post.excerpt}
+        />
+        <meta
+          name="keywords"
+          content={post.metaKeywords || post.tags.join(", ")}
+        />
+        <meta name="author" content={post.author} />
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/")}
-              className="hidden md:flex items-center"
-            >
-              <Home className="h-4 w-4 mr-2" />
-              Home
-            </Button>
-          </div>
+        {/* Open Graph Meta Tags */}
+        <meta property="og:title" content={post.metaTitle || post.title} />
+        <meta
+          property="og:description"
+          content={post.metaDescription || post.excerpt}
+        />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={canonicalUrl} />
+        {post.coverImage && (
+          <meta property="og:image" content={post.coverImage} />
+        )}
 
-          {/* Center Section: Title */}
-          <h1 className="flex-1 text-xl font-semibold line-clamp-1 text-left">
-            {post?.title}
-          </h1>
+        {/* Twitter Card Meta Tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.metaTitle || post.title} />
+        <meta
+          name="twitter:description"
+          content={post.metaDescription || post.excerpt}
+        />
+        {post.coverImage && (
+          <meta name="twitter:image" content={post.coverImage} />
+        )}
 
-          {/* Right Section: Actions */}
-          <div className="flex items-center gap-4">
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-4">
-              <ShareDialog
-                url={`${window.location.origin}/blog/${post?.slug || slugify(post?.title || "")}`}
-                title={post?.title || ""}
-              />
+        {/* Article Meta Tags */}
+        <meta
+          property="article:published_time"
+          content={new Date(post.createdAt).toISOString()}
+        />
+        {post.updatedAt && (
+          <meta
+            property="article:modified_time"
+            content={new Date(post.updatedAt).toISOString()}
+          />
+        )}
+        {post.tags.map((tag) => (
+          <meta property="article:tag" content={tag} key={tag} />
+        ))}
 
-              {adjacentPosts?.prev && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    navigate(
-                      `/blog/${adjacentPosts.prev.slug || adjacentPosts.prev.id}`
-                    )
-                  }
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              )}
+        {/* Canonical URL */}
+        <link rel="canonical" href={canonicalUrl} />
 
-              {adjacentPosts?.next && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    navigate(
-                      `/blog/${adjacentPosts.next.slug || adjacentPosts.next.id}`
-                    )
-                  }
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              )}
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(generateStructuredData(post))}
+        </script>
+      </Helmet>
+
+      <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
+        {/* Sticky Header */}
+        <motion.header
+          style={{
+            opacity: headerOpacity,
+            y: headerTranslateY,
+          }}
+          className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        >
+          <div className="flex h-14 items-center justify-between gap-4 px-4">
+            {/* Left Section: Navigation Buttons */}
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/archive")}
+                className="hidden md:flex items-center"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Blog Archive
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/")}
+                className="hidden md:flex items-center"
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Home
+              </Button>
             </div>
 
-            {/* Mobile Menu */}
-            <div className="md:hidden">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                  <nav className="flex flex-col gap-4">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => navigate("/blog")}
-                    >
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Blog Archive
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => navigate("/")}
-                    >
-                      <Home className="h-4 w-4 mr-2" />
-                      Home
-                    </Button>
-
-                    <ShareDialog
-                      url={`${window.location.origin}/blog/${post?.slug || slugify(post?.title || "")}`}
-                      title={post?.title || ""}
-                    />
-
-                    <div className="flex gap-2 mt-4">
-                      {adjacentPosts?.prev && (
-                        <Button
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() =>
-                            navigate(
-                              `/blog/${adjacentPosts.prev.slug || adjacentPosts.prev.id}`
-                            )
-                          }
-                        >
-                          <ArrowLeft className="h-4 w-4 mr-2" />
-                          Previous
-                        </Button>
-                      )}
-
-                      {adjacentPosts?.next && (
-                        <Button
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() =>
-                            navigate(
-                              `/blog/${adjacentPosts.next.slug || adjacentPosts.next.id}`
-                            )
-                          }
-                        >
-                          Next
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
-                      )}
-                    </div>
-                  </nav>
-                </SheetContent>
-              </Sheet>
-            </div>
-          </div>
-        </div>
-      </motion.header>
-
-      <div className="px-4 py-20">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8"
-          >
-            {/* Navigation buttons for non-sticky state */}
-            <motion.div
-              style={{ opacity: nonStickyOpacity }}
-              className="flex items-center justify-between mb-12"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex items-center divide-x divide-border/40">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    asChild
-                    className="group px-4"
-                  >
-                    <Link to="/">
-                      <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className="flex items-center gap-2"
-                      >
-                        <Home className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                        <span className="font-medium">Home</span>
-                      </motion.div>
-                    </Link>
-                  </Button>
-                  <div className="h-4 w-px bg-border/40 mx-2" />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    asChild
-                    className="group px-4"
-                  >
-                    <Link to="/archive">
-                      <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className="flex items-center gap-2"
-                      >
-                        <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                        <span className="font-medium">Blog Archive</span>
-                      </motion.div>
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center divide-x divide-border/40">
-                <div className="pr-4">
-                  <ShareDialog
-                    url={`${window.location.origin}/blog/${post.slug || slugify(post.title)}`}
-                    title={post.title}
-                  />
-                </div>
-                {adjacentPosts?.next && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      navigate(
-                        `/blog/${adjacentPosts.next.slug || adjacentPosts.next.id}`
-                      )
-                    }
-                    className="group pl-4 hidden sm:flex items-center gap-2"
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      className="flex items-center gap-2"
-                    >
-                      <span className="font-medium">Next Post</span>
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </motion.div>
-                  </Button>
-                )}
-              </div>
-            </motion.div>
-
-            <h1 className="text-4xl md:text-5xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-primary-teal to-secondary-blue leading-[1.2] md:leading-[1.2] py-1">
-              {post.title}
+            {/* Center Section: Title */}
+            <h1 className="flex-1 text-xl font-semibold line-clamp-1 text-left">
+              {post?.title}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                {post.author}
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                {formatDate(post.publishedAt)}
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                {calculateReadingTime(post.content)}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2 mb-8">
-              {post.tags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="group/tag transition-colors hover:bg-primary-teal/20"
-                >
-                  <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-
-            {post.coverImage && (
-              <div className="relative aspect-video mb-12 rounded-xl overflow-hidden">
-                <img
-                  src={post.coverImage}
-                  alt={post.title}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
+            {/* Right Section: Actions */}
+            <div className="flex items-center gap-4">
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center gap-4">
+                <ShareDialog
+                  url={`${window.location.origin}/blog/${post?.slug || slugify(post?.title || "")}`}
+                  title={post?.title || ""}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent" />
-              </div>
-            )}
-          </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_250px] gap-12">
-            <motion.article
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="prose prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-primary-teal hover:prose-a:text-primary-teal/80 prose-img:rounded-xl"
-              dangerouslySetInnerHTML={{ __html: processedContent }}
-            />
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="hidden lg:block"
-            >
-              <div className="sticky top-20 space-y-8">
-                {tocItems.length > 0 && (
-                  <Card className="p-4">
-                    <h3 className="text-lg font-semibold mb-4">
-                      Table of Contents
-                    </h3>
-                    <TableOfContents
-                      items={tocItems}
-                      activeId={activeHeading}
-                      onItemClick={scrollToHeading}
-                    />
-                  </Card>
-                )}
-              </div>
-            </motion.div>
-          </div>
-
-          {(adjacentPosts?.prev || adjacentPosts?.next) && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="mt-12 flex flex-col items-center gap-8"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                {adjacentPosts.prev && (
-                  <Card
-                    className="group cursor-pointer p-6 transition-all duration-300 hover:shadow-xl dark:hover:shadow-primary-teal/5"
+                {adjacentPosts?.prev && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() =>
                       navigate(
                         `/blog/${adjacentPosts.prev.slug || adjacentPosts.prev.id}`
                       )
                     }
                   >
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                      <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                      Previous Post
-                    </div>
-                    <h4 className="font-semibold group-hover:text-primary-teal transition-colors">
-                      {adjacentPosts.prev.title}
-                    </h4>
-                  </Card>
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
                 )}
-                {adjacentPosts.next && (
-                  <Card
-                    className="group cursor-pointer p-6 transition-all duration-300 hover:shadow-xl dark:hover:shadow-primary-teal/5"
+
+                {adjacentPosts?.next && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() =>
                       navigate(
                         `/blog/${adjacentPosts.next.slug || adjacentPosts.next.id}`
                       )
                     }
                   >
-                    <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground mb-2">
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+
+              {/* Mobile Menu */}
+              <div className="md:hidden">
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                    <nav className="flex flex-col gap-4">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => navigate("/archive")}
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Blog Archive
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => navigate("/")}
+                      >
+                        <Home className="h-4 w-4 mr-2" />
+                        Home
+                      </Button>
+
+                      <ShareDialog
+                        url={`${window.location.origin}/blog/${post?.slug || slugify(post?.title || "")}`}
+                        title={post?.title || ""}
+                      />
+
+                      <div className="flex gap-2 mt-4">
+                        {adjacentPosts?.prev && (
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() =>
+                              navigate(
+                                `/blog/${adjacentPosts.prev.slug || adjacentPosts.prev.id}`
+                              )
+                            }
+                          >
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                            Previous
+                          </Button>
+                        )}
+
+                        {adjacentPosts?.next && (
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() =>
+                              navigate(
+                                `/blog/${adjacentPosts.next.slug || adjacentPosts.next.id}`
+                              )
+                            }
+                          >
+                            Next
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </Button>
+                        )}
+                      </div>
+                    </nav>
+                  </SheetContent>
+                </Sheet>
+              </div>
+            </div>
+          </div>
+        </motion.header>
+
+        <div className="px-4 py-20">
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mb-8"
+            >
+              {/* Navigation buttons for non-sticky state */}
+              <motion.div
+                style={{ opacity: nonStickyOpacity }}
+                className="flex items-center justify-between mb-12"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center divide-x divide-border/40">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="group px-4"
+                    >
+                      <Link to="/">
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          className="flex items-center gap-2"
+                        >
+                          <Home className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                          <span className="font-medium">Home</span>
+                        </motion.div>
+                      </Link>
+                    </Button>
+                    <div className="h-4 w-px bg-border/40 mx-2" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="group px-4"
+                    >
+                      <Link to="/archive">
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          className="flex items-center gap-2"
+                        >
+                          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                          <span className="font-medium">Blog Archive</span>
+                        </motion.div>
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex items-center divide-x divide-border/40">
+                  <div className="pr-4">
+                    <ShareDialog
+                      url={`${window.location.origin}/blog/${post.slug || slugify(post.title)}`}
+                      title={post.title}
+                    />
+                  </div>
+                  {adjacentPosts?.next && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        navigate(
+                          `/blog/${adjacentPosts.next.slug || adjacentPosts.next.id}`
+                        )
+                      }
+                      className="group pl-4 hidden sm:flex items-center gap-2"
+                    >
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        className="flex items-center gap-2"
+                      >
+                        <span className="font-medium">Next Post</span>
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </motion.div>
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
+
+              <h1 className="text-4xl md:text-5xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-primary-teal to-secondary-blue leading-[1.2] md:leading-[1.2] py-1">
+                {post.title}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  {post.author}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {formatDate(post.createdAt)}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  {readingTime}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-8">
+                {post.tags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    className="group/tag transition-colors hover:bg-primary-teal/20"
+                  >
+                    <Tag className="h-3 w-3 mr-1 transition-transform group-hover/tag:rotate-12" />
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+
+              {post.coverImage && (
+                <div className="relative aspect-video mb-12 rounded-xl overflow-hidden">
+                  <img
+                    src={post.coverImage}
+                    alt={post.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent" />
+                </div>
+              )}
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_250px] gap-12">
+              {/* Blog Content */}
+              <motion.article
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="prose prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-primary-teal hover:prose-a:text-primary-teal/80 prose-img:rounded-xl blog-content"
+                dangerouslySetInnerHTML={{ __html: processedContent }}
+              />
+            </div>
+
+            {/* Table of Contents Sidebar */}
+            {tocItems.length > 0 && (
+              <div className="hidden lg:block">
+                <div className="sticky top-20">
+                  <TableOfContents
+                    items={tocItems}
+                    activeId={activeHeading}
+                    onItemClick={scrollToHeading}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Navigation and Related Posts */}
+          <div className="mt-16 space-y-16">
+            {/* Previous/Next Navigation */}
+            {(adjacentPosts?.prev || adjacentPosts?.next) && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
+                {adjacentPosts?.prev && (
+                  <Card
+                    className="group cursor-pointer p-6 transition-all duration-300 hover:shadow-xl dark:hover:shadow-primary-teal/5"
+                    onClick={() => navigate(`/blog/${adjacentPosts.prev.slug}`)}
+                  >
+                    <p className="text-sm text-muted-foreground mb-2 flex items-center gap-1">
+                      <ArrowLeft className="h-4 w-4" />
+                      Previous Post
+                    </p>
+                    <h4 className="font-medium group-hover:text-primary-teal transition-colors">
+                      {adjacentPosts.prev.title}
+                    </h4>
+                  </Card>
+                )}
+                {adjacentPosts?.next && (
+                  <Card
+                    className="group cursor-pointer p-6 transition-all duration-300 hover:shadow-xl dark:hover:shadow-primary-teal/5"
+                    onClick={() => navigate(`/blog/${adjacentPosts.next.slug}`)}
+                  >
+                    <p className="text-sm text-muted-foreground mb-2 flex items-center justify-end gap-1">
                       Next Post
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </div>
-                    <h4 className="font-semibold text-right group-hover:text-primary-teal transition-colors">
+                      <ArrowRight className="h-4 w-4" />
+                    </p>
+                    <h4 className="font-medium text-right group-hover:text-primary-teal transition-colors">
                       {adjacentPosts.next.title}
                     </h4>
                   </Card>
                 )}
-              </div>
+              </motion.div>
+            )}
 
-              <Link
-                to="/archive"
-                className="group flex items-center gap-2 text-primary-teal hover:text-primary-teal transition-colors"
-              >
-                View all blog posts
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </motion.div>
-          )}
-
-          {relatedPosts && relatedPosts.length > 0 && (
+            {/* View More Link */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.8 }}
-              className="mt-20"
+              transition={{ duration: 0.5, delay: 0.7 }}
+              className="flex justify-center"
             >
-              <h2 className="text-2xl font-bold mb-8">Related Posts</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {relatedPosts.map((relatedPost, index) => (
-                  <motion.div
-                    key={relatedPost.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-                  >
-                    <Card
-                      className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl dark:hover:shadow-primary-teal/5 h-full flex flex-col"
-                      onClick={() =>
-                        navigate(`/blog/${relatedPost.slug || relatedPost.id}`)
-                      }
-                    >
-                      <div className="aspect-video overflow-hidden relative">
-                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent z-10" />
-                        <img
-                          src={
-                            relatedPost.coverImage ||
-                            "https://images.unsplash.com/photo-1587620962725-abab7fe55159"
-                          }
-                          alt={relatedPost.title}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          loading="lazy"
-                        />
-                      </div>
-                      <div className="p-6 flex-grow flex flex-col">
-                        <h3 className="text-lg font-semibold mb-2 transition-colors group-hover:text-primary-teal">
-                          {relatedPost.title}
-                        </h3>
-                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                          {relatedPost.excerpt}
-                        </p>
-                        <div className="mt-auto flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          {formatDate(relatedPost.publishedAt)}
-                        </div>
-                      </div>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
+              <Link
+                to="/blog"
+                className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary-teal transition-colors"
+              >
+                <Home className="h-4 w-4" aria-hidden="true" />
+                View more posts
+              </Link>
             </motion.div>
-          )}
+
+            {/* Related Posts Section */}
+            <RelatedPosts posts={relatedPosts || []} />
+          </div>
         </div>
       </div>
       <ScrollToTop />
-    </div>
+    </>
   );
 };

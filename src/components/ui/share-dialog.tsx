@@ -1,14 +1,14 @@
+import { Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Share, Link, Twitter, Facebook, Linkedin } from "lucide-react";
-import { shareContent, SharePlatform } from "@/utils/share";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 interface ShareDialogProps {
@@ -17,68 +17,42 @@ interface ShareDialogProps {
 }
 
 export function ShareDialog({ url, title }: ShareDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isCopied, setIsCopied] = useState(false);
-
-  const handleShare = async (platform: SharePlatform) => {
-    await shareContent(url, title, platform, () => {
-      if (platform === 'copy') {
-        setIsCopied(true);
-        toast.success("Link copied to clipboard!");
-        setTimeout(() => setIsCopied(false), 2000);
-      }
-    });
-    setIsOpen(false);
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard!");
+    } catch (err) {
+      toast.error("Failed to copy link");
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
-          size="sm"
-          className="gap-2"
+          variant="ghost"
+          size="icon"
+          className="hover:bg-transparent hover:text-primary-teal"
         >
           <Share className="h-4 w-4" />
-          Share
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Share this post</DialogTitle>
+          <DialogTitle>Share "{title}"</DialogTitle>
+          <DialogDescription>
+            Copy the link below to share this post with others
+          </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-2">
-          <Button
-            variant="outline"
-            className="w-full justify-start"
-            onClick={() => handleShare('copy')}
-          >
-            <Link className="mr-2 h-4 w-4" />
-            {isCopied ? "Copied!" : "Copy link"}
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full justify-start"
-            onClick={() => handleShare('twitter')}
-          >
-            <Twitter className="mr-2 h-4 w-4" />
-            Share on Twitter
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full justify-start"
-            onClick={() => handleShare('facebook')}
-          >
-            <Facebook className="mr-2 h-4 w-4" />
-            Share on Facebook
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full justify-start"
-            onClick={() => handleShare('linkedin')}
-          >
-            <Linkedin className="mr-2 h-4 w-4" />
-            Share on LinkedIn
+        <div className="flex items-center space-x-2">
+          <Input
+            value={url}
+            readOnly
+            className="flex-1"
+            onClick={(e) => e.currentTarget.select()}
+          />
+          <Button onClick={copyToClipboard} className="shrink-0">
+            Copy Link
           </Button>
         </div>
       </DialogContent>
