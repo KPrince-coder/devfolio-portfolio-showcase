@@ -5,6 +5,7 @@ import { DashboardSidebar } from "./DashboardSidebar";
 import { DashboardLoader } from "../loaders/DashboardLoader";
 import { cn } from "@/lib/utils";
 import { Tab } from "@/types/dashboard";
+import { useAuth } from "@/hooks/use-auth";
 import {
   LayoutDashboard,
   FileEdit,
@@ -137,7 +138,7 @@ const profileSubTabs: Tab[] = [
   },
 ];
 
-export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user }) => {
+export const DashboardLayout: React.FC<DashboardLayoutProps> = () => {
   const [activeTab, setActiveTab] = useState<string>(defaultTabs[0].value);
   const [activeSubTab, setActiveSubTab] = useState<string>(
     profileSubTabs[0].value
@@ -185,15 +186,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user }) => {
     document.documentElement.classList.toggle("dark");
   };
 
-  const handleLogout = async () => {
-    // Add your logout logic here
-    try {
-      // Example: await supabase.auth.signOut();
-      window.location.href = "/login";
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-  };
+  // Auth context for loging out
+  const { user, handleLogout } = useAuth();
 
   const renderManager = () => {
     switch (activeTab) {
