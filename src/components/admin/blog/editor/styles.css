@@ -1,6 +1,6 @@
 /* Editor Styles */
 .ProseMirror {
-  @apply relative min-h-[200px] max-h-[500px] w-full overflow-y-auto border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50;
+  @apply relative min-h-[200px] max-h-[500px] w-full overflow-y-auto bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50;
   outline: none;
   cursor: text;
 }
@@ -55,11 +55,8 @@
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
-  @apply text-muted-foreground;
+  @apply text-gray-400 dark:text-gray-600 h-0 float-left select-none pointer-events-none;
   content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
 }
 
 .ProseMirror .is-empty::before {
@@ -366,9 +363,15 @@ ul[data-type="taskList"] {
 }
 
 /* Focus Styles */
-.has-focus {
-  border-radius: 0.25rem;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+.editor-container {
+  @apply relative border border-input bg-transparent px-3 py-2 text-sm;
+  transition: border-color 0.15s ease;
+}
+
+.editor-container:focus-within {
+  @apply border-gray-400 dark:border-gray-600;
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(100, 100, 100, 0.1);
 }
 
 /* YouTube Embed Styles */
@@ -626,15 +629,15 @@ ul[data-type="taskList"] {
 }
 
 .warning-block {
-  @apply bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 my-4 rounded-r-lg;
+  @apply bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 my-4 rounded-r-lg;
 }
 
 .info-block {
-  @apply bg-gray-50 dark:bg-gray-900/20 border-l-4 border-gray-500 p-4 my-4 rounded-r-lg;
+  @apply bg-slate-50 dark:bg-slate-900/20 border-l-4 border-slate-500 p-4 my-4 rounded-r-lg;
 }
 
 .success-block {
-  @apply bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 my-4 rounded-r-lg;
+  @apply bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r-lg;
 }
 
 .error-block {
@@ -672,44 +675,75 @@ ul[data-type="taskList"] {
   @apply inline-flex items-center gap-1 text-gray-600 dark:text-gray-400;
 }
 
-/* Block Types */
-.ProseMirror blockquote.note-block {
-  @apply bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 my-4 rounded-r-lg text-gray-900 dark:text-gray-100 shadow-sm;
-  margin: 1rem 0;
+/* Block Types with icons */
+.ProseMirror blockquote[class*="block"],
+.preview-content blockquote[class*="block"] {
+  @apply relative p-4 my-4 rounded-lg border-l-[6px] shadow-sm;
 }
 
-.ProseMirror blockquote.warning-block {
-  @apply bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 my-4 rounded-r-lg text-gray-900 dark:text-gray-100 shadow-sm;
-  margin: 1rem 0;
+.ProseMirror blockquote.note-block,
+.preview-content blockquote.note-block {
+  @apply bg-blue-100 dark:bg-blue-900/40 border-blue-500 text-gray-900 dark:text-gray-100;
 }
 
-.ProseMirror blockquote.info-block {
-  @apply bg-slate-50 dark:bg-slate-900/30 border-l-4 border-slate-500 p-4 my-4 rounded-r-lg text-gray-900 dark:text-gray-100 shadow-sm;
-  margin: 1rem 0;
+.ProseMirror blockquote.note-block::before,
+.preview-content blockquote.note-block::before {
+  content: "Note";
+  @apply absolute top-2 left-3 text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider;
 }
 
-.ProseMirror blockquote.success-block {
-  @apply bg-emerald-50 dark:bg-emerald-900/30 border-l-4 border-emerald-500 p-4 my-4 rounded-r-lg text-gray-900 dark:text-gray-100 shadow-sm;
-  margin: 1rem 0;
+.ProseMirror blockquote.warning-block,
+.preview-content blockquote.warning-block {
+  @apply bg-orange-100 dark:bg-orange-900/40 border-orange-500 text-gray-900 dark:text-gray-100;
 }
 
-.ProseMirror blockquote.error-block {
-  @apply bg-rose-50 dark:bg-rose-900/30 border-l-4 border-rose-500 p-4 my-4 rounded-r-lg text-gray-900 dark:text-gray-100 shadow-sm;
-  margin: 1rem 0;
+.ProseMirror blockquote.warning-block::before,
+.preview-content blockquote.warning-block::before {
+  content: "Warning";
+  @apply absolute top-2 left-3 text-xs font-semibold text-orange-700 dark:text-orange-300 uppercase tracking-wider;
 }
 
-/* Regular Blockquote */
-.ProseMirror blockquote:not(.note-block, .warning-block, .info-block, .success-block, .error-block) {
+.ProseMirror blockquote.info-block,
+.preview-content blockquote.info-block {
+  @apply bg-indigo-100 dark:bg-indigo-900/40 border-indigo-500 text-gray-900 dark:text-gray-100;
+}
+
+.ProseMirror blockquote.info-block::before,
+.preview-content blockquote.info-block::before {
+  content: "Info";
+  @apply absolute top-2 left-3 text-xs font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider;
+}
+
+.ProseMirror blockquote.success-block,
+.preview-content blockquote.success-block {
+  @apply bg-emerald-100 dark:bg-emerald-900/40 border-emerald-500 text-gray-900 dark:text-gray-100;
+}
+
+.ProseMirror blockquote.success-block::before,
+.preview-content blockquote.success-block::before {
+  content: "Success";
+  @apply absolute top-2 left-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider;
+}
+
+.ProseMirror blockquote.error-block,
+.preview-content blockquote.error-block {
+  @apply bg-red-100 dark:bg-red-900/40 border-red-500 text-gray-900 dark:text-gray-100;
+}
+
+.ProseMirror blockquote.error-block::before,
+.preview-content blockquote.error-block::before {
+  content: "Error";
+  @apply absolute top-2 left-3 text-xs font-semibold text-red-700 dark:text-red-300 uppercase tracking-wider;
+}
+
+.ProseMirror blockquote:not([class*="block"]),
+.preview-content blockquote:not([class*="block"]) {
   @apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 my-4 italic text-gray-700 dark:text-gray-300;
 }
 
-/* Remove outline */
-.ProseMirror {
-  @apply outline-none ring-0 !important;
-}
-
-.ProseMirror-focused {
-  @apply outline-none ring-0 !important;
+.ProseMirror blockquote[class*="block"] p,
+.preview-content blockquote[class*="block"] p {
+  @apply mt-4;
 }
 
 /* Hover effects for blocks */
@@ -718,11 +752,11 @@ ul[data-type="taskList"] {
 }
 
 .ProseMirror blockquote.warning-block:hover {
-  @apply bg-amber-100 dark:bg-amber-900/40 transition-colors;
+  @apply bg-orange-100 dark:bg-orange-900/40 transition-colors;
 }
 
 .ProseMirror blockquote.info-block:hover {
-  @apply bg-slate-100 dark:bg-slate-900/40 transition-colors;
+  @apply bg-indigo-100 dark:bg-indigo-900/40 transition-colors;
 }
 
 .ProseMirror blockquote.success-block:hover {
@@ -730,5 +764,75 @@ ul[data-type="taskList"] {
 }
 
 .ProseMirror blockquote.error-block:hover {
-  @apply bg-rose-100 dark:bg-rose-900/40 transition-colors;
+  @apply bg-red-100 dark:bg-red-900/40 transition-colors;
+}
+
+/* Editor container */
+.editor-container {
+  @apply relative border border-input bg-transparent px-3 py-2 text-sm;
+  transition: border-color 0.15s ease;
+}
+
+.editor-container:focus-within {
+  @apply border-gray-400 dark:border-gray-600;
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(100, 100, 100, 0.1);
+}
+
+/* Base editor styles */
+.ProseMirror {
+  @apply outline-none ring-0 border-none !important;
+  min-height: 400px;
+}
+
+.ProseMirror-focused {
+  @apply outline-none ring-0 border-none !important;
+}
+
+/* Remove gray line in editor */
+.ProseMirror p.is-editor-empty:first-child::before {
+  @apply text-gray-400 dark:text-gray-600 h-0 float-left select-none pointer-events-none;
+  content: attr(data-placeholder);
+}
+
+/* Blockquote styles */
+.ProseMirror blockquote,
+.preview-content blockquote {
+  @apply border-l-4 border-gray-200 dark:border-gray-700 pl-4 my-4;
+}
+
+/* Note block */
+.ProseMirror blockquote.note-block,
+.preview-content blockquote.note-block {
+  @apply bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 my-4 rounded-r-lg;
+}
+
+/* Warning block */
+.ProseMirror blockquote.warning-block,
+.preview-content blockquote.warning-block {
+  @apply bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 my-4 rounded-r-lg;
+}
+
+/* Info block */
+.ProseMirror blockquote.info-block,
+.preview-content blockquote.info-block {
+  @apply bg-slate-50 dark:bg-slate-900/20 border-l-4 border-slate-500 p-4 my-4 rounded-r-lg;
+}
+
+/* Success block */
+.ProseMirror blockquote.success-block,
+.preview-content blockquote.success-block {
+  @apply bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r-lg;
+}
+
+/* Error block */
+.ProseMirror blockquote.error-block,
+.preview-content blockquote.error-block {
+  @apply bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 my-4 rounded-r-lg;
+}
+
+/* Common block styles */
+.ProseMirror blockquote[class*="-block"],
+.preview-content blockquote[class*="-block"] {
+  @apply shadow-sm;
 }

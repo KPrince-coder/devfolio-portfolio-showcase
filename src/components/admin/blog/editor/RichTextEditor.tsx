@@ -454,8 +454,14 @@ const commandCategories: SlashCommandCategory[] = [
             .deleteRange(range)
             .setNode("paragraph")
             .toggleBlockquote()
-            .updateAttributes("blockquote", {
-              class: "note-block",
+            .run();
+          
+          // Need to set attributes after the blockquote is created
+          editor
+            .chain()
+            .focus()
+            .updateAttributes('blockquote', {
+              class: 'note-block'
             })
             .run();
         },
@@ -471,8 +477,13 @@ const commandCategories: SlashCommandCategory[] = [
             .deleteRange(range)
             .setNode("paragraph")
             .toggleBlockquote()
-            .updateAttributes("blockquote", {
-              class: "warning-block",
+            .run();
+          
+          editor
+            .chain()
+            .focus()
+            .updateAttributes('blockquote', {
+              class: 'warning-block'
             })
             .run();
         },
@@ -1136,22 +1147,30 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           onShowInstructions={() => setShowInstructions(true)}
         />
         <div
-          className={cn("relative border rounded-md w-full cursor-text", {
-            "h-[500px] overflow-auto custom-scrollbar": !isScrollLocked,
-            "min-h-fit": isScrollLocked,
-            "preview-mode": isPreview,
-          })}
+          className={cn(
+            "min-h-[500px] w-full rounded-md border editor-container",
+            {
+              "cursor-not-allowed": isPreview,
+            }
+          )}
           onClick={() => !isPreview && editor?.chain().focus().run()}
         >
-          <EditorContent
-            editor={editor}
-            className={cn(
-              "prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-invert focus:outline-none focus:ring-0 max-w-none",
-              {
-                "select-none": isPreview,
-              }
-            )}
-            placeholder={`Start writing your blog post...
+          {isPreview ? (
+            <div
+              className={cn(
+                "prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-invert preview-content",
+                "max-w-none"
+              )}
+              dangerouslySetInnerHTML={{ __html: editor?.getHTML() || "" }}
+            />
+          ) : (
+            <EditorContent
+              editor={editor}
+              className={cn(
+                "prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-invert",
+                "max-w-none"
+              )}
+              placeholder={`Start writing your blog post...
 
 Quick Guide:
 • Press / to open the command menu
@@ -1164,7 +1183,8 @@ Quick Guide:
   - Error (Red, /error): Critical warnings
 
 Type / to explore all available blocks and formatting options.`}
-          />
+            />
+          )}
         </div>
       </div>
       <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
