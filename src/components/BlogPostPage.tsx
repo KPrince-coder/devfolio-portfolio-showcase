@@ -363,63 +363,33 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
   return (
     <>
       <Helmet>
-        {/* Basic Meta Tags */}
-        <title>{post.metaTitle || post.title}</title>
-        <meta
-          name="description"
-          content={post.metaDescription || post.excerpt}
-        />
-        <meta
-          name="keywords"
-          content={post.metaKeywords || post.tags.join(", ")}
-        />
-        <meta name="author" content={post.author} />
-
-        {/* Open Graph Meta Tags */}
-        <meta property="og:title" content={post.metaTitle || post.title} />
-        <meta
-          property="og:description"
-          content={post.metaDescription || post.excerpt}
-        />
+        <title>{post?.title} | {import.meta.env.VITE_APP_TITLE || 'Blog'}</title>
+        <meta name="description" content={post?.excerpt || ''} />
+        
+        {/* Open Graph / Facebook */}
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={canonicalUrl} />
-        {post.coverImage && (
-          <meta property="og:image" content={post.coverImage} />
-        )}
-
-        {/* Twitter Card Meta Tags */}
+        <meta property="og:title" content={post?.title} />
+        <meta property="og:description" content={post?.excerpt} />
+        <meta property="og:url" content={window.location.href} />
+        {post?.coverImage && <meta property="og:image" content={post.coverImage} />}
+        <meta property="og:site_name" content={import.meta.env.VITE_APP_TITLE || 'Blog'} />
+        
+        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={post.metaTitle || post.title} />
-        <meta
-          name="twitter:description"
-          content={post.metaDescription || post.excerpt}
-        />
-        {post.coverImage && (
-          <meta name="twitter:image" content={post.coverImage} />
-        )}
-
-        {/* Article Meta Tags */}
-        <meta
-          property="article:published_time"
-          content={new Date(post.createdAt).toISOString()}
-        />
-        {post.updatedAt && (
-          <meta
-            property="article:modified_time"
-            content={new Date(post.updatedAt).toISOString()}
-          />
-        )}
-        {post.tags.map((tag) => (
-          <meta property="article:tag" content={tag} key={tag} />
+        <meta name="twitter:title" content={post?.title} />
+        <meta name="twitter:description" content={post?.excerpt} />
+        {post?.coverImage && <meta name="twitter:image" content={post.coverImage} />}
+        
+        {/* Article Specific */}
+        <meta property="article:published_time" content={post?.createdAt} />
+        <meta property="article:author" content={post?.author} />
+        {post?.tags?.map((tag) => (
+          <meta key={tag} property="article:tag" content={tag} />
         ))}
 
-        {/* Canonical URL */}
-        <link rel="canonical" href={canonicalUrl} />
-
-        {/* Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify(generateStructuredData(post))}
-        </script>
+        {/* LinkedIn Specific */}
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
