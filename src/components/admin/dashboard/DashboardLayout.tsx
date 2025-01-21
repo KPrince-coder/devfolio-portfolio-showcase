@@ -1,32 +1,29 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { DashboardHeader } from "./DashboardHeader";
-import { DashboardSidebar } from "./DashboardSidebar";
-import { DashboardLoader } from "../loaders/DashboardLoader";
+import React, { useState, useEffect, useCallback } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+// import { useMediaQuery } from "@/hooks/use-media-query";
+import { DashboardLoader } from "../loaders/DashboardLoader";
 import { Tab } from "@/types/dashboard";
 import { useAuth } from "@/hooks/use-auth";
 import {
   LayoutDashboard,
   FileEdit,
   Settings,
-  Users,
-  MessageSquare,
-  BookOpen,
-  Laptop,
-  Newspaper,
-  UserPen,
-  Clock,
-  Briefcase,
+  FileText,
+  Code2,
   GraduationCap,
-  Heart,
-  Link,
-  Code,
+  BrainCircuit,
+  Briefcase,
+  Trophy,
+  Contact,
   Gauge,
   LineChart,
   User,
+  Menu,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { DashboardSidebar } from "./DashboardSidebar";
+import { DashboardHeader } from "./DashboardHeader";
 
 // Import managers
 import { DashboardManager } from "@/components/admin/managers/DashboardManager";
@@ -38,10 +35,6 @@ import { ProfileManager } from "@/components/admin/managers/ProfileManager";
 import { TechnicalSkillsManager } from "@/components/admin/managers/TechnicalSkillsManager";
 import { TechnicalProficiencyManager } from "@/components/admin/managers/TechnicalProficiencyManager";
 import { AnalyticsDashboardManager } from "@/components/admin/managers/AnalyticsDashboardManager";
-
-// interface DashboardLayoutProps {
-//   user: any;
-// }
 
 const defaultTabs: Tab[] = [
   {
@@ -59,31 +52,31 @@ const defaultTabs: Tab[] = [
   {
     label: "Profile",
     value: "profile",
-    icon: UserPen,
+    icon: FileText,
     color: "#EC4899",
   },
   {
     label: "Projects",
     value: "projects",
-    icon: Laptop,
+    icon: Briefcase,
     color: "#10B981",
   },
   {
     label: "Blog Posts",
     value: "blogs",
-    icon: Newspaper,
+    icon: FileEdit,
     color: "#F59E0B",
   },
   {
     label: "Timeline",
     value: "timeline",
-    icon: Clock,
+    icon: Contact,
     color: "#6366F1",
   },
   {
     label: "Technical Skills",
     value: "technical-skills",
-    icon: Code,
+    icon: Code2,
     color: "#14B8A6",
   },
   {
@@ -95,13 +88,13 @@ const defaultTabs: Tab[] = [
   {
     label: "Messages",
     value: "messages",
-    icon: MessageSquare,
+    icon: Settings,
     color: "#EC4899",
   },
   {
     label: "Users",
     value: "users",
-    icon: Users,
+    icon: User,
     color: "#14B8A6",
   },
   {
@@ -128,13 +121,13 @@ const profileSubTabs: Tab[] = [
   {
     label: "Hobbies",
     value: "hobbies",
-    icon: Heart,
+    icon: BrainCircuit,
     color: "#F59E0B",
   },
   {
     label: "Social Links",
     value: "social-links",
-    icon: Link,
+    icon: Contact,
     color: "#6366F1",
   },
 ];
@@ -145,8 +138,8 @@ export const DashboardLayout: React.FC = () => {
     profileSubTabs[0].value
   );
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -167,10 +160,10 @@ export const DashboardLayout: React.FC = () => {
 
     const handleResize = () => {
       const width = window.innerWidth;
-      setIsMobile(width < 768);
+      setIsSmallScreen(width < 780);
       setIsCollapsed(width < 1280);
-      if (width >= 768) {
-        setIsSidebarOpen(false);
+      if (width >= 780) {
+        setIsSidebarOpen(true);
       }
     };
 
@@ -204,6 +197,35 @@ export const DashboardLayout: React.FC = () => {
     // Call the actual logout function
     await handleLogout();
   };
+
+  // Handle click outside sidebar for mobile
+  const handleClickOutside = useCallback(
+    (e: MouseEvent) => {
+      if (isSmallScreen && isSidebarOpen) {
+        const sidebar = document.getElementById("dashboard-sidebar");
+        if (sidebar && !sidebar.contains(e.target as Node)) {
+          setIsSidebarOpen(false);
+        }
+      }
+    },
+    [isSmallScreen, isSidebarOpen]
+  );
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [handleClickOutside]);
+
+  // Update sidebar state based on screen size
+  useEffect(() => {
+    if (isSmallScreen) {
+      setIsSidebarOpen(false);
+    } else {
+      setIsSidebarOpen(true);
+    }
+  }, [isSmallScreen]);
 
   const renderManager = () => {
     switch (activeTab) {
@@ -276,23 +298,42 @@ export const DashboardLayout: React.FC = () => {
             </div>
 
             {/* Main Layout */}
-            <div className="relative z-10 flex h-screen">
-              <DashboardSidebar
-                tabs={defaultTabs}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                isMobile={isMobile}
-                isOpen={isSidebarOpen}
-                onClose={() => setIsSidebarOpen(false)}
-                isCollapsed={isCollapsed}
-                onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-              />
+            <div className="relative z-10 flex min-h-screen">
+              {/* Sidebar */}
+              <aside
+                id="dashboard-sidebar"
+                className={cn(
+                  "fixed inset-y-0 left-0 z-50",
+                  "flex-shrink-0",
+                  "bg-background/80 backdrop-blur-xl",
+                  "transition-all duration-300 ease-in-out",
+                  isSmallScreen ? "fixed w-64" : "relative",
+                  isSidebarOpen ? "translate-x-0" : "-translate-x-full",
+                  !isSmallScreen && (isCollapsed ? "w-20" : "w-60")
+                )}
+              >
+                <DashboardSidebar
+                  tabs={defaultTabs}
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  isMobile={isSmallScreen}
+                  isOpen={isSidebarOpen}
+                  onClose={() => setIsSidebarOpen(false)}
+                  isCollapsed={!isSmallScreen && isCollapsed}
+                  onToggleCollapse={() =>
+                    !isSmallScreen && setIsCollapsed(!isCollapsed)
+                  }
+                />
+              </aside>
 
+              {/* Main Content Area */}
               <main
                 className={cn(
                   "flex-1 flex flex-col",
-                  "transition-all duration-300",
-                  isCollapsed ? "lg:ml-[80px]" : "lg:ml-[280px]"
+                  "transition-all duration-300 ease-in-out",
+                  !isSmallScreen && (isCollapsed ? "ml-0" : "ml-0"),
+                  isSmallScreen && "ml-0",
+                  "w-full"
                 )}
               >
                 <DashboardHeader
@@ -301,10 +342,10 @@ export const DashboardLayout: React.FC = () => {
                   onThemeToggle={toggleTheme}
                   onLogout={handleLogoutClick}
                   onMenuClick={() => setIsSidebarOpen(true)}
-                  isMobile={isMobile}
+                  isMobile={isSmallScreen}
                 />
 
-                <div className="flex-1 overflow-y-auto px-2">
+                <div className="flex-1 overflow-y-auto p-4">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeTab}

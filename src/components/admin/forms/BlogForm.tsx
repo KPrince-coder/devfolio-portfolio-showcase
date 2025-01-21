@@ -214,15 +214,15 @@ export const BlogForm: React.FC<BlogFormProps> = ({
       coverImage: initialData?.coverImage || "",
       tags: initialData?.tags || [],
       status: (initialData?.status as "draft" | "published") || "draft",
-      is_featured: initialData?.is_featured || false,
+      // is_featured: initialData?.is_featured || false,
       // Initialize SEO fields with existing data in edit mode
-      meta_title: initialData?.meta_title || initialData?.title || "",
+      meta_title: initialData?.metaTitle || initialData?.title || "",
       meta_description:
-        initialData?.meta_description || initialData?.excerpt || "",
-      meta_keywords: initialData?.meta_keywords || "",
+        initialData?.metaDescription || initialData?.excerpt || "",
+      meta_keywords: initialData?.metaKeywords || "",
       author: initialData?.author || "",
       canonical_url:
-        initialData?.canonical_url || `blog/${initialData?.slug || ""}`,
+        initialData?.canonicalUrl || `blog/${initialData?.slug || ""}`,
     },
   });
 

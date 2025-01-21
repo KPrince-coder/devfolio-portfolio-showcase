@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -10,9 +10,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { User as SupabaseUser } from "@supabase/supabase-js";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface DashboardHeaderProps {
-  user: any;
+  user: SupabaseUser | null;
   isDarkMode: boolean;
   onThemeToggle: () => void;
   onLogout: () => void;
@@ -20,32 +31,29 @@ interface DashboardHeaderProps {
   isMobile: boolean;
 }
 
-export const DashboardHeader = React.memo(({
+export function DashboardHeader({
   user,
   isDarkMode,
   onThemeToggle,
   onLogout,
   onMenuClick,
   isMobile,
-}: DashboardHeaderProps) => {
-  const handleNotificationClick = useCallback(() => {
-    // Handle notification click
-  }, []);
-
-  const handleProfileClick = useCallback(() => {
-    // Handle profile click
-  }, []);
+}: DashboardHeaderProps) {
+  const userInitials = user?.email
+    ? user.email.substring(0, 2).toUpperCase()
+    : "AD";
 
   return (
     <motion.header
       className={cn(
         "sticky top-0 z-40",
         "flex items-center justify-between",
-        "h-16 px-6",
+        "h-16 pr-6",
         "bg-white/40 dark:bg-gray-900/40",
         "backdrop-blur-xl",
         "border-b border-white/20 dark:border-gray-800/20",
-        "transition-all duration-200"
+        "transition-all duration-200",
+        isMobile ? "pl-6" : "pl-0"
       )}
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -55,24 +63,21 @@ export const DashboardHeader = React.memo(({
     >
       {/* Left Section */}
       <motion.div
-        className="flex items-center gap-4"
+        className={`flex items-center ${isMobile ? "gap-4" : "gap-0"}`}
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onMenuClick}
-          className={cn(
-            "hover:bg-white/40 dark:hover:bg-gray-800/40",
-            "transition-transform duration-200 hover:scale-105"
-          )}
-          aria-label="Toggle menu"
-        >
-          <Menu className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-        </Button>
-
+        {isMobile && (
+          <button
+            onClick={onMenuClick}
+            className="flex items-center justify-center rounded-md hover:bg-accent p-2 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
+        {!isMobile && <div className="w-10" />}
         <motion.div
           className="hidden sm:flex items-center space-x-3"
           whileHover={{ scale: 1.02 }}
@@ -95,7 +100,7 @@ export const DashboardHeader = React.memo(({
               Welcome back,
             </h1>
             <p className="text-xs text-gray-600 dark:text-gray-400">
-              {user?.name || "Admin"}
+              {user?.email || "Admin"}
             </p>
           </motion.div>
         </motion.div>
@@ -142,7 +147,10 @@ export const DashboardHeader = React.memo(({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
                 <Button
                   variant="ghost"
                   size="icon"
@@ -151,7 +159,6 @@ export const DashboardHeader = React.memo(({
                     "hover:bg-white/40 dark:hover:bg-gray-800/40",
                     "transition-transform duration-200"
                   )}
-                  onClick={handleNotificationClick}
                   aria-label="View notifications"
                 >
                   <Bell className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -183,23 +190,7 @@ export const DashboardHeader = React.memo(({
           className="hidden sm:flex items-center gap-2"
           whileHover={{ scale: 1.02 }}
         >
-          <div
-            className={cn(
-              "p-2 rounded-xl",
-              "flex items-center gap-2",
-              "bg-white/40 dark:bg-gray-800/40",
-              "border border-white/20 dark:border-gray-800/20"
-            )}
-          >
-            <Sun className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
-            <Switch
-              checked={isDarkMode}
-              onCheckedChange={onThemeToggle}
-              aria-label="Toggle theme"
-              className="data-[state=checked]:bg-primary-teal"
-            />
-            <Moon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-          </div>
+          <ThemeToggle isDarkMode={isDarkMode} onToggle={onThemeToggle} />
         </motion.div>
 
         {/* Desktop Logout */}
@@ -208,22 +199,46 @@ export const DashboardHeader = React.memo(({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <Button
-            variant="default"
-            onClick={onLogout}
-            className={cn(
-              "bg-gradient-to-r from-primary-teal to-primary-teal/90",
-              "text-white",
-              "border border-white/20 dark:border-gray-800/20",
-              "shadow-lg shadow-primary-teal/20",
-              "hover:shadow-xl hover:shadow-primary-teal/30",
-              "transition-all duration-200"
-            )}
-            aria-label="Sign out"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign out
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="relative h-9 w-9 rounded-full"
+                aria-label="User menu"
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarImage
+                    src={user?.user_metadata?.avatar_url}
+                    alt={user?.email || "User avatar"}
+                  />
+                  <AvatarFallback>{userInitials}</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-56"
+              align="end"
+              side="bottom"
+              sideOffset={5}
+            >
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {user?.email}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Administrator</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={onLogout}
+                className="text-red-600 dark:text-red-400 cursor-pointer"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </motion.div>
 
         {/* Mobile Logout */}
@@ -244,4 +259,4 @@ export const DashboardHeader = React.memo(({
       </motion.div>
     </motion.header>
   );
-});
+}
