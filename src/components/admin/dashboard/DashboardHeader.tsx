@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "./ThemeToggle";
+import { ProfileSettingsForm } from "../forms/ProfileSettingsForm";
 
 interface DashboardHeaderProps {
   user: SupabaseUser | null;
@@ -42,6 +43,8 @@ export function DashboardHeader({
   const userInitials = user?.email
     ? user.email.substring(0, 2).toUpperCase()
     : "AD";
+
+  const [showProfileSettings, setShowProfileSettings] = useState(false);
 
   return (
     <motion.header
@@ -206,7 +209,7 @@ export function DashboardHeader({
                 className="relative h-9 w-9 rounded-full"
                 aria-label="User menu"
               >
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-9 w-9">
                   <AvatarImage
                     src={user?.user_metadata?.avatar_url}
                     alt={user?.email || "User avatar"}
@@ -220,6 +223,9 @@ export function DashboardHeader({
               align="end"
               side="bottom"
               sideOffset={5}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+              onEscapeKeyDown={(e) => e.preventDefault()}
+              onInteractOutside={(e) => e.preventDefault()}
             >
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
@@ -231,8 +237,17 @@ export function DashboardHeader({
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => setShowProfileSettings(true)}
+                onSelect={(e) => e.preventDefault()}
+              >
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer text-red-600 focus:text-red-600"
                 onClick={onLogout}
-                className="text-red-600 dark:text-red-400 cursor-pointer"
+                onSelect={(e) => e.preventDefault()}
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
@@ -257,6 +272,14 @@ export function DashboardHeader({
           </Button>
         </motion.div>
       </motion.div>
+      {/* Profile Settings Dialog */}
+      {user && (
+        <ProfileSettingsForm
+          open={showProfileSettings}
+          onClose={() => setShowProfileSettings(false)}
+          currentEmail={user.email || ""}
+        />
+      )}
     </motion.header>
   );
 }
