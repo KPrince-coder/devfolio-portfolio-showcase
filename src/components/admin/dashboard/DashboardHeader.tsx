@@ -48,12 +48,12 @@ export function DashboardHeader({
       className={cn(
         "sticky top-0 z-40",
         "flex items-center justify-between",
-        "h-16 pr-6",
+        "h-16 ",
         "bg-white/40 dark:bg-gray-900/40",
         "backdrop-blur-xl",
         "border-b border-white/20 dark:border-gray-800/20",
         "transition-all duration-200",
-        isMobile ? "pl-6" : "pl-0"
+        isMobile ? "px-6" : "pl-0 pr-10"
       )}
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
