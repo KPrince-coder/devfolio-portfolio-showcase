@@ -298,14 +298,13 @@ export const DashboardLayout: React.FC = () => {
             </div>
 
             {/* Main Layout */}
-            <div className="relative z-10 flex min-h-screen">
+            <div className="relative flex h-screen overflow-hidden bg-gray-100/50 dark:bg-gray-900/50">
               {/* Sidebar */}
               <aside
                 id="dashboard-sidebar"
                 className={cn(
-                  "fixed inset-y-0 left-0 z-50",
-                  "flex-shrink-0",
-                  "bg-background/80 backdrop-blur-xl",
+                  "h-screen z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl",
+                  "border-r border-white/20 dark:border-gray-800/20",
                   "transition-all duration-300 ease-in-out",
                   isSmallScreen ? "fixed w-64" : "relative",
                   isSidebarOpen ? "translate-x-0" : "-translate-x-full",
@@ -333,7 +332,7 @@ export const DashboardLayout: React.FC = () => {
                   "transition-all duration-300 ease-in-out",
                   !isSmallScreen && (isCollapsed ? "ml-0" : "ml-0"),
                   isSmallScreen && "ml-0",
-                  "w-full"
+                  "w-full h-screen"
                 )}
               >
                 <DashboardHeader
@@ -345,7 +344,7 @@ export const DashboardLayout: React.FC = () => {
                   isMobile={isSmallScreen}
                 />
 
-                <div className="flex-1 overflow-y-auto p-4">
+                <div className="flex-1 overflow-y-auto p-6">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeTab}
