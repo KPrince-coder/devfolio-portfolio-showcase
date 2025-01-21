@@ -28,11 +28,13 @@ export interface Project {
   title: string;
   description: string;
   image_url?: string;
-  demo_url?: string;
+  live_url?: string;
   github_url?: string;
   technologies: string[];
-  order: number;
   category: "Data Engineering" | "Web Development" | "Android Development";
+  user_id: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface ProjectFormProps {
@@ -132,32 +134,52 @@ export function ProjectForm({
 
       let imageUrl = editingProject.image_url;
 
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
       if (imageFile) {
+        // Delete old image if it exists
+        if (imageUrl) {
+          const oldImagePath = imageUrl.split('/').pop();
+          if (oldImagePath) {
+            await supabase.storage
+              .from('project-images')
+              .remove([`${user.id}/${oldImagePath}`]);
+          }
+        }
+
+        // Upload new image to user's folder
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("projects")
-          .upload(`project-images/${Date.now()}-${imageFile.name}`, imageFile);
+          .from('project-images')
+          .upload(`${user.id}/${Date.now()}-${imageFile.name}`, imageFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) throw uploadError;
 
         const {
           data: { publicUrl },
         } = supabase.storage
-          .from("projects")
+          .from('project-images')
           .getPublicUrl(uploadData?.path || "");
 
         imageUrl = publicUrl;
       }
 
       const projectData = {
-        id: editingProject.id,
         title: editingProject.title.trim(),
         description: editingProject.description.trim(),
         image_url: imageUrl,
-        demo_link: editingProject.demo_url,
-        github_link: editingProject.github_url,
+        live_url: editingProject.live_url,
+        github_url: editingProject.github_url,
         technologies: editingProject.technologies,
         category: editingProject.category,
-        order: editingProject.order || 0,
+        user_id: user.id,
       };
 
       const { error } = editingProject.id.includes("temp")
@@ -177,11 +199,11 @@ export function ProjectForm({
 
       onSave();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving project:", error);
       toast({
         title: "Error",
-        description: "Failed to save project. Please try again.",
+        description: error.message || "Failed to save project. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -192,14 +214,19 @@ export function ProjectForm({
   if (!editingProject) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col gap-0 p-0">
+    <Dialog open={open} onOpenChange={onClose} modal>
+      <DialogContent
+        className="sm:max-w-[600px] max-h-[90vh] flex flex-col gap-0 p-0"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader className="p-6 pb-2">
           <DialogTitle>
             {editingProject.id.includes("temp") ? "Add Project" : "Edit Project"}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Fill in the details below to {editingProject.id.includes("temp") ? "create a new" : "update the"} project.
+            Fill in the details below to{" "}
+            {editingProject.id.includes("temp") ? "create a new" : "update the"}{" "}
+            project.
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto px-6">
@@ -272,9 +299,9 @@ export function ProjectForm({
               <Label htmlFor="demoUrl">Demo URL</Label>
               <Input
                 id="demoUrl"
-                value={editingProject.demo_url || ""}
+                value={editingProject.live_url || ""}
                 onChange={(e) =>
-                  setEditingProject({ ...editingProject, demo_url: e.target.value })
+                  setEditingProject({ ...editingProject, live_url: e.target.value })
                 }
                 placeholder="https://example.com"
               />
