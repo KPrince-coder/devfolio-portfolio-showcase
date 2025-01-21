@@ -37,7 +37,7 @@ export default function Login() {
 
   // Check for timeout message
   useEffect(() => {
-    const timeoutReason = localStorage.getItem('sessionTimeoutReason');
+    const timeoutReason = localStorage.getItem("sessionTimeoutReason");
     if (timeoutReason) {
       toast({
         title: "Session Ended",
@@ -46,7 +46,7 @@ export default function Login() {
         duration: 4000,
       });
       // Clear the message
-      localStorage.removeItem('sessionTimeoutReason');
+      localStorage.removeItem("sessionTimeoutReason");
     }
   }, []);
 
@@ -80,7 +80,7 @@ export default function Login() {
 
       // Slight delay for better UX
       await new Promise((resolve) => setTimeout(resolve, 500));
-      
+
       navigate("/admin");
     } catch (error) {
       toast({
@@ -178,7 +178,7 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onKeyPress={(e) => handleKeyPress(e, "email")}
+                  onKeyDown={(e) => handleKeyPress(e, "email")}
                   required
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
                   placeholder="Enter your email"
@@ -201,7 +201,7 @@ export default function Login() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    onKeyPress={(e) => handleKeyPress(e, "password")}
+                    onKeyDown={(e) => handleKeyPress(e, "password")}
                     required
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
                     placeholder="Enter your password"
@@ -221,6 +221,7 @@ export default function Login() {
               </motion.div>
 
               <motion.div
+                className="pt-4"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4 }}
