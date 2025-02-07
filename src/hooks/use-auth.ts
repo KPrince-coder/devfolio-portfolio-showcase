@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, createContext, useContext, FC, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,7 +30,6 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
 
       setUser(null);
       
-      // Show success toast with animation
       toast.success("Successfully logged out", {
         duration: 2000,
         position: "top-right",
@@ -56,30 +56,53 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   useSessionTimeout(handleLogout);
 
   useEffect(() => {
-    // Check active session
-    const checkUser = async () => {
+    let mounted = true;
+
+    // Check active session and set up auth listener
+    const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
-        setLoading(false);
+        // Get current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        // Only update state if component is still mounted
+        if (mounted) {
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+
+        // Set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          if (mounted) {
+            setUser(session?.user ?? null);
+            setLoading(false);
+
+            // If session is null and we're not on the login page, redirect
+            if (!session?.user && window.location.pathname !== '/login') {
+              navigate('/login');
+            }
+          }
+        });
+
+        return () => {
+          subscription.unsubscribe();
+        };
+
       } catch (error) {
         console.error('Error checking auth status:', error);
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
-    checkUser();
+    initializeAuth();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
+    // Cleanup function
     return () => {
-      subscription.unsubscribe();
+      mounted = false;
     };
-  }, []);
+  }, [navigate]);
 
   const contextValue = useMemo<AuthContextType>(
     () => ({
@@ -87,10 +110,14 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
       loading,
       handleLogout
     }),
-    [user, loading, handleLogout]
+    [user, loading]
   );
 
-  return React.createElement(AuthContext.Provider, { value: contextValue }, children);
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {

@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       admin_users: {
@@ -185,80 +185,96 @@ export interface Database {
       }
       blogs: {
         Row: {
-          id: string
-          title: string
+          author: string | null
+          author_avatar: string | null
+          canonical_url: string | null
+          category: string | null
+          comment_count: number | null
           content: string
-          excerpt: string
-          image_url: string
-          published: boolean
-          created_at: string
-          updated_at: string
-          author: string
-          tags: string[]
-          slug: string
-          viewcount: number
-          hasliked: boolean
-          like_count: number
-          comment_count: number
-          reading_time: number
-          category: string
-          status: string
-          meta_title: string
-          meta_description: string
-          meta_keywords: string
-          canonical_url: string
-          coverimage: string
+          coverimage: string | null
+          created_at: string | null
+          excerpt: string | null
+          hasliked: boolean | null
+          id: string
+          image_url: string | null
+          is_featured: boolean | null
+          like_count: number | null
+          likes: number | null
+          meta_description: string | null
+          meta_keywords: string | null
+          meta_title: string | null
+          published: boolean | null
+          publishedat: string | null
+          reading_time: string | null
+          slug: string | null
+          status: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          view_count: number | null
+          viewcount: number | null
         }
         Insert: {
-          id?: string
-          title: string
+          author?: string | null
+          author_avatar?: string | null
+          canonical_url?: string | null
+          category?: string | null
+          comment_count?: number | null
           content: string
-          excerpt?: string
-          image_url?: string
-          published?: boolean
-          created_at?: string
-          updated_at?: string
-          author?: string
-          tags?: string[]
-          slug?: string
-          viewcount?: number
-          hasliked?: boolean
-          like_count?: number
-          comment_count?: number
-          reading_time?: number
-          category?: string
-          status?: string
-          meta_title?: string
-          meta_description?: string
-          meta_keywords?: string
-          canonical_url?: string
-          coverimage?: string
+          coverimage?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          hasliked?: boolean | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          like_count?: number | null
+          likes?: number | null
+          meta_description?: string | null
+          meta_keywords?: string | null
+          meta_title?: string | null
+          published?: boolean | null
+          publishedat?: string | null
+          reading_time?: string | null
+          slug?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          view_count?: number | null
+          viewcount?: number | null
         }
         Update: {
-          id?: string
-          title?: string
+          author?: string | null
+          author_avatar?: string | null
+          canonical_url?: string | null
+          category?: string | null
+          comment_count?: number | null
           content?: string
-          excerpt?: string
-          image_url?: string
-          published?: boolean
-          created_at?: string
-          updated_at?: string
-          author?: string
-          tags?: string[]
-          slug?: string
-          viewcount?: number
-          hasliked?: boolean
-          like_count?: number
-          comment_count?: number
-          reading_time?: number
-          category?: string
-          status?: string
-          meta_title?: string
-          meta_description?: string
-          meta_keywords?: string
-          canonical_url?: string
-          coverimage?: string
+          coverimage?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          hasliked?: boolean | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          like_count?: number | null
+          likes?: number | null
+          meta_description?: string | null
+          meta_keywords?: string | null
+          meta_title?: string | null
+          published?: boolean | null
+          publishedat?: string | null
+          reading_time?: string | null
+          slug?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          view_count?: number | null
+          viewcount?: number | null
         }
+        Relationships: []
       }
       comment_likes: {
         Row: {
@@ -294,6 +310,7 @@ export interface Database {
           id: number
           is_read: boolean
           message: string
+          read_at: string | null
           status: string | null
           subject: string
           tags: string[] | null
@@ -306,6 +323,7 @@ export interface Database {
           id?: number
           is_read?: boolean
           message: string
+          read_at?: string | null
           status?: string | null
           subject: string
           tags?: string[] | null
@@ -318,6 +336,7 @@ export interface Database {
           id?: number
           is_read?: boolean
           message?: string
+          read_at?: string | null
           status?: string | null
           subject?: string
           tags?: string[] | null
@@ -529,6 +548,7 @@ export interface Database {
       profile_data: {
         Row: {
           about_text: string | null
+          created_at: string | null
           id: string
           profile_image_url: string | null
           resume_url: string | null
@@ -536,6 +556,7 @@ export interface Database {
         }
         Insert: {
           about_text?: string | null
+          created_at?: string | null
           id?: string
           profile_image_url?: string | null
           resume_url?: string | null
@@ -543,6 +564,7 @@ export interface Database {
         }
         Update: {
           about_text?: string | null
+          created_at?: string | null
           id?: string
           profile_image_url?: string | null
           resume_url?: string | null
@@ -550,90 +572,45 @@ export interface Database {
         }
         Relationships: []
       }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          id: string
-          updated_at: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          id: string
-          updated_at?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       projects: {
         Row: {
           category: string
-          created_at: string | null
-          demo_link: string | null
+          created_at: string
           description: string | null
-          github_link: string | null
+          github_url: string | null
           id: string
           image_url: string | null
-          live_link: string | null
-          tags: string[] | null
+          live_url: string | null
+          technologies: string[] | null
           title: string
-          updated_at: string | null
+          updated_at: string
+          user_id: string | null
         }
         Insert: {
           category: string
-          created_at?: string | null
-          demo_link?: string | null
+          created_at?: string
           description?: string | null
-          github_link?: string | null
+          github_url?: string | null
           id?: string
           image_url?: string | null
-          live_link?: string | null
-          tags?: string[] | null
+          live_url?: string | null
+          technologies?: string[] | null
           title: string
-          updated_at?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Update: {
           category?: string
-          created_at?: string | null
-          demo_link?: string | null
+          created_at?: string
           description?: string | null
-          github_link?: string | null
+          github_url?: string | null
           id?: string
           image_url?: string | null
-          live_link?: string | null
-          tags?: string[] | null
+          live_url?: string | null
+          technologies?: string[] | null
           title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      skills: {
-        Row: {
-          category: string
-          created_at: string | null
-          id: string
-          name: string
-          proficiency_level: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          category: string
-          created_at?: string | null
-          id?: string
-          name: string
-          proficiency_level?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          category?: string
-          created_at?: string | null
-          id?: string
-          name?: string
-          proficiency_level?: number | null
-          updated_at?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
