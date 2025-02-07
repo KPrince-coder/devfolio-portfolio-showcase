@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tag, X, ChevronDown, Check } from "lucide-react";
@@ -32,26 +31,20 @@ export function TagFilterInput({
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   const filteredTags = React.useMemo(() => {
-    const validTags = Array.isArray(allTags) ? allTags : [];
-    if (!searchQuery) return validTags;
-    return validTags.filter((tag) =>
+    if (!searchQuery) return allTags;
+    return allTags.filter((tag) =>
       tag.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [allTags, searchQuery]);
 
-  const isAllSelected = React.useMemo(() => {
-    const validAllTags = Array.isArray(allTags) ? allTags : [];
-    const validSelectedTags = Array.isArray(selectedTags) ? selectedTags : [];
-    return validSelectedTags.length === validAllTags.length && validAllTags.length > 0;
-  }, [allTags, selectedTags]);
+  const isAllSelected = selectedTags.length === allTags.length && allTags.length > 0;
 
   const handleSelectAll = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isAllSelected) {
       onClearTags();
     } else {
-      const validTags = Array.isArray(allTags) ? allTags : [];
-      validTags.forEach((tag) => {
+      allTags.forEach((tag) => {
         if (!selectedTags.includes(tag)) {
           onToggleTag(tag);
         }
