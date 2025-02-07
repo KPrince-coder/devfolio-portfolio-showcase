@@ -363,23 +363,32 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
   return (
     <>
       <Helmet>
-        <title>{post?.title} | {import.meta.env.VITE_APP_TITLE || 'Blog'}</title>
-        <meta name="description" content={post?.excerpt || ''} />
-        
+        <title>
+          {post?.title} | {import.meta.env.VITE_APP_TITLE || "Blog"}
+        </title>
+        <meta name="description" content={post?.excerpt || ""} />
+
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="article" />
         <meta property="og:title" content={post?.title} />
         <meta property="og:description" content={post?.excerpt} />
         <meta property="og:url" content={window.location.href} />
-        {post?.coverImage && <meta property="og:image" content={post.coverImage} />}
-        <meta property="og:site_name" content={import.meta.env.VITE_APP_TITLE || 'Blog'} />
-        
+        {post?.coverImage && (
+          <meta property="og:image" content={post.coverImage} />
+        )}
+        <meta
+          property="og:site_name"
+          content={import.meta.env.VITE_APP_TITLE || "Blog"}
+        />
+
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={post?.title} />
         <meta name="twitter:description" content={post?.excerpt} />
-        {post?.coverImage && <meta name="twitter:image" content={post.coverImage} />}
-        
+        {post?.coverImage && (
+          <meta name="twitter:image" content={post.coverImage} />
+        )}
+
         {/* Article Specific */}
         <meta property="article:published_time" content={post?.createdAt} />
         <meta property="article:author" content={post?.author} />
@@ -739,7 +748,7 @@ export const BlogPostPage = ({ postId }: BlogPostPageProps) => {
               className="flex justify-center"
             >
               <Link
-                to="/blog"
+                to="/archive"
                 className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary-teal transition-colors"
               >
                 <Home className="h-4 w-4" aria-hidden="true" />
