@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, createContext, useContext, FC, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,7 +30,6 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
 
       setUser(null);
       
-      // Show success toast with animation
       toast.success("Successfully logged out", {
         duration: 2000,
         position: "top-right",
@@ -40,7 +40,6 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
         },
       });
 
-      // Navigate to login page after a slight delay
       setTimeout(() => {
         navigate('/login');
       }, 500);
@@ -52,11 +51,9 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Use session timeout hook
   useSessionTimeout(handleLogout);
 
   useEffect(() => {
-    // Check active session
     const checkUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -70,7 +67,6 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
 
     checkUser();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
@@ -87,10 +83,14 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
       loading,
       handleLogout
     }),
-    [user, loading, handleLogout]
+    [user, loading]
   );
 
-  return React.createElement(AuthContext.Provider, { value: contextValue }, children);
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {

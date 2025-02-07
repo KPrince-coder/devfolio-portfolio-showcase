@@ -1,3 +1,4 @@
+
 export type SharePlatform = 'copy' | 'twitter' | 'facebook' | 'linkedin' | 'whatsapp';
 
 interface ShareConfig {
@@ -24,6 +25,7 @@ export async function shareContent({ url, text, platform, onSuccess }: ShareConf
 
     const shareUrl = new URL(SHARE_URLS[platform]);
     const encodedUrl = encodeURIComponent(url);
+    const encodedText = encodeURIComponent(text);
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     switch (platform) {
@@ -34,8 +36,16 @@ export async function shareContent({ url, text, platform, onSuccess }: ShareConf
       case 'facebook':
         shareUrl.searchParams.set('u', encodedUrl);
         break;
+      case 'linkedin':
+        // LinkedIn requires specific parameters for better preview
+        window.open(
+          `${SHARE_URLS.linkedin}?url=${encodedUrl}&title=${encodedText}`,
+          'share',
+          'width=550,height=400,toolbar=0,menubar=0,location=0,status=0,scrollbars=1,resizable=1'
+        );
+        onSuccess?.();
+        return;
       case 'whatsapp':
-        // Use the appropriate WhatsApp URL based on device
         const whatsappUrl = isMobile ? 'whatsapp://send' : SHARE_URLS.whatsapp;
         const shareText = `${text}\n\n${url}`;
         window.open(
@@ -45,22 +55,13 @@ export async function shareContent({ url, text, platform, onSuccess }: ShareConf
         );
         onSuccess?.();
         return;
-      case 'linkedin':
-        // LinkedIn requires the URL to be properly encoded
-        window.open(
-          `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-          'share',
-          'width=550,height=400,toolbar=0,menubar=0,location=0,status=0,scrollbars=1,resizable=1'
-        );
-        onSuccess?.();
-        return;
     }
 
-    // Open in a new window with specific dimensions
+    // Open share dialog in a centered popup window
     const width = 550;
     const height = 400;
-    const left = (window.screen.width - width) / 2;
-    const top = (window.screen.height - height) / 2;
+    const left = Math.round((window.screen.width / 2) - (width / 2));
+    const top = Math.round((window.screen.height / 2) - (height / 2));
 
     window.open(
       shareUrl.toString(),

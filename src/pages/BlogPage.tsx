@@ -1,3 +1,4 @@
+
 import { FC } from 'react';
 import { BlogPostPage } from "@/components/BlogPostPage";
 import { useParams, Navigate } from 'react-router-dom';
@@ -10,7 +11,7 @@ const BlogPost: FC<BlogPostProps> = () => {
   const { postId } = useParams();
 
   if (!postId) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/archive" replace />;
   }
 
   return <BlogPostPage postId={postId} />;
@@ -28,5 +29,3 @@ const BlogPage = ({ postId }: BlogPageProps) => {
 };
 
 export default BlogPage;
-
-
